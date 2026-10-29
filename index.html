@@ -786,11 +786,11 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
   if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
   function useKokoro() { return voiceMode === "local" && (IS_MOBILE ? piperState === "ready" && piperReady.has(ch.pv) : kokoroState === "ready"); }
   function useCloud() { return voiceMode === "cloud" && !IN_CLAUDE; }
-  const PREF = { cynic: ["Andrew", "Brian", "Christopher", "Davis", "Mark", "David"], perfectionist: ["Christopher", "Eric", "Steffan", "Roger", "Brian", "David", "Mark"], coach: ["Guy", "Roger", "Davis", "Tony", "Jason", "Brian", "Mark", "David"],
+  var PREF = { cynic: ["Andrew", "Brian", "Christopher", "Davis", "Mark", "David"], perfectionist: ["Christopher", "Eric", "Steffan", "Roger", "Brian", "David", "Mark"], coach: ["Guy", "Roger", "Davis", "Tony", "Jason", "Brian", "Mark", "David"],
     speedrunner: ["Ava", "Emma", "Aria", "Ana", "Michelle", "Zira", "Samantha"], overthinker: ["Jenny", "Michelle", "Emma", "Aria", "Nancy", "Zira", "Samantha"] };
-  let bAssign = {};
+  var bAssign = {};
   function assignVoices() {
-    bAssign = {}; const used = new Set();
+    if (!PREF) return; bAssign = {}; const used = new Set();
     for (const c of CHARS) {
       const names = PREF[c.id] || []; let pick = null;
       for (const pass of [0, 1]) {
@@ -801,10 +801,11 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
       if (pick) { bAssign[c.id] = pick.name; used.add(pick.name); }
     }
   }
-  const hasNatural = () => bVoices.some((v) => /natural|online/i.test(v.name));
+  function hasNatural() { return bVoices.some((v) => /natural|online/i.test(v.name)); }
   function charBrowserVoice() {
     if (ch.bv) return bVoices.find((v) => v.name === ch.bv) || bVoices[0];
-    return bVoices.find((v) => v.name === bAssign[ch.id]) || bVoices[0];
+    if (!bAssign || !bAssign[ch.id]) assignVoices();
+    return bVoices.find((v) => v.name === (bAssign || {})[ch.id]) || bVoices[0];
   }
   function fillVoiceSelect() {
     const sel = $("cpVoice"); if (!sel) return; sel.innerHTML = "";
