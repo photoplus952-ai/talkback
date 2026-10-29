@@ -51,7 +51,11 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
 .nav button[aria-current="page"]{color:#FF8FB8}
 
 /* home */
-.hero{position:relative;flex:0 0 58%;min-height:360px;overflow:hidden;background:radial-gradient(120% 90% at 30% 30%,#FF2E7E 0%,var(--pink) 35%,#7A0636 100%)}
+.topbar{display:flex;align-items:center;gap:14px;padding-block:12px 10px;flex-shrink:0}
+.flame{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.flame b{font-family:var(--display);font-size:30px;font-weight:400;line-height:1;color:var(--yellow)}
+.flame span{font-size:11px;line-height:1.15;color:var(--muted);font-weight:700}
+.hero{position:relative;flex:0 0 50%;min-height:330px;overflow:hidden;background:radial-gradient(120% 90% at 30% 30%,#FF2E7E 0%,var(--pink) 35%,#7A0636 100%)}
 .hero img{position:absolute;left:-26%;top:3%;height:150%;width:auto;max-width:none;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,16,0) 55%,var(--bg) 100%);pointer-events:none}
 .day{position:absolute;z-index:2;top:14px;right:max(16px,env(safe-area-inset-right,0px));text-align:right;line-height:.85}
@@ -69,11 +73,34 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
 .castbtn[aria-pressed="true"] .face{border-color:var(--yellow)}
 .castbtn small{font-size:11px;font-weight:500}
 .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;flex-shrink:0}
-.act{border:0;border-radius:26px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:right;min-height:110px}
-.act.call{background:linear-gradient(140deg,var(--pink),var(--violet));box-shadow:0 12px 30px rgba(255,26,110,.35)}
+.act{position:relative;overflow:hidden;border:0;border-radius:26px;padding:14px 16px 16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:4px;text-align:right;min-height:150px;color:#fff}
+.act.call{background:radial-gradient(120% 100% at 85% 0%,#FF4D8D 0%,var(--pink) 40%,#5B1BC9 100%);box-shadow:0 14px 34px rgba(255,26,110,.38)}
 .act.chat{background:var(--surface);border:1px solid var(--line)}
-.act b{font-size:18px}
-.act span{font-size:13px;opacity:.85}
+.act b{font-size:19px;position:relative}
+.act .sub{font-size:12.5px;opacity:.88;position:relative}
+.act .live{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:5px;font:700 10px var(--en);letter-spacing:.1em;background:rgba(11,10,16,.35);border-radius:999px;padding:4px 8px}
+.act .live i{width:7px;height:7px;border-radius:50%;background:#4BE3A6;box-shadow:0 0 8px #4BE3A6;animation:pulse 1.4s ease-in-out infinite}
+.callface{position:absolute;top:12px;left:12px;width:58px;height:58px;border-radius:50%;background-color:#FF1A6E;background-repeat:no-repeat;border:2px solid rgba(255,255,255,.9)}
+.callface em{position:absolute;inset:-7px;border-radius:50%;border:2px solid rgba(255,255,255,.45);animation:ring 1.8s ease-out infinite}
+.act .wave{position:absolute;top:48px;right:18px;display:flex;gap:3px;align-items:center;height:22px}
+.act .wave i{width:4px;border-radius:4px;background:rgba(255,255,255,.85);height:30%;animation:bars 1s ease-in-out infinite}
+.act .wave i:nth-child(2){animation-delay:.15s}.act .wave i:nth-child(3){animation-delay:.3s}.act .wave i:nth-child(4){animation-delay:.45s}.act .wave i:nth-child(5){animation-delay:.6s}
+.mini{position:absolute;font-size:12px;border-radius:14px;padding:6px 10px;max-width:80%}
+.mini.a{top:14px;left:12px;background:var(--surface-2);border-radius:14px 14px 14px 4px;font-family:var(--en);font-weight:600;color:#EDEBF5}
+.mini.b{top:52px;right:12px;background:linear-gradient(135deg,var(--pink),var(--violet));border-radius:14px 14px 4px 14px;display:flex;gap:4px;padding:8px 11px}
+.mini.b i{width:6px;height:6px;border-radius:50%;background:#fff;animation:dot 1.2s ease-in-out infinite}
+.mini.b i:nth-child(2){animation-delay:.2s}.mini.b i:nth-child(3){animation-delay:.4s}
+@keyframes ring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+@keyframes bars{0%,100%{height:25%}50%{height:100%}}
+@keyframes dot{0%,100%{opacity:.35;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+/* topics inside the conversation */
+.topics{display:flex;flex-wrap:wrap;gap:8px;padding-block:4px 8px}
+.topics .tlabel{width:100%;font-size:12px;color:var(--muted);font-weight:700}
+.topics button{border:1px solid var(--line);background:var(--surface-2);color:#fff;border-radius:999px;padding:9px 14px;font:700 14px var(--he);min-height:40px}
+.topics button:hover,.topics button:focus-visible{border-color:var(--pink);background:#2A1020}
+#callTopics{padding-inline:16px;position:relative;z-index:5;justify-content:center}
+#callTopics button{background:rgba(11,10,16,.6);backdrop-filter:blur(8px)}
 
 /* character page */
 .cphero{position:relative;flex:0 0 46%;overflow:hidden;background:radial-gradient(110% 80% at 50% 35%,#FF2E7E 0%,var(--pink) 30%,#5A0328 100%)}
@@ -207,12 +234,12 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
 .ringwrap .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
 .ringwrap .val b{font-family:var(--display);font-size:24px;font-weight:400}
 .ringwrap .val span{font-size:10px;color:var(--muted)}
-.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
-.wd{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
-.wd i{width:26px;height:26px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center}
-.wd.done i{background:var(--pink)}
+.week{flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;min-width:0}
+.wd{display:flex;flex-direction:column;align-items:stretch;gap:5px;font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+.wd i{display:block;height:12px;border-radius:999px;background:var(--surface-2)}
+.wd.done i{background:linear-gradient(90deg,var(--pink),#FF5A96);box-shadow:0 0 10px rgba(255,26,110,.55)}
 .wd.miss i{background:#3A3650}
-.wd.now i{background:transparent;border:2px dashed var(--yellow)}
+.wd.now i{background:linear-gradient(to left,var(--yellow) var(--p,0%),#2E2A1A var(--p,0%));box-shadow:0 0 0 1.5px var(--yellow)}
 .wd.now{color:var(--yellow);font-weight:800}
 .todaytxt{display:flex;flex-direction:column;gap:8px;min-width:0}
 .todaytxt .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:800}
@@ -267,9 +294,12 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
 
   <!-- HOME -->
   <section class="view" id="v-home">
+    <div class="topbar gut" aria-label="רצף ימים">
+      <div class="flame"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FFD23F" stroke="#FFD23F" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 2-7 1 1 2 2 3 2 0-2 0-4 0-6z"/></svg><b>6</b><span>ימים<br>ברצף</span></div>
+      <div class="week" id="week"></div>
+    </div>
     <div class="hero">
       <img id="heroImg" src="" alt="">
-      <div class="streak pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 2-7 1 1 2 2 3 2 0-2 0-4 0-6z"/></svg>6 ימים</div>
       <div class="day display"><small>DAY</small><span class="big">07</span><small>/ 30</small></div>
       <div class="greet" id="greet"></div>
     </div>
@@ -281,27 +311,23 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
           <div class="val"><b id="xpToday">20</b><span>מתוך 50 XP</span></div>
         </div>
         <div class="todaytxt">
-          <div class="top">יעד יומי <span id="goalTxt">עוד שיחה אחת ואת שם</span></div>
-          <div class="week" id="week"></div>
+          <div class="top">יעד יומי</div>
+          <div class="small" id="goalTxt">עוד שיחה אחת ואת שם</div>
         </div>
       </div>
       <h3 class="h3">עם מי מדברים?</h3>
       <div class="cast" id="cast" role="group" aria-label="בחירת דמות"></div>
-      <h3 class="h3">על מה?</h3>
-      <div class="chips" id="scenarios">
-        <button class="choice" type="button" aria-pressed="true" data-v="a first meeting with a new design client about a logo project">פגישה עם לקוח</button>
-        <button class="choice" type="button" aria-pressed="false" data-v="checking in at a hotel in New York after a long flight">צ'ק-אין במלון</button>
-        <button class="choice" type="button" aria-pressed="false" data-v="ordering food at a busy diner in the US">מסעדה</button>
-        <button class="choice" type="button" aria-pressed="false" data-v="a casual chat about the learner's day, plans and interests">שיחה חופשית</button>
-      </div>
       <div class="actions">
         <button class="act call" type="button" data-go="call">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/></svg>
-          <b>שיחת וידאו</b><span>מדברים בקול, כמו בטלפון</span>
+          <span class="live"><i></i>LIVE</span>
+          <span class="callface" id="actFace"><em></em></span>
+          <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <b>שיחת וידאו</b><span class="sub" id="actCallSub">Max על הקו. עונים בקול</span>
         </button>
         <button class="act chat" type="button" data-go="chat">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FF8FB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>
-          <b>צ'אט</b><span>כותבים ומקליטים, ושומעים כל הודעה</span>
+          <span class="mini a" dir="ltr" id="actChatLine">So… what's new?</span>
+          <span class="mini b" aria-hidden="true"><i></i><i></i><i></i></span>
+          <b>צ'אט</b><span class="sub">כותבים או מקליטים, בקצב שלך</span>
         </button>
       </div>
     </div>
@@ -402,6 +428,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
       <div class="cap" id="cap" aria-live="polite"></div>
       <div class="youline" id="youLine"></div>
       <div class="banner" id="callTip" hidden></div>
+      <div class="topics" id="callTopics" hidden></div>
       <form class="callinput" id="callForm">
         <button class="round ghost" type="button" id="callMic" aria-label="הקלטה" style="width:48px;height:48px;border-radius:999px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
         <input id="callInput" type="text" placeholder="Speak or type…" autocomplete="off" aria-label="מה את אומרת">
@@ -673,7 +700,9 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     ["heroImg", "cpImg"].forEach((id) => { const el = $(id); el.classList.remove("enter"); void el.offsetWidth; el.classList.add("enter"); });
     $("greet").textContent = c.greet;
     $("chatName").textContent = c.name; $("callName").textContent = c.name;
-    faceStyle($("chatFace"), c);
+    faceStyle($("chatFace"), c); faceStyle($("actFace"), c, 2.6);
+    $("actCallSub").textContent = `${c.name} על הקו. עונים בקול`;
+    $("actChatLine").textContent = { cynic: "So… impress me.", speedrunner: "Quick! What's new?", perfectionist: "Tell me about your day.", overthinker: "Hmm, how are you, really?", coach: "Ready? Let's go!" }[c.id] || "What's new?";
     $("chatInput").placeholder = `Message ${c.name}…`;
     // character page
     $("cpImg").src = c.img; $("cpImg").alt = `${c.name}, ${c.he}`;
@@ -763,7 +792,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     g.addEventListener("click", (e) => { const b = e.target.closest(".choice"); if (!b) return; g.querySelectorAll(".choice").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); cb(b.dataset.v); });
     cb(g.querySelector('[aria-pressed="true"]').dataset.v);
   }
-  group("scenarios", (v) => (scenario = v)); group("tones", (v) => (tone = v)); group("rates", (v) => (rate = parseFloat(v)));
+  scenario = "chosen by the learner at the start; until they choose, a friendly casual chat"; group("tones", (v) => (tone = v)); group("rates", (v) => (rate = parseFloat(v)));
   $("engines").addEventListener("click", (e) => { const b = e.target.closest(".choice"); if (b) { stopSpeech(); setVoiceMode(b.dataset.v); } });
   $("autoReadSw").addEventListener("click", (e) => { autoRead = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(autoRead)); });
 
@@ -1041,6 +1070,22 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     p.addEventListener("click", () => { const was = p.classList.contains("on"); stopSpeech(); if (was) return; p.classList.add("on"); onSpoken = () => p.classList.remove("on"); sayChunk(b.textContent, 0); });
     m.append(b, p); $("log").appendChild(m); scrollLog(); return { m, b };
   }
+  const TOPICS = [
+    ["פגישה עם לקוח", "a first meeting with a new design client about a logo project", "Let's practice a meeting with a new client."],
+    ["צ'ק-אין במלון", "checking in at a hotel in New York after a long flight", "Let's do a hotel check-in."],
+    ["מסעדה", "ordering food at a busy diner in the US", "Let's order food at a restaurant."],
+    ["שדה תעופה", "at a US airport: check-in, security and finding the gate", "Let's practice at the airport."],
+    ["שיחה חופשית", "a casual chat about the learner's day, plans and interests", "Let's just chat."],
+  ];
+  let topicChosen = false;
+  function showTopics(where) {
+    hideTopics();
+    const box = where === "call" ? $("callTopics") : document.createElement("div");
+    box.className = "topics"; box.innerHTML = '<span class="tlabel">על מה מדברים? אפשר לבחור, או פשוט לענות במילים שלך</span>' + TOPICS.map((t, i) => `<button type="button" data-t="${i}">${t[0]}</button>`).join("");
+    if (where === "call") box.hidden = false; else { box.id = "chatTopics"; $("log").appendChild(box); scrollLog(); }
+    box.onclick = (e) => { const b = e.target.closest("[data-t]"); if (!b) return; const t = TOPICS[+b.dataset.t]; scenario = t[1]; topicChosen = true; hideTopics(); send(t[2]); };
+  }
+  function hideTopics() { $("callTopics").hidden = true; $("callTopics").innerHTML = ""; document.getElementById("chatTopics")?.remove(); }
   function chip(cls, main, sub) { const c = document.createElement("div"); c.className = "fixchip " + cls; c.innerHTML = `<b>${main}</b><span>${esc(sub)}</span>`; return c; }
 
   // ================= AI =================
@@ -1130,11 +1175,11 @@ Use empty arrays when nothing applies.`;
     stopSpeech(); stopRec();
     busy = true; $("chatSend").disabled = true;
     let meEl = null;
-    if (userText) { turns.push({ role: "user", content: userText }); S.msgs++; meEl = addMe(userText); $("youLine").textContent = userText; }
+    if (userText) { if (!topicChosen) { topicChosen = true; hideTopics(); } turns.push({ role: "user", content: userText }); S.msgs++; meEl = addMe(userText); $("youLine").textContent = userText; }
     showTyping(); renderCap("", true);
     if (inMode === "call") $("callStatus").textContent = "חושב על תשובה...";
     const convo = [{ role: "user", content: rules() }, ...turns.slice(-10)];
-    if (!turns.length) convo.push({ role: "user", content: "(Open the conversation now: greet me in character in a few words, then ask one question that starts the scenario.)" });
+    if (!turns.length) convo.push({ role: "user", content: "(Open the conversation now: greet me in character in a few words, then ask what I'd like to practice today, for example a client meeting, a hotel, a restaurant, the airport, or just chatting. One short question.)" });
     ctl = new AbortController();
     let ai = null, queued = 0, reply = "";
     const speakIt = () => (inMode === "call" ? !muted : autoRead);
@@ -1185,6 +1230,7 @@ Use empty arrays when nothing applies.`;
       if (msg) { const d = document.createElement("div"); d.className = "banner"; d.textContent = msg; $("log").appendChild(d); $("cap").textContent = msg; }
     } finally {
       busy = false; $("chatSend").disabled = false; setChatStatus("מחובר", false); renderHome();
+      if (turns.length === 1 && turns[0].role === "assistant" && !topicChosen) showTopics(inMode);
       if (inMode === "call" && mode === "call" && !pending) listenNext();
       if (mode === "chat") $("chatInput").focus();
     }
@@ -1221,7 +1267,7 @@ Use empty arrays when nothing applies.`;
     names.forEach((n, i) => {
       const d = document.createElement("div");
       d.className = "wd " + (i < today ? (i === 1 ? "miss" : "done") : i === today ? (xp >= 50 ? "done" : "now") : "");
-      d.innerHTML = (i < today && i !== 1) || (i === today && xp >= 50) ? '<i><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></i>' + n : "<i></i>" + n;
+      d.innerHTML = "<i></i>" + n; if (i === today) d.style.setProperty("--p", Math.min(100, Math.round((xp / 50) * 100)) + "%");
       w.appendChild(d);
     });
   }
@@ -1262,7 +1308,7 @@ Use empty arrays when nothing applies.`;
     fill("sumWords", S.words, (w) => { const d = document.createElement("div"); d.className = "sum"; d.innerHTML = `<div class="right">${esc(w.en)}</div><div class="small">${esc(w.he || "")}</div>`; return d; }, "עוד לא נוספו מילים.");
     $("summary").hidden = false;
   }
-  function resetTalk() { ctl?.abort(); stopSpeech(); stopRec(); turns = []; S.fixes.length = S.minor.length = 0; S.msgs = 0; $("log").innerHTML = ""; $("callFix").innerHTML = ""; $("youLine").textContent = ""; renderCap("", true); }
+  function resetTalk() { ctl?.abort(); stopSpeech(); stopRec(); turns = []; topicChosen = false; hideTopics(); S.fixes.length = S.minor.length = 0; S.msgs = 0; $("log").innerHTML = ""; $("callFix").innerHTML = ""; $("youLine").textContent = ""; renderCap("", true); }
   $("newTalk").addEventListener("click", () => { resetTalk(); focus = ""; $("summary").hidden = true; go("home"); });
 
   applyChar(CHARS[0]); envNote(); renderHome();
