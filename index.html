@@ -51,8 +51,8 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
 .nav button[aria-current="page"]{color:#FF8FB8}
 
 /* home */
-.hero{position:relative;flex:0 0 40%;min-height:250px;overflow:hidden;background:radial-gradient(120% 90% at 30% 30%,#FF2E7E 0%,var(--pink) 35%,#7A0636 100%)}
-.hero img{position:absolute;left:-4%;top:5%;height:128%;width:auto;max-width:none;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}
+.hero{position:relative;flex:0 0 58%;min-height:360px;overflow:hidden;background:radial-gradient(120% 90% at 30% 30%,#FF2E7E 0%,var(--pink) 35%,#7A0636 100%)}
+.hero img{position:absolute;left:-26%;top:3%;height:150%;width:auto;max-width:none;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,16,0) 55%,var(--bg) 100%);pointer-events:none}
 .day{position:absolute;z-index:2;top:14px;right:max(16px,env(safe-area-inset-right,0px));text-align:right;line-height:.85}
 .day .big{font-size:96px}
@@ -274,6 +274,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
       <div class="greet" id="greet"></div>
     </div>
     <div class="homebody gut">
+      <button class="banner" type="button" id="keyNudge" hidden style="text-align:start;cursor:pointer;border-color:var(--yellow)"><b style="color:var(--yellow)">לתשובות מהירות:</b> מדביקים פעם אחת מפתח Gemini חינמי (דקה, בלי טלפון). לחצי כאן ←</button>
       <div class="today" aria-label="ההתקדמות של היום">
         <div class="ringwrap">
           <svg width="76" height="76" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="32" fill="none" stroke="#221F2D" stroke-width="8"/><circle id="goalRing" cx="38" cy="38" r="32" fill="none" stroke="url(#gg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"/><defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#FF1A6E"/><stop offset="1" stop-color="#FFD23F"/></linearGradient></defs></svg>
@@ -747,7 +748,6 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     if (v === "words") renderWords();
     if (v === "progress") renderProgress();
     if (v === "home") renderHome();
-    if ((v === "chat" || v === "call") && !IN_CLAUDE && !NO_ORIGIN && !gemKey()) { openSetup(); }
     if (v === "chat") { if (!turns.length) send(""); else $("chatInput").focus(); }
     if (v === "call") { requestAnimationFrame(buildRig); startTimer(); renderCap("", true); if (!turns.length) send(""); else listenNext(); }
     else stopTimer();
@@ -927,7 +927,8 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
         let txt = ""; for (const r of ev.results) txt += r[0].transcript;
         inp.value = txt.trim(); if (where === "call") $("youLine").textContent = inp.value;
         clearTimeout(recTimer);
-        recTimer = setTimeout(() => { if (inp.value.trim()) { stopRec(); $(where === "call" ? "callForm" : "chatForm").requestSubmit(); } }, 1200);
+        const fin = ev.results[ev.results.length - 1]?.isFinal;
+        recTimer = setTimeout(() => { if (inp.value.trim()) { stopRec(); $(where === "call" ? "callForm" : "chatForm").requestSubmit(); } }, fin ? 350 : 900);
       };
       rec.onerror = (e) => { if (e.error === "not-allowed" || e.error === "service-not-allowed") { stopRec(); showTip(where); } };
       rec.onend = () => { if (rec && recFor === "call" && mode === "call" && !busy && !speakingNow) { try { rec.start(); } catch {} } else { btn.classList.remove("rec"); $("selfcam").classList.remove("talking"); } };
@@ -968,6 +969,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     ckSet("sr", SR ? "" : "bad", SR ? "לחצי על דברי ותגידי משפט באנגלית." : "הדפדפן לא תומך בזיהוי דיבור. פתחי בכרום.");
   }
   $("openCheck").addEventListener("click", () => { $("settings").hidden = true; $("check").hidden = false; runCheck(); });
+  $("keyNudge").addEventListener("click", () => openSetup());
   function openSetup() { $("check").hidden = false; runCheck(); toast("רגע לפני השיחה: מדביקים מפתח Gemini חינמי, פעם אחת", 6000); }
   $("checkRows").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-ck]"); if (!b) return; const id = b.dataset.ck;
@@ -1089,9 +1091,28 @@ Use empty arrays when nothing applies.`;
     throw lastErr || { code: "gem_err" };
   }
   const gemKey = () => store.get("tb_gem") || "";
+  // Free AI with no key at all (Pollinations). Slower and less reliable than Gemini; used until a key is added.
+  async function freeAI(convo, onText, signal) {
+    const msgs = [{ role: "system", content: convo[0].content }, ...convo.slice(1)];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const to = new AbortController(); const tm = setTimeout(() => to.abort(), 14000);
+      const onAbort = () => to.abort(); signal?.addEventListener("abort", onAbort);
+      try {
+        const r = await fetch("https://text.pollinations.ai/openai", { method: "POST", signal: to.signal, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "openai", messages: msgs }) });
+        if (!r.ok) throw new Error("free " + r.status);
+        const j = await r.json(); const text = j.choices?.[0]?.message?.content || "";
+        if (!text) throw new Error("empty");
+        // reveal fast so it feels like typing
+        for (let i = 12; i < text.length; i += 12) { if (signal?.aborted) throw { code: "cancelled" }; onText({ text: text.slice(0, i) }); await new Promise((res) => setTimeout(res, 16)); }
+        onText({ text }); return text;
+      } catch (e) { if (signal?.aborted) throw { code: "cancelled" }; if (attempt) throw { code: "free_fail" }; }
+      finally { clearTimeout(tm); signal?.removeEventListener("abort", onAbort); }
+    }
+  }
   async function llm(convo, onText, signal) {
     if (sample) { const r = await sample(convo, { modelTier: "quick", cache: false, signal, onText }); return r.text; }
     if (!IN_CLAUDE && gemKey()) return gemini(convo, onText, signal);
+    if (!IN_CLAUDE && !NO_ORIGIN) return freeAI(convo, onText, signal);
     if (!IN_CLAUDE && window.puter?.ai) {
       const msgs = [{ role: "system", content: convo[0].content }, ...convo.slice(1)];
       const resp = await window.puter.ai.chat(msgs, { model: "openai/gpt-5.4-nano", stream: true });
@@ -1160,7 +1181,7 @@ Use empty arrays when nothing applies.`;
       scrollLog();
     } catch (e) {
       typingEl?.remove(); typingEl = null;
-      const msg = { cancelled: "", not_granted: "צריך לאשר לדף לדבר עם Claude.", rate_limited: "יותר מדי הודעות ברצף. נסי שוב בעוד רגע.", session_expired: "צריך להתחבר מחדש ל-Claude.", no_sample: "השיחה עם הדמות עובדת כשפותחים את הדף בתוך Claude.", no_ai: "חיבור ה-AI עוד נטען. שלחי שוב בעוד רגע.", no_key: "כדי לדבר עם הדמות צריך מפתח Gemini חינמי. הגדרות ← בדיקה שהכול עובד ← מפתח Gemini.", gem_key: "מפתח ה-Gemini לא תקין. הדביקי אותו שוב בהגדרות ← בדיקה שהכול עובד.", gem_quota: "הגעת למכסה החינמית של Gemini לדקה. חכי רגע ושלחי שוב.", net: "אין חיבור לאינטרנט. שלחי שוב.", no_origin: "הקובץ פתוח ישירות מהמכשיר, ולכן אין חיבור ל-AI. פתחי את האפליקציה מהקישור באינטרנט (הגדרות ← בדיקה שהכול עובד)." }[e?.code] ?? "החיבור נקטע. שלחי שוב.";
+      const msg = { cancelled: "", not_granted: "צריך לאשר לדף לדבר עם Claude.", rate_limited: "יותר מדי הודעות ברצף. נסי שוב בעוד רגע.", session_expired: "צריך להתחבר מחדש ל-Claude.", no_sample: "השיחה עם הדמות עובדת כשפותחים את הדף בתוך Claude.", no_ai: "חיבור ה-AI עוד נטען. שלחי שוב בעוד רגע.", free_fail: "השירות החינמי בלי מפתח עמוס כרגע. עם מפתח Gemini חינמי זה עובד מהר ויציב: הגדרות ← בדיקה שהכול עובד.", no_key: "כדי לדבר עם הדמות צריך מפתח Gemini חינמי. הגדרות ← בדיקה שהכול עובד ← מפתח Gemini.", gem_key: "מפתח ה-Gemini לא תקין. הדביקי אותו שוב בהגדרות ← בדיקה שהכול עובד.", gem_quota: "הגעת למכסה החינמית של Gemini לדקה. חכי רגע ושלחי שוב.", net: "אין חיבור לאינטרנט. שלחי שוב.", no_origin: "הקובץ פתוח ישירות מהמכשיר, ולכן אין חיבור ל-AI. פתחי את האפליקציה מהקישור באינטרנט (הגדרות ← בדיקה שהכול עובד)." }[e?.code] ?? "החיבור נקטע. שלחי שוב.";
       if (msg) { const d = document.createElement("div"); d.className = "banner"; d.textContent = msg; $("log").appendChild(d); $("cap").textContent = msg; }
     } finally {
       busy = false; $("chatSend").disabled = false; setChatStatus("מחובר", false); renderHome();
@@ -1192,6 +1213,7 @@ Use empty arrays when nothing applies.`;
   function renderWords() { const l = $("wordsList"); l.innerHTML = ""; S.words.slice().reverse().forEach((w) => l.appendChild(wordCard(w, false))); exampleWords.forEach((w) => l.appendChild(wordCard(w, true))); $("wordsCount").textContent = S.words.length ? `${S.words.length} חדשות היום` : ""; }
   function xpToday() { return Math.min(80, 20 + S.msgs * 5 + S.fixes.length * 2 + S.words.length * 3); }
   function renderHome() {
+    $("keyNudge").hidden = IN_CLAUDE || NO_ORIGIN || !!gemKey();
     const xp = xpToday(); $("xpToday").textContent = xp;
     $("goalRing").setAttribute("stroke-dashoffset", String(201 * (1 - Math.min(1, xp / 50))));
     $("goalTxt").textContent = xp >= 50 ? "היעד הושג! הרצף נשמר" : `עוד ${50 - xp} XP ליעד`;
