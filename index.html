@@ -315,6 +315,8 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
 .ckrow.ok .dot{background:#4BE3A6}.ckrow.bad .dot{background:#FF4D6D}.ckrow.wait .dot{background:#FFD23F}
 .ckrow b{display:block;font-size:14px}.ckrow p{margin:2px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted,#B4B1C4)}
 .ckrow .play{margin-inline-start:auto;flex-shrink:0}
+.setupcard{background:linear-gradient(160deg,rgba(255,26,110,.18),rgba(139,92,255,.14));border:1px solid rgba(255,26,110,.45);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:8px;margin-block:6px}
+.setupcard b{font-size:16px}.setupcard span{font-size:14px;line-height:1.55;color:#E6E4F0}.setupcard .primary{height:46px;font-size:15px}
 .vtoast{position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);max-width:90%;background:rgba(11,10,16,.85);border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* idle animation of the presented character */
@@ -1056,7 +1058,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
   // ================= system check =================
   const CK = [
     { id: "https", t: "פתוח מקישור באינטרנט (https)" },
-    { id: "key", t: "מפתח Gemini לשיחה עם הדמות", btn: "שמירה" },
+    { id: "key", t: "מפתח Gemini לשיחה עם הדמות (חובה)", btn: "שמירה" },
     { id: "ai", t: "הדמות עונה", btn: "בדיקה" },
     { id: "voice", t: "הקול של הדמות", btn: "בדיקה" },
     { id: "mic", t: "גישה למיקרופון", btn: "בדיקה" },
@@ -1070,7 +1072,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     else ckSet("https", secure ? "ok" : "bad", secure ? "מעולה. מיקרופון, AI וקולות יכולים לעבוד." : "הקובץ נפתח ישירות מהמכשיר. פתחי את האפליקציה מהקישור באינטרנט.");
     $("howLink").hidden = secure || IN_CLAUDE;
     if (gemKey()) { $("gemKeyIn").value = gemKey(); ckSet("key", "ok", "נשמר במכשיר הזה בלבד."); }
-    else ckSet("key", IN_CLAUDE ? "ok" : "bad", IN_CLAUDE ? "בתוך Claude לא צריך מפתח." : "1. לחצי על הקישור והתחברי עם Google. 2. לחצי Create API key. 3. העתיקי את המפתח, הדביקי כאן ולחצי שמירה.");
+    else ckSet("key", IN_CLAUDE ? "ok" : "bad", IN_CLAUDE ? "בתוך Claude לא צריך מפתח." : "1. לחצי על הקישור הוורוד (נפתח בלשונית חדשה) והתחברי עם חשבון Google. 2. לחצי Create API key. 3. העתיקי את המפתח (מתחיל ב-AIza), חזרי לכאן, הדביקי ולחצי שמירה.");
     ckSet("ai", "", "לחצי על בדיקה. הדמות תענה במשפט אחד.");
     ckSet("voice", "", "לחצי על בדיקה. עכשיו: " + engineLabel());
     ckSet("mic", "", "לחצי על בדיקה ואשרי גישה כשהדפדפן שואל.");
@@ -1078,6 +1080,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
   }
   $("openCheck").addEventListener("click", () => { $("settings").hidden = true; $("check").hidden = false; runCheck(); });
   $("keyNudge").addEventListener("click", () => openSetup());
+  document.addEventListener("click", (e) => { if (e.target.closest("[data-setup]")) openSetup(); });
   function openSetup() { $("check").hidden = false; runCheck(); toast("רגע לפני השיחה: מדביקים מפתח Gemini חינמי, פעם אחת", 6000); }
   $("checkRows").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-ck]"); if (!b) return; const id = b.dataset.ck;
@@ -1191,7 +1194,9 @@ Use empty arrays when nothing applies.`;
     let contents = convo.slice(1).map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
     if (!contents.length || contents[0].role !== "user") contents.unshift({ role: "user", parts: [{ text: "(start)" }] });
     let lastErr;
-    for (const [model, cfg] of [["gemini-2.5-flash", { thinkingConfig: { thinkingBudget: 0 } }], ["gemini-flash-latest", {}], ["gemini-2.0-flash", {}]]) {
+    const models = [["gemini-3.5-flash-lite", { thinkingConfig: { thinkingLevel: "minimal" } }], ["gemini-3.6-flash", { thinkingConfig: { thinkingLevel: "minimal" } }], ["gemini-2.5-flash", { thinkingConfig: { thinkingBudget: 0 } }], ["gemini-flash-lite-latest", {}], ["gemini-flash-latest", {}]];
+    const start = Math.max(0, models.findIndex((m) => m[0] === store.get("tb_gem_model")));
+    for (const [model, cfg] of models.slice(start).concat(models.slice(0, start))) {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, {
         method: "POST", headers: { "Content-Type": "application/json" }, signal,
         body: JSON.stringify({ systemInstruction: { parts: [{ text: sys }] }, contents, generationConfig: { temperature: 0.9, ...cfg } }),
@@ -1200,6 +1205,7 @@ Use empty arrays when nothing applies.`;
       if (r.status === 403 || r.status === 401) throw { code: "gem_key" };
       if (r.status === 429) throw { code: "gem_quota" };
       if (!r.ok) throw { code: "gem_err", message: String(r.status) };
+      store.set("tb_gem_model", model);
       const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", text = "";
       for (;;) {
         const { done, value } = await rd.read(); if (done) break;
@@ -1242,7 +1248,7 @@ Use empty arrays when nothing applies.`;
   async function llm(convo, onText, signal) {
     if (sample) { const r = await sample(convo, { modelTier: "quick", cache: false, signal, onText }); return r.text; }
     if (!IN_CLAUDE && gemKey()) return gemini(convo, onText, signal);
-    if (!IN_CLAUDE && !NO_ORIGIN) return freeAI(convo, onText, signal);
+    if (!IN_CLAUDE && !NO_ORIGIN) throw { code: "no_key" }; // the keyless services stopped answering (Oct 2026), so ask for the free key right away
     if (!IN_CLAUDE && window.puter?.ai) {
       const msgs = [{ role: "system", content: convo[0].content }, ...convo.slice(1)];
       const resp = await window.puter.ai.chat(msgs, { model: "openai/gpt-5.4-nano", stream: true });
@@ -1312,7 +1318,11 @@ Use empty arrays when nothing applies.`;
     } catch (e) {
       typingEl?.remove(); typingEl = null;
       const msg = { cancelled: "", not_granted: "צריך לאשר לדף לדבר עם Claude.", rate_limited: "יותר מדי הודעות ברצף. נסי שוב בעוד רגע.", session_expired: "צריך להתחבר מחדש ל-Claude.", no_sample: "השיחה עם הדמות עובדת כשפותחים את הדף בתוך Claude.", no_ai: "חיבור ה-AI עוד נטען. שלחי שוב בעוד רגע.", free_fail: "השירות החינמי בלי מפתח עמוס כרגע. עם מפתח Gemini חינמי זה עובד מהר ויציב: הגדרות ← בדיקה שהכול עובד.", no_key: "כדי לדבר עם הדמות צריך מפתח Gemini חינמי. הגדרות ← בדיקה שהכול עובד ← מפתח Gemini.", gem_key: "מפתח ה-Gemini לא תקין. הדביקי אותו שוב בהגדרות ← בדיקה שהכול עובד.", gem_quota: "הגעת למכסה החינמית של Gemini לדקה. חכי רגע ושלחי שוב.", net: "אין חיבור לאינטרנט. שלחי שוב.", no_origin: "הקובץ פתוח ישירות מהמכשיר, ולכן אין חיבור ל-AI. פתחי את האפליקציה מהקישור באינטרנט (הגדרות ← בדיקה שהכול עובד)." }[e?.code] ?? "החיבור נקטע. שלחי שוב.";
-      if (msg) { const d = document.createElement("div"); d.className = "banner"; d.textContent = msg; $("log").appendChild(d); $("cap").textContent = msg; }
+      if (e?.code === "no_key" || e?.code === "gem_key") {
+        const d = document.createElement("div"); d.className = "setupcard";
+        d.innerHTML = `<b>${e.code === "gem_key" ? "המפתח לא עבד" : "רגע לפני שמתחילים"}</b><span>כדי ש-${esc(ch.name)} יוכל לענות, צריך מפתח Gemini חינמי של Google. לוקח דקה, בלי טלפון ובלי כרטיס אשראי, ועושים את זה רק פעם אחת.</span><button class="primary" type="button" data-setup>להגדרה עכשיו</button>`;
+        $("log").appendChild(d); scrollLog(); $("cap").textContent = ""; if (inMode === "call") openSetup();
+      } else if (msg) { const d = document.createElement("div"); d.className = "banner"; d.textContent = msg; $("log").appendChild(d); $("cap").textContent = msg; }
     } finally {
       busy = false; $("chatSend").disabled = false; setChatStatus("מחובר", false); renderHome();
       if (turns.length === 1 && turns[0].role === "assistant" && !topicChosen) showTopics(inMode);
