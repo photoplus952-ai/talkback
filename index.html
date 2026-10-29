@@ -462,8 +462,8 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
       <div class="banner" id="envNote"></div>
       <div class="label">מאיפה מגיעים הקולות</div>
       <div class="chips" id="engines">
-        <button class="choice" type="button" aria-pressed="false" data-v="local">איכותי (בלי חשבון)</button>
-        <button class="choice" type="button" aria-pressed="true" data-v="browser">של המכשיר</button>
+        <button class="choice" type="button" aria-pressed="true" data-v="browser">של המכשיר (מיידי)</button>
+        <button class="choice" type="button" aria-pressed="false" data-v="local">איכותי (הורדה גדולה)</button>
         <button class="choice" type="button" aria-pressed="false" data-v="cloud">ענן (Puter)</button>
       </div>
       <div class="label">מהירות דיבור</div>
@@ -535,13 +535,13 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
   // Kokoro runs locally and is opt-in (computer only, ~90MB once). Browser voices are the last fallback.
   const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
-  let voiceMode = IN_CLAUDE ? "browser" : (store.get("tb_voice3") || "local");
+  let voiceMode = IN_CLAUDE ? "browser" : (store.get("tb_voice4") || "browser");
   if (NO_ORIGIN && voiceMode === "cloud") voiceMode = "browser";
   if (voiceMode === "cloud") loadPuter();
   let kokoro = null, kokoroState = "off";
   function toast(msg, ms) { const v = $("vtoast"); v.textContent = msg; v.hidden = false; clearTimeout(toast.t); if (ms) toast.t = setTimeout(() => (v.hidden = true), ms); }
   function setVoiceMode(m) {
-    voiceMode = m; store.set("tb_voice3", m); if (m === "cloud") loadPuter();
+    voiceMode = m; store.set("tb_voice4", m); if (m === "cloud") loadPuter();
     if (m === "local") loadLocal();
     document.querySelectorAll("#engines .choice").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === m)));
     envNote(); fillVoiceSelect();
@@ -559,7 +559,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
         const seen = {};
         kokoro = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
           dtype: "q8", device: "wasm",
-          progress_callback: (p) => { if (p && p.status === "progress" && p.total) { seen[p.file] = [p.loaded, p.total]; let a = 0, b = 0; for (const k in seen) { a += seen[k][0]; b += seen[k][1]; } toast("טוענת קולות טבעיים · " + Math.round((a / b) * 100) + "%"); } },
+          progress_callback: (p) => { if (p && p.status === "progress" && p.total) { seen[p.file] = [p.loaded, p.total]; let a = 0, b = 0; for (const k in seen) { a += seen[k][0]; b += seen[k][1]; } toast("מורידה קולות איכותיים · " + Math.round((a / b) * 100) + "% (פעם אחת)"); } },
         });
         kokoroState = "ready"; toast("הקולות המקומיים מוכנים", 3000);
       } catch (e) { console.warn(e); kokoroState = "failed"; toast("הקולות האיכותיים לא נטענו. ממשיכים בקול המכשיר", 6000); }
@@ -624,7 +624,8 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     else if (NO_ORIGIN) n.textContent = "הקובץ פתוח ישירות מהמכשיר. ככה אין שיחה עם AI ואין קולות מהענן. כדי שהכול יעבוד, פתחי את האפליקציה מקישור באינטרנט. הסבר בבדיקה שהכול עובד.";
     else n.textContent = voiceMode === "cloud" ? "קולות מהענן דרך Puter. דורש חשבון Puter (שעלול לבקש מספר טלפון)."
       : voiceMode === "local" ? (useKokoro() ? "קולות איכותיים פעילים. רצים על המכשיר, בלי חשבון ובלי עלות." : kokoroState === "failed" ? "הקולות האיכותיים לא נטענו במכשיר הזה. ממשיכים בקול של המכשיר." : (IS_MOBILE ? (piperState === "failed" ? "הקולות לטלפון לא נטענו. ממשיכים בקול המכשיר." : "קולות איכותיים לטלפון: לכל דמות קול משלה, יורד פעם אחת (כ-60MB לדמות). עד שהקול יורד, מדברים בקול המכשיר.") : "טוענת קולות איכותיים (כ-90MB, פעם אחת בלבד)... בינתיים קול המכשיר."))
-      : "הקול של המכשיר. בלי חשבון, עובד תמיד. במחשב, בדפדפן Edge, הקולות כאן טבעיים במיוחד.";
+      : hasNatural() ? "קולות טבעיים של המכשיר, לכל דמות קול אחר. בלי הורדה ובלי חשבון."
+      : "קולות המכשיר. במחשב הם הכי טבעיים בדפדפן Microsoft Edge: פתחי שם את הקישור ותקבלי לכל דמות קול טבעי, בלי הורדה. בטלפון, אפשר לבחור למטה \"איכותי\" (הורדה של כ-60MB לדמות).";
     const eng = $("engines"); if (eng) { eng.hidden = IN_CLAUDE; eng.previousElementSibling.hidden = IN_CLAUDE; eng.querySelector('[data-v="cloud"]').hidden = NO_ORIGIN; }
     document.querySelectorAll("#engines .choice").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === voiceMode)));
   }
@@ -746,6 +747,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     if (v === "words") renderWords();
     if (v === "progress") renderProgress();
     if (v === "home") renderHome();
+    if ((v === "chat" || v === "call") && !IN_CLAUDE && !NO_ORIGIN && !gemKey()) { openSetup(); }
     if (v === "chat") { if (!turns.length) send(""); else $("chatInput").focus(); }
     if (v === "call") { requestAnimationFrame(buildRig); startTimer(); renderCap("", true); if (!turns.length) send(""); else listenNext(); }
     else stopTimer();
@@ -778,14 +780,31 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     if (!synth) return;
     const rank = (v) => (/natural|online|neural/i.test(v.name) ? 0 : /google/i.test(v.name) ? 1 : 2);
     bVoices = synth.getVoices().filter((v) => /^en[-_]US/i.test(v.lang)).sort((a, b) => rank(a) - rank(b));
+    assignVoices();
     fillVoiceSelect();
   }
   if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
   function useKokoro() { return voiceMode === "local" && (IS_MOBILE ? piperState === "ready" && piperReady.has(ch.pv) : kokoroState === "ready"); }
   function useCloud() { return voiceMode === "cloud" && !IN_CLAUDE; }
+  const PREF = { cynic: ["Andrew", "Brian", "Christopher", "Davis", "Mark", "David"], perfectionist: ["Christopher", "Eric", "Steffan", "Roger", "Brian", "David", "Mark"], coach: ["Guy", "Roger", "Davis", "Tony", "Jason", "Brian", "Mark", "David"],
+    speedrunner: ["Ava", "Emma", "Aria", "Ana", "Michelle", "Zira", "Samantha"], overthinker: ["Jenny", "Michelle", "Emma", "Aria", "Nancy", "Zira", "Samantha"] };
+  let bAssign = {};
+  function assignVoices() {
+    bAssign = {}; const used = new Set();
+    for (const c of CHARS) {
+      const names = PREF[c.id] || []; let pick = null;
+      for (const pass of [0, 1]) {
+        for (const n of names) { const v = bVoices.find((x) => x.name.includes(n) && (pass || !used.has(x.name))); if (v) { pick = v; break; } }
+        if (pick) break;
+      }
+      if (!pick) { const re = c.g === "f" ? FEM : MAL; pick = bVoices.find((x) => re.test(x.name) && !used.has(x.name)) || bVoices.find((x) => re.test(x.name)) || bVoices[0]; }
+      if (pick) { bAssign[c.id] = pick.name; used.add(pick.name); }
+    }
+  }
+  const hasNatural = () => bVoices.some((v) => /natural|online/i.test(v.name));
   function charBrowserVoice() {
     if (ch.bv) return bVoices.find((v) => v.name === ch.bv) || bVoices[0];
-    const re = ch.g === "f" ? FEM : MAL; return bVoices.find((v) => re.test(v.name)) || bVoices[0];
+    return bVoices.find((v) => v.name === bAssign[ch.id]) || bVoices[0];
   }
   function fillVoiceSelect() {
     const sel = $("cpVoice"); if (!sel) return; sel.innerHTML = "";
@@ -948,6 +967,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     ckSet("sr", SR ? "" : "bad", SR ? "לחצי על דברי ותגידי משפט באנגלית." : "הדפדפן לא תומך בזיהוי דיבור. פתחי בכרום.");
   }
   $("openCheck").addEventListener("click", () => { $("settings").hidden = true; $("check").hidden = false; runCheck(); });
+  function openSetup() { $("check").hidden = false; runCheck(); toast("רגע לפני השיחה: מדביקים מפתח Gemini חינמי, פעם אחת", 6000); }
   $("checkRows").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-ck]"); if (!b) return; const id = b.dataset.ck;
     if (id === "key") {
