@@ -462,9 +462,9 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
       <div class="banner" id="envNote"></div>
       <div class="label">מאיפה מגיעים הקולות</div>
       <div class="chips" id="engines">
-        <button class="choice" type="button" aria-pressed="true" data-v="cloud">ענן (מומלץ)</button>
-        <button class="choice" type="button" aria-pressed="false" data-v="local">מקומי</button>
-        <button class="choice" type="button" aria-pressed="false" data-v="browser">דפדפן</button>
+        <button class="choice" type="button" aria-pressed="false" data-v="local">איכותי (בלי חשבון)</button>
+        <button class="choice" type="button" aria-pressed="true" data-v="browser">של המכשיר</button>
+        <button class="choice" type="button" aria-pressed="false" data-v="cloud">ענן (Puter)</button>
       </div>
       <div class="label">מהירות דיבור</div>
       <div class="chips" id="rates">
@@ -491,7 +491,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
       <p class="small">כל שורה ירוקה עובדת. שורה אדומה מסבירה מה לעשות.</p>
       <div class="stack" id="checkRows"></div>
       <div class="card" id="howLink" hidden>
-        <div class="label">איך מקבלים קישור (פעם אחת, כ-2 דקות, בחינם)</div>
+        <div class="label">פתחי את האפליקציה מהקישור: <span dir="ltr">photoplus952-ai.github.io/talkback</span></div>
         <ol class="small" style="margin:0;padding-inline-start:18px;line-height:1.8">
           <li>במחשב, היכנסי ל-<b dir="ltr">app.netlify.com/drop</b> ופתחי חשבון חינמי.</li>
           <li>שימי את הקובץ <b dir="ltr">index.html</b> לבד בתיקייה, וגררי את התיקייה לחלון.</li>
@@ -530,20 +530,18 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
   // AI: Claude inside the Claude app; Puter (free, sign-in once) when the file is opened on its own in Chrome.
   let sample = null, puterReady = false;
   if (IN_CLAUDE) { (async () => { try { sample = await window.claude.use("sample"); } catch { sample = null; } })(); }
-  else if (!NO_ORIGIN) {
-    const s = document.createElement("script"); s.src = "https://js.puter.com/v2/"; s.onload = () => (puterReady = true); document.head.appendChild(s);
-  }
+  function loadPuter() { if (window.puter || loadPuter.on || NO_ORIGIN || IN_CLAUDE) return; loadPuter.on = 1; const s = document.createElement("script"); s.src = "https://js.puter.com/v2/"; s.onload = () => (puterReady = true); document.head.appendChild(s); }
   // Voice: cloud voices (Puter → OpenAI / Polly) work on any device with no download.
   // Kokoro runs locally and is opt-in (computer only, ~90MB once). Browser voices are the last fallback.
   const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
-  let voiceMode = IN_CLAUDE ? "browser" : (store.get("tb_voice") || "cloud");
+  let voiceMode = IN_CLAUDE ? "browser" : (store.get("tb_voice2") || (IS_MOBILE ? "browser" : "local"));
   if (NO_ORIGIN && voiceMode === "cloud") voiceMode = "browser";
-  if (voiceMode === "local" && IS_MOBILE) voiceMode = "cloud";
+  if (voiceMode === "cloud") loadPuter();
   let kokoro = null, kokoroState = "off";
   function toast(msg, ms) { const v = $("vtoast"); v.textContent = msg; v.hidden = false; clearTimeout(toast.t); if (ms) toast.t = setTimeout(() => (v.hidden = true), ms); }
   function setVoiceMode(m) {
-    voiceMode = m; store.set("tb_voice", m);
+    voiceMode = m; store.set("tb_voice2", m); if (m === "cloud") loadPuter();
     if (m === "local" && kokoroState === "off") loadKokoro();
     document.querySelectorAll("#engines .choice").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === m)));
     envNote(); fillVoiceSelect();
@@ -564,7 +562,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
           progress_callback: (p) => { if (p && p.status === "progress" && p.total) { seen[p.file] = [p.loaded, p.total]; let a = 0, b = 0; for (const k in seen) { a += seen[k][0]; b += seen[k][1]; } toast("טוענת קולות טבעיים · " + Math.round((a / b) * 100) + "%"); } },
         });
         kokoroState = "ready"; toast("הקולות המקומיים מוכנים", 3000);
-      } catch (e) { console.warn(e); kokoroState = "failed"; toast("הקולות המקומיים לא נטענו. עוברת לקולות מהענן", 6000); setVoiceMode("cloud"); return; }
+      } catch (e) { console.warn(e); kokoroState = "failed"; toast("הקולות האיכותיים לא נטענו. ממשיכים בקול המכשיר", 6000); }
       envNote(); fillVoiceSelect();
     })();
   }
@@ -601,10 +599,10 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     const n = $("envNote");
     if (IN_CLAUDE) n.innerHTML = "בתוך Claude: הקול מגיע מהדפדפן וההקלטה עוברת דרך הכתבה (<kbd>Win</kbd>+<kbd>H</kbd>). לקולות טבעיים ומיקרופון אמיתי, פתחי את קובץ ה-HTML ישירות בכרום.";
     else if (NO_ORIGIN) n.textContent = "הקובץ פתוח ישירות מהמכשיר. ככה אין שיחה עם AI ואין קולות מהענן. כדי שהכול יעבוד, פתחי את האפליקציה מקישור באינטרנט. הסבר בבדיקה שהכול עובד.";
-    else n.textContent = voiceMode === "cloud" ? "קולות מהענן: טבעיים, בלי הורדה, עובדים בטלפון ובמחשב. בפעם הראשונה תתבקשי להתחבר ל-Puter (חינם)."
-      : voiceMode === "local" ? (kokoroState === "ready" ? "קולות מקומיים פעילים. עובדים גם בלי אינטרנט." : "טוענת קולות מקומיים (כ-90MB, פעם אחת)... בינתיים קול הדפדפן.")
-      : "קול הדפדפן. פחות טבעי, אבל עובד תמיד.";
-    const eng = $("engines"); if (eng) { eng.hidden = IN_CLAUDE; eng.previousElementSibling.hidden = IN_CLAUDE; eng.querySelector('[data-v="local"]').hidden = IS_MOBILE; eng.querySelector('[data-v="cloud"]').hidden = NO_ORIGIN; }
+    else n.textContent = voiceMode === "cloud" ? "קולות מהענן דרך Puter. דורש חשבון Puter (שעלול לבקש מספר טלפון)."
+      : voiceMode === "local" ? (kokoroState === "ready" ? "קולות איכותיים פעילים. רצים על המכשיר, בלי חשבון ובלי עלות." : kokoroState === "failed" ? "הקולות האיכותיים לא נטענו במכשיר הזה. ממשיכים בקול של המכשיר." : "טוענת קולות איכותיים (כ-90MB, פעם אחת בלבד)... בינתיים קול המכשיר." + (IS_MOBILE ? " בטלפון זה כבד, ועלול להיות איטי." : ""))
+      : "הקול של המכשיר. בלי חשבון, עובד תמיד. במחשב, בדפדפן Edge, הקולות כאן טבעיים במיוחד.";
+    const eng = $("engines"); if (eng) { eng.hidden = IN_CLAUDE; eng.previousElementSibling.hidden = IN_CLAUDE; eng.querySelector('[data-v="cloud"]').hidden = NO_ORIGIN; }
     document.querySelectorAll("#engines .choice").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === voiceMode)));
   }
 
@@ -855,7 +853,7 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
     if (synth) synth.cancel(); if (curAudio) { curAudio.pause(); curAudio = null; }
     setSpeaking(false); document.querySelectorAll(".play.on").forEach((b) => b.classList.remove("on"));
   }
-  function engineLabel() { return useCloud() ? (window.puter?.ai ? "קול ענן · " + ch.cv : "קול דפדפן (Puter עוד לא נטען)") : useKokoro() ? "קול מקומי · " + ch.kv : "קול דפדפן · " + (charBrowserVoice()?.name || "ברירת מחדל"); }
+  function engineLabel() { return useCloud() ? (window.puter?.ai ? "קול ענן · " + ch.cv : "קול המכשיר (Puter עוד לא נטען)") : useKokoro() ? "קול איכותי · " + ch.kv : (voiceMode === "local" ? "קול המכשיר (האיכותי עוד נטען) · " : "קול המכשיר · ") + (charBrowserVoice()?.name || "ברירת מחדל"); }
   $("cpPlay").addEventListener("click", () => { stopSpeech(); toast("משמיעה: " + engineLabel(), 3500); sayChunk(ch.quote, 0); });
 
   // ================= microphone =================
@@ -901,40 +899,49 @@ select{height:46px;border-radius:14px;border:1px solid var(--line);background:va
   // ================= system check =================
   const CK = [
     { id: "https", t: "פתוח מקישור באינטרנט (https)" },
-    { id: "puter", t: "שירות ה-AI והקולות (Puter) נטען" },
-    { id: "auth", t: "מחוברת ל-Puter", btn: "התחברות" },
-    { id: "voice", t: "קול מהענן", btn: "בדיקה" },
+    { id: "key", t: "מפתח Gemini לשיחה עם הדמות", btn: "שמירה" },
+    { id: "ai", t: "הדמות עונה", btn: "בדיקה" },
+    { id: "voice", t: "הקול של הדמות", btn: "בדיקה" },
     { id: "mic", t: "גישה למיקרופון", btn: "בדיקה" },
     { id: "sr", t: "זיהוי דיבור באנגלית", btn: "דברי" },
   ];
   function ckSet(id, st, msg) { const r = $("ck_" + id); if (!r) return; r.className = "ckrow " + st; r.querySelector("p").textContent = msg; }
   async function runCheck() {
-    $("checkRows").innerHTML = CK.map((c) => `<div class="ckrow" id="ck_${c.id}"><span class="dot"></span><div><b>${c.t}</b><p></p></div>${c.btn ? `<button class="play" type="button" data-ck="${c.id}">${c.btn}</button>` : ""}</div>`).join("");
-    if (IN_CLAUDE) { ckSet("https", "bad", "את בתוך Claude. כאן יש רק קול דפדפן, והמיקרופון חסום. לבדיקה מלאה פתחי את הקובץ מקישור באינטרנט."); }
-    else ckSet("https", !NO_ORIGIN && window.isSecureContext ? "ok" : "bad", !NO_ORIGIN && window.isSecureContext ? "מעולה. מיקרופון, AI וקולות יכולים לעבוד." : "הקובץ נפתח ישירות מהמכשיר, ובגלל זה ה-AI, הקולות מהענן והמיקרופון בטלפון חסומים. ההוראות להעלאה לקישור מופיעות למטה.");
-    $("howLink").hidden = !NO_ORIGIN && window.isSecureContext;
-    ckSet("puter", window.puter?.ai ? "ok" : "bad", window.puter?.ai ? "נטען." : NO_ORIGIN ? "לא נטען, כי הקובץ פתוח ישירות מהמכשיר. בקישור באינטרנט זה ייטען לבד." : "לא נטען. בדקי שיש אינטרנט, ונסי לרענן.");
-    try { const ok = window.puter?.auth ? await window.puter.auth.isSignedIn() : false; ckSet("auth", ok ? "ok" : "bad", ok ? "מחוברת." : "עוד לא מחוברת. לחצי על התחברות (חשבון חינמי, פעם אחת)."); } catch (e) { ckSet("auth", "bad", errText(e)); }
-    ckSet("voice", "", "לחצי על בדיקה. אם תשמעי את Max בקול עמוק ויבש, זה עובד.");
+    $("checkRows").innerHTML = CK.map((c) => `<div class="ckrow" id="ck_${c.id}"><span class="dot"></span><div style="flex:1;min-width:0"><b>${c.t}</b><p></p>${c.id === "key" ? '<input id="gemKeyIn" type="password" dir="ltr" placeholder="AIza..." autocomplete="off" style="margin-top:8px;width:100%;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:#fff;padding:0 12px;font-size:14px"><p><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--pink)">לקבלת מפתח חינמי (חשבון Google, בלי טלפון ובלי כרטיס אשראי)</a></p>' : ""}</div>${c.btn ? `<button class="play" type="button" data-ck="${c.id}">${c.btn}</button>` : ""}</div>`).join("");
+    const secure = !NO_ORIGIN && window.isSecureContext;
+    if (IN_CLAUDE) ckSet("https", "bad", "את בתוך Claude. כאן יש רק קול דפדפן והמיקרופון חסום. לבדיקה מלאה פתחי את הקישור באינטרנט.");
+    else ckSet("https", secure ? "ok" : "bad", secure ? "מעולה. מיקרופון, AI וקולות יכולים לעבוד." : "הקובץ נפתח ישירות מהמכשיר. פתחי את האפליקציה מהקישור באינטרנט.");
+    $("howLink").hidden = secure || IN_CLAUDE;
+    if (gemKey()) { $("gemKeyIn").value = gemKey(); ckSet("key", "ok", "נשמר במכשיר הזה בלבד."); }
+    else ckSet("key", IN_CLAUDE ? "ok" : "bad", IN_CLAUDE ? "בתוך Claude לא צריך מפתח." : "1. לחצי על הקישור והתחברי עם Google. 2. לחצי Create API key. 3. העתיקי את המפתח, הדביקי כאן ולחצי שמירה.");
+    ckSet("ai", "", "לחצי על בדיקה. הדמות תענה במשפט אחד.");
+    ckSet("voice", "", "לחצי על בדיקה. עכשיו: " + engineLabel());
     ckSet("mic", "", "לחצי על בדיקה ואשרי גישה כשהדפדפן שואל.");
     ckSet("sr", SR ? "" : "bad", SR ? "לחצי על דברי ותגידי משפט באנגלית." : "הדפדפן לא תומך בזיהוי דיבור. פתחי בכרום.");
   }
   $("openCheck").addEventListener("click", () => { $("settings").hidden = true; $("check").hidden = false; runCheck(); });
   $("checkRows").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-ck]"); if (!b) return; const id = b.dataset.ck;
-    if ((id === "auth" || id === "voice") && !window.puter?.ai) { ckSet(id, "bad", "זה יעבוד רק בקישור באינטרנט. ההוראות למטה."); return; }
-    if (id === "auth") {
-      try { await window.puter.auth.signIn(); ckSet("auth", "ok", "מחוברת."); } catch (er) { ckSet("auth", "bad", "ההתחברות נכשלה: " + errText(er) + (window.isSecureContext ? "" : ". זה קורה כשהקובץ לא פתוח מקישור https.")); }
+    if (id === "key") {
+      const k = $("gemKeyIn").value.trim();
+      if (!k) { ckSet("key", "bad", "לא הודבק מפתח."); return; }
+      store.set("tb_gem", k); ckSet("key", "ok", "נשמר במכשיר הזה בלבד. עכשיו לחצי בדיקה בשורה הבאה.");
+    }
+    if (id === "ai") {
+      ckSet("ai", "wait", "שואלת את Max...");
+      try {
+        const t = await llm([{ role: "user", content: "You are Max, a dry, deadpan but friendly character in an English-practice app. Reply with ONE short English sentence." }, { role: "user", content: "Say hi to me." }], () => {}, new AbortController().signal);
+        ckSet("ai", t ? "ok" : "bad", t ? "עובד. Max אמר: " + t.trim() : "לא התקבלה תשובה.");
+      } catch (er) {
+        const m = { no_key: "קודם צריך לשמור מפתח בשורה הקודמת.", gem_key: "המפתח לא תקין. העתיקי אותו שוב מ-Google.", gem_quota: "המכסה החינמית לדקה נגמרה. חכי דקה ונסי שוב.", net: "אין חיבור לאינטרנט.", no_origin: "צריך לפתוח מהקישור באינטרנט." }[er?.code];
+        ckSet("ai", "bad", "נכשל: " + (m || errText(er)));
+      }
     }
     if (id === "voice") {
-      ckSet("voice", "wait", "מייצרת קול...");
-      try {
-        const keep = ch; ch = CHARS[0];
-        const url = await genCloud("Hey. This is Max. If you can hear me, the cloud voices work.");
-        ch = keep;
-        const a = new Audio(url); await a.play();
-        ckSet("voice", "ok", "עובד. אמור להישמע קול ענן טבעי (ash).");
-      } catch (er) { ckSet("voice", "bad", "נכשל: " + errText(er)); }
+      ckSet("voice", "wait", "משמיעה...");
+      const label = engineLabel();
+      stopSpeech(); const prev = onSpoken; onSpoken = () => { ckSet("voice", "ok", "נשמע? זה היה: " + label + ". אם זה נשמע רובוטי, נסי בהגדרות את \"איכותי\"."); };
+      sayChunk(`Hey. This is ${ch.name}. If you can hear me, the voice works.`, 0);
     }
     if (id === "mic") {
       try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach((t) => t.stop()); ckSet("mic", "ok", "יש גישה למיקרופון."); }
@@ -1004,8 +1011,38 @@ Then a line with exactly ###
 Then one JSON object: {"helpHe":"","corrections":[{"wrong":"","right":"","why":"short Hebrew"}],"minor":[{"wrong":"","right":""}],"newWords":[{"en":"","he":""}]}
 Use empty arrays when nothing applies.`;
   }
+  async function gemini(convo, onText, signal) {
+    const key = gemKey(); const sys = convo[0].content;
+    let contents = convo.slice(1).map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+    if (!contents.length || contents[0].role !== "user") contents.unshift({ role: "user", parts: [{ text: "(start)" }] });
+    let lastErr;
+    for (const [model, cfg] of [["gemini-2.5-flash", { thinkingConfig: { thinkingBudget: 0 } }], ["gemini-flash-latest", {}], ["gemini-2.0-flash", {}]]) {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, signal,
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: sys }] }, contents, generationConfig: { temperature: 0.9, ...cfg } }),
+      }).catch((e) => { if (signal?.aborted) throw { code: "cancelled" }; throw { code: "net", message: e.message }; });
+      if (r.status === 404 || r.status === 400) { lastErr = { code: "gem_" + r.status, message: (await r.text()).slice(0, 200) }; if (r.status === 400 && /API key/i.test(lastErr.message)) throw { code: "gem_key" }; continue; }
+      if (r.status === 403 || r.status === 401) throw { code: "gem_key" };
+      if (r.status === 429) throw { code: "gem_quota" };
+      if (!r.ok) throw { code: "gem_err", message: String(r.status) };
+      const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", text = "";
+      for (;;) {
+        const { done, value } = await rd.read(); if (done) break;
+        buf += dec.decode(value, { stream: true }); let i;
+        while ((i = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+          if (!line.startsWith("data:")) continue;
+          try { const j = JSON.parse(line.slice(5)); const t = (j.candidates?.[0]?.content?.parts || []).map((x) => x.text || "").join(""); if (t) { text += t; onText({ text }); } } catch {}
+        }
+      }
+      return text;
+    }
+    throw lastErr || { code: "gem_err" };
+  }
+  const gemKey = () => store.get("tb_gem") || "";
   async function llm(convo, onText, signal) {
     if (sample) { const r = await sample(convo, { modelTier: "quick", cache: false, signal, onText }); return r.text; }
+    if (!IN_CLAUDE && gemKey()) return gemini(convo, onText, signal);
     if (!IN_CLAUDE && window.puter?.ai) {
       const msgs = [{ role: "system", content: convo[0].content }, ...convo.slice(1)];
       const resp = await window.puter.ai.chat(msgs, { model: "openai/gpt-5.4-nano", stream: true });
@@ -1013,7 +1050,7 @@ Use empty arrays when nothing applies.`;
       for await (const part of resp) { if (signal.aborted) throw { code: "cancelled" }; if (part?.text) { text += part.text; onText({ text }); } }
       return text;
     }
-    throw { code: IN_CLAUDE ? "no_sample" : NO_ORIGIN ? "no_origin" : "no_ai" };
+    throw { code: IN_CLAUDE ? "no_sample" : NO_ORIGIN ? "no_origin" : "no_key" };
   }
   function parseMeta(s) { if (!s) return {}; s = s.replace(/```(json)?/g, "").trim(); const a = s.indexOf("{"), b = s.lastIndexOf("}"); try { return JSON.parse(s.slice(a, b + 1)); } catch { return {}; } }
 
@@ -1074,7 +1111,7 @@ Use empty arrays when nothing applies.`;
       scrollLog();
     } catch (e) {
       typingEl?.remove(); typingEl = null;
-      const msg = { cancelled: "", not_granted: "צריך לאשר לדף לדבר עם Claude.", rate_limited: "יותר מדי הודעות ברצף. נסי שוב בעוד רגע.", session_expired: "צריך להתחבר מחדש ל-Claude.", no_sample: "השיחה עם הדמות עובדת כשפותחים את הדף בתוך Claude.", no_ai: "חיבור ה-AI עוד נטען. שלחי שוב בעוד רגע.", no_origin: "הקובץ פתוח ישירות מהמכשיר, ולכן אין חיבור ל-AI. פתחי את האפליקציה מהקישור באינטרנט (הגדרות ← בדיקה שהכול עובד)." }[e?.code] ?? "החיבור נקטע. שלחי שוב.";
+      const msg = { cancelled: "", not_granted: "צריך לאשר לדף לדבר עם Claude.", rate_limited: "יותר מדי הודעות ברצף. נסי שוב בעוד רגע.", session_expired: "צריך להתחבר מחדש ל-Claude.", no_sample: "השיחה עם הדמות עובדת כשפותחים את הדף בתוך Claude.", no_ai: "חיבור ה-AI עוד נטען. שלחי שוב בעוד רגע.", no_key: "כדי לדבר עם הדמות צריך מפתח Gemini חינמי. הגדרות ← בדיקה שהכול עובד ← מפתח Gemini.", gem_key: "מפתח ה-Gemini לא תקין. הדביקי אותו שוב בהגדרות ← בדיקה שהכול עובד.", gem_quota: "הגעת למכסה החינמית של Gemini לדקה. חכי רגע ושלחי שוב.", net: "אין חיבור לאינטרנט. שלחי שוב.", no_origin: "הקובץ פתוח ישירות מהמכשיר, ולכן אין חיבור ל-AI. פתחי את האפליקציה מהקישור באינטרנט (הגדרות ← בדיקה שהכול עובד)." }[e?.code] ?? "החיבור נקטע. שלחי שוב.";
       if (msg) { const d = document.createElement("div"); d.className = "banner"; d.textContent = msg; $("log").appendChild(d); $("cap").textContent = msg; }
     } finally {
       busy = false; $("chatSend").disabled = false; setChatStatus("מחובר", false); renderHome();
