@@ -61,4 +61,3 @@ Each screen's spec sits next to it on the "All screens v3.2" and "You 2.0" board
 - Files: `assets/icon/`. Option **B** (dark with pink-violet glow) is the default, and option **A** (brand gradient) is an alternative, until the owner picks.
 - Sizes: 1024, 512, 192, 180 (apple-touch-icon), plus `maskable_512` (no badge, content in the safe zone) for Android.
 - Character: the owner's character, from the waist up, with a "sound wave" badge in the corner.
-</E
