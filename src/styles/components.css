@@ -81,6 +81,9 @@
 .btn-block {
   width: 100%;
 }
+.btn {
+  white-space: nowrap;
+}
 .btn-tile {
   height: 60px;
   border-radius: 22px;

@@ -5,6 +5,8 @@ name = "talkback-api"
 main = "src/index.ts"
 compatibility_date = "2025-09-01"
 workers_dev = true
+# Never remove variables set in the Cloudflare dashboard (e.g. the key, if it was saved as Text instead of Secret).
+keep_vars = true
 
 # Do not log request bodies (privacy: photos, voice, conversations).
 [observability]
