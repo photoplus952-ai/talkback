@@ -1,0 +1,48 @@
+/* Design system v3: tokens. Source of truth: docs/DESIGN.md + docs/design/design-system-v3.html */
+:root {
+  /* color */
+  --ink: #0e0b14;
+  --surface-1: #18141f;
+  --surface-2: #231d2d;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f6f3fa;
+  --muted: #a39db3;
+  --pink: #ff1a6e;
+  --pink-tint: #ff7aa8;
+  --violet: #7b4dff;
+  --red: #ff4d5e;
+  --gradient: linear-gradient(135deg, #ff1a6e, #7b4dff);
+  --hero: radial-gradient(110% 90% at 25% 20%, #ff4d8d 0%, #ff1a6e 38%, #8a0a44 100%);
+
+  /* type */
+  --font-ui: 'Heebo', system-ui, sans-serif;
+  --font-display: 'Anton', 'Heebo', sans-serif;
+  --font-en: 'Bricolage Grotesque', system-ui, sans-serif;
+
+  /* 4px grid */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --gutter: 20px;
+
+  /* radius */
+  --r-chip: 12px;
+  --r-card: 20px;
+  --r-char: 28px;
+  --r-pill: 999px;
+
+  /* sizes */
+  --btn-h: 56px;
+  --btn-h-2: 48px;
+  --touch: 44px;
+  --nav-h: 66px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+
+  /* motion */
+  --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}

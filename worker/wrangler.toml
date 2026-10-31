@@ -1,0 +1,20 @@
+# TALKBACK API: a small proxy that keeps the Gemini key off the phone.
+# The key is a secret named GEMINI_API_KEY, set in the Cloudflare dashboard
+# (Workers & Pages -> talkback-api -> Settings -> Variables and Secrets). Never in this file.
+name = "talkback-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+# Do not log request bodies (privacy: photos, voice, conversations).
+[observability]
+enabled = false
+
+[vars]
+# Only these sites may call the API.
+ALLOWED_ORIGINS = "https://photoplus952-ai.github.io,http://localhost:5173,http://localhost:4173"
+# Models, in fallback order (BRAIN.md, VOICE.md, YOU20.md). Change here, not in code.
+CHAT_MODELS = "gemini-3.5-flash-lite,gemini-3.6-flash"
+TTS_MODELS = "gemini-3.8-flash-lite-tts,gemini-3.8-flash-tts"
+IMAGE_MODELS = "gemini-3-pro-image-preview,gemini-2.5-flash-image"
+LIVE_MODEL = "gemini-live-2.5-flash-preview"

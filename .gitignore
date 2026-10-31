@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.wrangler/
+worker/node_modules/
+test-results/
+playwright-report/
+.dev.vars
+*.local

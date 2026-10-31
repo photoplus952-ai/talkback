@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="30%" cy="22%" r="95%">
+      <stop offset="0" stop-color="#231D2D"/>
+      <stop offset=".55" stop-color="#0E0B14"/>
+      <stop offset="1" stop-color="#0E0B14"/>
+    </radialGradient>
+    <linearGradient id="brand" gradientUnits="userSpaceOnUse" x1="181.51999999999998" y1="213.91999999999996" x2="842.48" y2="842.48">
+      <stop offset="0" stop-color="#FF1A6E"/>
+      <stop offset="1" stop-color="#7B4DFF"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="51.84"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+  <g opacity=".55" filter="url(#glow)">
+    <rect x="181.51999999999998" y="257.11999999999995" width="660.96" height="507.6" rx="162" fill="#FF1A6E"/>
+  </g>
+  <g fill="url(#brand)">
+    <rect x="181.51999999999998" y="213.91999999999996" width="660.96" height="507.6" rx="162"/>
+    <path d="M 267.91999999999996 650.24 L 231.2 829.52 Q 229.03999999999996 842.48 242 836 L 445.03999999999996 650.24 Z" stroke-linejoin="round"/>
+  </g>
+  <circle cx="317.6" cy="467.72" r="21.6" fill="#fff"/><line x1="395.36" y1="386.72" x2="395.36" y2="548.72" stroke="#fff" stroke-width="43.2" stroke-linecap="round"/><line x1="473.12" y1="332.72" x2="473.12" y2="602.72" stroke="#fff" stroke-width="43.2" stroke-linecap="round"/><line x1="550.88" y1="365.12" x2="550.88" y2="570.32" stroke="#fff" stroke-width="43.2" stroke-linecap="round"/><line x1="628.64" y1="408.32000000000005" x2="628.64" y2="527.12" stroke="#fff" stroke-width="43.2" stroke-linecap="round"/><circle cx="706.4" cy="467.72" r="21.6" fill="#fff"/>
+</svg>
