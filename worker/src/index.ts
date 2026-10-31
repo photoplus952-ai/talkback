@@ -8,6 +8,7 @@
  *   POST /tts               Gemini TTS, returns audio/wav (model fallback)
  *   POST /live-token        ephemeral token for Gemini Live (the browser connects directly)
  *   POST /image             Gemini image (photo -> character), returns base64 images
+ *   POST /transcribe        short recording -> exact transcript (keeps her mistakes)
  *
  * Privacy: request bodies (photos, voice, conversations) are never logged or stored.
  */
@@ -263,6 +264,31 @@ async function image(req: Request, env: Env, cors: Record<string, string>) {
   return json({ images: out, model: results.find((r) => r.res.ok)?.model }, 200, cors);
 }
 
+const TRANSCRIBE_PROMPT =
+  'Transcribe this recording exactly as spoken. The speaker is a Hebrew speaker learning English. ' +
+  'Keep every grammar mistake and word choice as is; do not correct anything. ' +
+  'Write English in English and Hebrew in Hebrew. If there is no speech, return an empty string. ' +
+  'Output only the transcript.';
+
+async function transcribe(req: Request, env: Env, cors: Record<string, string>) {
+  const b = await readJson(req);
+  const audio = typeof b?.audio === 'string' ? b.audio : '';
+  const mimeType = typeof b?.mimeType === 'string' ? b.mimeType : 'audio/webm';
+  if (!audio) return err(400, 'bad_request', cors);
+  const payload = {
+    contents: [{ parts: [{ inlineData: { mimeType, data: audio } }, { text: TRANSCRIBE_PROMPT }] }],
+    generationConfig: { thinkingConfig: { thinkingLevel: 'minimal' }, temperature: 0, maxOutputTokens: 400 },
+  };
+  const t0 = Date.now();
+  const { res, model } = await withFallback(list(env.CHAT_MODELS), (m) =>
+    gemini(env, `/v1beta/models/${encodeURIComponent(m)}:generateContent`, { method: 'POST', body: JSON.stringify(payload) }),
+  );
+  if (!res.ok) return upstreamError(res, cors);
+  const d = (await res.json()) as { candidates?: Candidate[] };
+  const text = (d.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+  return json({ text }, 200, { ...cors, 'X-Model': model, 'Server-Timing': `upstream;dur=${Date.now() - t0}` });
+}
+
 // ---------- entry ----------
 
 export default {
@@ -290,6 +316,8 @@ export default {
           return await liveToken(env, cors);
         case '/image':
           return await image(req, env, cors);
+        case '/transcribe':
+          return await transcribe(req, env, cors);
         default:
           return err(404, 'not_found', cors);
       }
