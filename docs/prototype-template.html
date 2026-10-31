@@ -1,0 +1,1434 @@
+<title>TALKBACK Live</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Heebo:wght@400;500;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap">
+<style>
+/* Layout: cinematic full-bleed character (C), glowing voice aura (B), soft rounded cards (H). One committed dark look. */
+:root{
+  --bg:#0B0A10; --surface:#17151F; --surface-2:#221F2D; --line:rgba(255,255,255,.10);
+  --fg:#FFFFFF; --muted:#B4B1C4; --pink:#FF1A6E; --pink-deep:#C4004F; --violet:#8B5CFF; --yellow:#B794FF; --mint:#4BE3A6; --red:#FF3B4E;
+  --display:"Anton", Impact, "Arial Narrow", sans-serif;
+  --en:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --he:"Heebo", "Segoe UI", Arial, sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%;height:100dvh}
+body{background:var(--bg);color:var(--fg);font-family:var(--he);overflow:hidden;margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid #FF8FB8;outline-offset:2px}
+.app{position:relative;height:100%;height:100dvh;max-width:460px;margin:0 auto;background:var(--bg);overflow:hidden}
+.view{position:absolute;inset:0 0 var(--navh) 0;display:flex;flex-direction:column;overflow:hidden}
+:root{--navh:calc(84px + env(safe-area-inset-bottom,0px))}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.pill{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;background:rgba(11,10,16,.62);border:1px solid var(--line);backdrop-filter:blur(10px);font-size:13px;font-weight:700}
+.iconbtn{width:40px;height:40px;padding:0;justify-content:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);display:inline-block}
+.display{font-family:var(--display);font-weight:400;letter-spacing:.5px;direction:ltr}
+.en{font-family:var(--en);direction:ltr;text-align:left}
+.muted{color:var(--muted)}
+.small{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+.label{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--muted)}
+.choice{flex:0 0 auto;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:9px 14px;font-size:14px;font-weight:700}
+.choice[aria-pressed="true"]{background:var(--pink);border-color:var(--pink)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.chips::-webkit-scrollbar{display:none}
+.primary{height:54px;border:0;border-radius:20px;background:var(--pink);font-weight:800;font-size:17px}
+.secondary{height:46px;border:1px solid var(--line);border-radius:16px;background:transparent;font-weight:700}
+select{height:46px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);padding:0 12px;width:100%}
+.face{border-radius:50%;background-repeat:no-repeat;background-color:var(--pink);flex-shrink:0;display:block}
+.banner{font-size:13px;line-height:1.5;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+.banner kbd{font-family:var(--en);background:var(--surface-2);border-radius:6px;padding:1px 6px}
+
+/* nav */
+.nav{display:flex;gap:4px;padding:6px;background:rgba(28,25,38,.86);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-radius:24px;box-shadow:0 12px 32px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.07)}
+.gnav{position:absolute;z-index:20;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));height:64px;box-sizing:border-box}
+.nav button{position:relative;background:none;border:0;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;font-size:11px;font-weight:700;color:var(--muted);transition:background .2s,color .2s}
+.nav button svg{width:22px;height:22px}
+.nav button[aria-current="page"]{color:#fff;background:linear-gradient(135deg,rgba(255,26,110,.28),rgba(139,92,255,.22))}
+.nav button[aria-current="page"] svg{stroke:#FF8FB8}
+
+/* home */
+.homescroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-block:12px 18px;scrollbar-width:none}
+.homescroll::-webkit-scrollbar{display:none}
+.weekcard{background:linear-gradient(180deg,#1C1926,#141219);border:1px solid var(--line);border-radius:24px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.wkhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.flame{display:flex;align-items:center;gap:6px}
+.flame b{font-family:var(--display);font-size:24px;font-weight:400;line-height:1;color:var(--yellow)}
+.flame span{font-size:13px;font-weight:800}
+.wkxp{font-size:12px;color:var(--muted);font-weight:700}
+.herocard{position:relative;flex:0 0 auto;height:min(100vw,380px);min-height:320px;border-radius:34px;overflow:hidden;background:radial-gradient(110% 90% at 25% 20%,#FF4D8D 0%,var(--pink) 38%,#8A0A44 100%);touch-action:pan-y;user-select:none;-webkit-user-select:none;box-shadow:0 18px 40px rgba(255,26,110,.25)}
+.herocard::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 30% 35%,rgba(255,255,255,.25),rgba(255,255,255,0) 70%);pointer-events:none}
+.slide{position:absolute;inset:0;will-change:transform,opacity}
+.slide img{position:absolute;z-index:1;top:4%;height:205%;width:auto;max-width:none;pointer-events:none;filter:drop-shadow(0 14px 24px rgba(0,0,0,.35))}
+.nametag{position:absolute;z-index:3;top:14px;left:14px;background:rgba(11,10,16,.55);backdrop-filter:blur(8px);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:800}
+.day{position:absolute;z-index:3;top:18px;right:18px;display:flex;flex-direction:column;align-items:flex-end;color:#fff;pointer-events:none;line-height:1}
+.day small{font-family:var(--display);font-size:16px;letter-spacing:.12em;opacity:.9;margin-bottom:2px}
+.dayrow{display:flex;align-items:flex-end;gap:4px;direction:ltr}
+.day .big{font-size:96px;line-height:.78;text-shadow:0 8px 30px rgba(110,4,48,.35)}
+.day .of{font-size:22px;line-height:1;opacity:.85;padding-bottom:2px}
+.bgname{position:absolute;z-index:0;left:-4%;bottom:-6%;font-size:clamp(150px,52vw,210px);line-height:.8;color:rgba(255,255,255,.12);letter-spacing:-2px;white-space:nowrap;pointer-events:none}
+.greet{position:absolute;z-index:3;bottom:40px;right:14px;max-width:56%;background:rgba(11,10,16,.78);backdrop-filter:blur(8px);border-radius:20px 20px 6px 20px;padding:10px 14px;font-size:14.5px;line-height:1.45}
+.swipebtn{position:absolute;z-index:4;bottom:8px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(11,10,16,.35);color:#fff;display:flex;align-items:center;justify-content:center}
+.swipebtn.prev{right:12px}.swipebtn.next{left:12px}
+.dots5{position:absolute;z-index:3;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.dots5 i{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.45);transition:width .2s,background .2s}
+.dots5 i.on{width:22px;background:#fff}
+/* daily progress */
+.daycard{background:var(--surface);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;flex-shrink:0;box-shadow:inset 0 0 0 1px var(--line)}
+.dchead{display:flex;justify-content:space-between;align-items:flex-end}
+.xpn{display:flex;align-items:baseline;gap:3px}
+.xpn b{font-family:var(--display);font-weight:400;font-size:30px;line-height:.9;background:linear-gradient(90deg,#FF5A96,#B794FF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.xpn small{font-size:12px;color:var(--muted);font-weight:700}
+.pbar{position:relative;height:10px;border-radius:999px;background:#25212F;overflow:hidden}
+.pbar>i{position:absolute;top:0;bottom:0;right:0;width:0;border-radius:999px;background:linear-gradient(to left,#FF1A6E,#B794FF);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.pbar>i::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(255,255,255,0) 35%,rgba(255,255,255,.4) 50%,rgba(255,255,255,0) 65%);background-size:220% 100%;animation:shine 2.6s linear infinite}
+@keyframes shine{from{background-position:200% 0}to{background-position:-200% 0}}
+.ptasks{display:flex;flex-direction:column}
+.ptask{display:flex;align-items:center;gap:12px;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;color:#fff;text-align:right;min-height:52px}
+.ptask:first-child{border-top:0;padding-top:2px}
+.ptask .pi{width:36px;height:36px;border-radius:12px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ptask .pt{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}
+.ptask .pt b{font-size:14.5px}
+.ptask .pt span{font-size:12px;color:var(--muted)}
+.ptask .px{font-size:12px;font-weight:800;color:#C9B2FF;background:rgba(183,148,255,.12);border-radius:999px;padding:4px 9px;flex-shrink:0}
+.ptask.done .pi{background:linear-gradient(135deg,#FF1A6E,#B794FF)}
+.ptask.done .pt b{color:var(--muted)}
+.ptask.done .px{color:#7DE8C0;background:rgba(75,227,166,.12)}
+.ptask:disabled{opacity:.55}
+/* cast screen */
+.castgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ccard{position:relative;height:230px;border-radius:26px;overflow:hidden;border:0;padding:0;background:radial-gradient(110% 80% at 50% 30%,#FF2E7E,#7A0636);color:#fff;text-align:right}
+.ccard img{position:absolute;left:50%;top:10px;height:175%;transform:translateX(-50%);max-width:none;pointer-events:none}
+.ccard .cc{position:absolute;inset:auto 0 0 0;padding:28px 12px 10px;background:linear-gradient(180deg,rgba(11,10,16,0),rgba(11,10,16,.95));display:flex;flex-direction:column}
+.ccard .cc .display{font-size:26px;line-height:1;text-align:right}
+.ccard .cc span{font-size:12px;color:#D6D4E3;font-weight:700}
+.ccard[aria-pressed="true"]{box-shadow:0 0 0 3px var(--yellow)}
+.ccard[aria-pressed="true"] .cc span{color:var(--yellow)}
+.ccard .now{position:absolute;top:10px;right:10px;background:var(--yellow);color:var(--bg);font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px}
+.youcard{border:2px dashed #3A3650;border-radius:26px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:var(--muted)}
+.youcard .display{color:#fff;font-size:28px}
+.h3{font-size:19px;font-weight:800;margin:0}
+.cast{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-block:2px 6px;flex-shrink:0}
+.cast::-webkit-scrollbar{display:none}
+.castbtn{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;width:66px;font-size:12px;font-weight:700;color:var(--muted)}
+.castbtn .face{width:56px;height:56px;border:3px solid transparent}
+.castbtn[aria-pressed="true"]{color:var(--fg)}
+.castbtn[aria-pressed="true"] .face{border-color:var(--yellow)}
+.castbtn small{font-size:11px;font-weight:500}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;flex-shrink:0}
+.act{display:flex;align-items:center;gap:10px;min-height:72px;padding:12px;border-radius:24px;border:0;text-align:right;color:#fff;transition:transform .15s ease,box-shadow .2s ease}
+.act:active{transform:scale(.97)}
+.act .ic{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.act .tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.act .tx b{font-size:15px;font-weight:800;line-height:1.2;white-space:nowrap}
+.act .tx small{font-size:12px;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act.call{background:linear-gradient(135deg,#FF1A6E 0%,#C0359E 55%,#8B5CFF 100%);box-shadow:0 10px 26px rgba(255,26,110,.32)}
+.act.call .ic{background:rgba(255,255,255,.18)}
+.act.chat{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.act.chat .ic{background:rgba(255,26,110,.12)}
+@keyframes ring{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+@keyframes bars{0%,100%{height:25%}50%{height:100%}}
+@keyframes dot{0%,100%{opacity:.35;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+@keyframes livep{0%,100%{opacity:1}50%{opacity:.35}}
+/* topics inside the conversation */
+.topics{display:flex;flex-wrap:wrap;gap:8px;padding-block:4px 8px}
+.topics .tlabel{width:100%;font-size:12px;color:var(--muted);font-weight:700}
+.topics button{border:1px solid var(--line);background:var(--surface-2);color:#fff;border-radius:999px;padding:9px 14px;font:700 14px var(--he);min-height:40px}
+.topics button:hover,.topics button:focus-visible{border-color:var(--pink);background:#2A1020}
+#callTopics{padding-inline:16px;position:relative;z-index:5;justify-content:center}
+#callTopics button{background:rgba(11,10,16,.6);backdrop-filter:blur(8px)}
+
+/* character page */
+.cphero{position:relative;flex:0 0 44%;overflow:hidden;background:radial-gradient(110% 80% at 50% 35%,#FF2E7E 0%,var(--pink) 30%,#5A0328 100%)}
+.cphero img{position:absolute;z-index:1;top:5%;height:190%;width:auto;max-width:none;filter:drop-shadow(0 18px 30px rgba(0,0,0,.4))}
+.cphero .bgname{left:auto;right:-3%;top:8%;bottom:auto}
+.cpgreet{top:64px;bottom:auto;right:14px;max-width:46%;animation:pop .45s cubic-bezier(.2,.9,.3,1.3) .35s both}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.92)}to{opacity:1;transform:none}}
+.cpactions{margin-top:-2px}
+.cphero::after{content:"";position:absolute;z-index:2;inset:0;background:linear-gradient(180deg,rgba(11,10,16,0) 58%,var(--bg) 100%);pointer-events:none}
+.cpname{position:absolute;z-index:3;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:10px;display:flex;align-items:flex-end;justify-content:space-between}
+.cpname .display{font-size:72px;line-height:.85;text-shadow:0 4px 24px rgba(0,0,0,.5)}
+.cpname .arch{background:var(--yellow);color:var(--bg);font-weight:800;font-size:14px;border-radius:999px;padding:6px 12px}
+.cpback{position:absolute;z-index:3;top:14px;right:max(16px,env(safe-area-inset-right,0px))}
+.cpbody{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-block:8px 16px}
+.card{background:var(--surface);border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.quote{display:flex;gap:10px;align-items:center}
+.quote p{flex:1;margin:0;font-family:var(--en);direction:ltr;text-align:left;font-size:17px;font-weight:700;line-height:1.35}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:13px;font-weight:700;background:var(--surface-2);border-radius:999px;padding:6px 10px}
+.trait{display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:10px;font-size:13px}
+.bar{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;display:flex;justify-content:flex-start}
+.bar i{display:block;background:linear-gradient(90deg,var(--pink),var(--violet));border-radius:999px}
+.round{width:52px;height:52px;border-radius:20px;border:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.round.send{background:linear-gradient(135deg,var(--pink),var(--violet))}
+.round.ghost{background:var(--surface-2);border:1px solid var(--line)}
+.round.rec{background:var(--red);border-color:var(--red);animation:pulse2 1s infinite}
+@keyframes pulse2{50%{box-shadow:0 0 0 8px rgba(255,59,78,.25)}}
+.round:disabled{opacity:.5}
+
+/* chat */
+.chathead{display:flex;align-items:center;gap:10px;padding-block:12px;border-bottom:1px solid var(--line);background:var(--bg);flex-shrink:0}
+.chathead .face{width:44px;height:44px;border:2px solid var(--pink)}
+.who{flex:1;display:flex;flex-direction:column;background:none;border:0;text-align:right;padding:0}
+.who b{font-family:var(--en)}
+.who span{font-size:13px;color:var(--mint)}
+.who span.typing{color:#FF8FB8}
+.log{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-block:14px}
+.msg{max-width:84%;display:flex;flex-direction:column;gap:6px}
+.msg.ai{align-self:flex-start}
+.msg.me{align-self:flex-end;align-items:flex-end}
+.bubble{padding:10px 14px;border-radius:20px;font-size:16px;line-height:1.45;overflow-wrap:anywhere}
+.ai .bubble{background:var(--surface-2);border-bottom-left-radius:6px}
+.me .bubble{background:linear-gradient(135deg,var(--pink),var(--pink-deep));border-bottom-right-radius:6px}
+.bubble.he{direction:rtl;text-align:right;font-family:var(--he)}
+.play{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:700;color:var(--muted);align-self:flex-start}
+.play.on{color:#FF8FB8;border-color:#FF8FB8}
+.fixchip{display:flex;flex-direction:column;gap:1px;background:var(--surface);border:1px solid rgba(183,148,255,.45);border-radius:14px;padding:6px 10px;max-width:260px}
+.fixchip b{font-family:var(--en);direction:ltr;text-align:left;color:var(--yellow);font-size:14px}
+.fixchip b s{color:var(--muted);font-weight:500}
+.fixchip span{font-size:12px;color:var(--muted)}
+.fixchip.word{border-color:rgba(139,92,255,.5)}
+.fixchip.word b{color:#C8B4FF}
+.fixchip.help{border-color:var(--line)}
+.fixchip.help span{color:var(--fg);font-size:13px}
+.dots{display:inline-flex;gap:4px;padding:14px 16px;background:var(--surface-2);border-radius:20px;border-bottom-left-radius:6px;align-self:flex-start}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:blink 1.1s infinite}
+.dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}
+@keyframes blink{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+.composer{display:flex;gap:8px;align-items:center;padding-block:10px 12px;flex-shrink:0}
+.composer input{flex:1;min-width:0;height:52px;border-radius:20px;border:1px solid var(--line);background:var(--surface);padding:0 16px;font-size:16px}
+
+/* call */
+.call{background:radial-gradient(90% 60% at 50% 28%,rgba(255,26,110,.55) 0%,rgba(255,26,110,.12) 45%,rgba(11,10,16,0) 75%),var(--bg)}
+.rig{position:absolute;left:50%;top:11%;height:112%;transform:translateX(-50%);will-change:transform}
+.rig img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
+.rig .jaw{will-change:transform}
+.rig .mouth{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,#1A0509 0%,#3A0F1C 60%,rgba(58,15,28,0) 100%);transform-origin:50% 0;transform:scaleY(0)}
+.ring{position:absolute;left:50%;top:30%;width:110%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(circle,rgba(255,26,110,0) 40%,rgba(255,26,110,.3) 52%,rgba(139,92,255,0) 70%)}
+.call.speaking .ring{opacity:1;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(.95)}50%{transform:translate(-50%,-50%) scale(1.04)}}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,0) 46%,rgba(11,10,16,.92) 74%,var(--bg) 100%);pointer-events:none}
+.calltop{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:16px}
+.calltop b{font-family:var(--en);font-size:18px}
+.calltop span{font-size:13px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:6px}
+.selfcam{position:absolute;z-index:2;top:78px;left:max(16px,env(safe-area-inset-left,0px));width:86px;height:118px;border-radius:18px;background:var(--surface-2);border:2px solid rgba(255,255,255,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;color:var(--muted)}
+.selfcam.talking{border-color:var(--mint);box-shadow:0 0 0 3px rgba(75,227,166,.3)}
+.callbottom{position:relative;z-index:2;margin-top:auto;display:flex;flex-direction:column;gap:10px;padding-block:0 16px}
+.cap{font-family:var(--en);direction:ltr;text-align:left;font-weight:700;font-size:clamp(20px,5.4vw,24px);line-height:1.35;min-height:2.7em;text-wrap:pretty}
+.cap .w{color:rgba(255,255,255,.42);transition:color .12s}
+.cap .w.on{color:#fff}
+.cap .w.fix{color:var(--bg);background:var(--yellow);border-radius:5px;padding:0 3px}
+.cap .dots{background:rgba(255,255,255,.08)}
+.callfix{display:flex;gap:8px;flex-wrap:wrap}
+.youline{direction:ltr;text-align:left;font-family:var(--en);font-size:15px;color:rgba(255,255,255,.65);font-style:italic;min-height:1.3em}
+.callinput{display:flex;gap:8px;align-items:center}
+.callinput input{flex:1;min-width:0;height:48px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);backdrop-filter:blur(10px);padding:0 16px;font-size:15px}
+.controls{display:flex;justify-content:center;gap:22px;align-items:flex-start}
+.ctl{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.8);background:none;border:0}
+.ctl .c{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center}
+.ctl.end .c{width:70px;height:70px;background:var(--red)}
+.ctl[aria-pressed="true"] .c{background:#fff}
+.ctl[aria-pressed="true"] .c svg{stroke:#000}
+
+/* words & progress */
+.pagehead{padding-block:18px 8px;display:flex;align-items:baseline;justify-content:space-between;flex-shrink:0}
+.pagehead .display{font-size:44px;line-height:1}
+.scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-block:6px 16px}
+.wcard{background:var(--surface);border-radius:22px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.wcard .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.wcard .t b{font-family:var(--en);font-size:19px}
+.wcard .t span{font-size:14px;color:var(--muted)}
+.wcard .t em{font-family:var(--en);direction:ltr;text-align:right;font-style:normal;font-size:13px;color:var(--muted)}
+.tag{font-size:11px;font-weight:800;color:#C8B4FF;background:rgba(139,92,255,.15);border-radius:999px;padding:2px 8px;align-self:flex-start}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface);border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.stat .display{font-size:32px;line-height:1}
+.stat span{font-size:12px;color:var(--muted)}
+.grid30{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;background:var(--surface);border-radius:20px;padding:14px}
+.grid30 i{aspect-ratio:1;border-radius:6px;background:var(--surface-2)}
+.grid30 i.d{background:var(--pink)}
+.grid30 i.m{background:#4A4660}
+.grid30 i.t{background:var(--pink);box-shadow:0 0 0 2px var(--yellow)}
+.listrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.switch{width:52px;height:30px;border-radius:999px;border:0;background:var(--surface-2);position:relative;flex-shrink:0}
+.switch::after{content:"";position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:right .2s}
+.switch[aria-pressed="true"]{background:var(--mint)}
+.switch[aria-pressed="true"]::after{right:25px}
+
+/* overlays */
+.overlay{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(11,10,16,.6);backdrop-filter:blur(6px)}
+.panel{background:var(--surface);border-radius:28px 28px 0 0;padding-block:22px 24px;display:flex;flex-direction:column;gap:14px;max-height:88%;overflow-y:auto}
+.panel h2{margin:0;font-size:38px;line-height:1;text-align:right}
+.sum{background:var(--surface-2);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.sum .wrong{font-family:var(--en);direction:ltr;text-align:left;color:var(--muted);text-decoration:line-through}
+.sum .right{font-family:var(--en);direction:ltr;text-align:left;font-weight:700}
+.sum .why{font-size:13px;color:var(--yellow)}
+.stack{display:flex;flex-direction:column;gap:8px}
+@media (prefers-reduced-motion:reduce){.call.speaking .ring,.dots i,.round.rec{animation:none}}
+
+/* home progress widget */
+.today{background:var(--surface);border-radius:24px;padding:14px;display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:center;flex-shrink:0}
+.ringwrap{position:relative;width:76px;height:76px}
+.ringwrap svg{transform:rotate(-90deg)}
+.ringwrap .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.ringwrap .val b{font-family:var(--display);font-size:24px;font-weight:400}
+.ringwrap .val span{font-size:10px;color:var(--muted)}
+.week{flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;min-width:0}
+.wd{display:flex;flex-direction:column;align-items:stretch;gap:5px;font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+.wd i{display:flex;align-items:center;justify-content:center;height:26px;border-radius:12px;background:var(--surface-2)}
+.wd.done i{background:linear-gradient(90deg,var(--pink),#FF5A96);box-shadow:0 0 10px rgba(255,26,110,.55)}
+.wd.miss i{background:#3A3650}
+.wd.now i{background:linear-gradient(to left,var(--yellow) var(--p,0%),#241D36 var(--p,0%));box-shadow:0 0 0 1.5px var(--yellow)}
+.wd.now{color:var(--yellow);font-weight:800}
+.todaytxt{display:flex;flex-direction:column;gap:8px;min-width:0}
+.todaytxt .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:800}
+.todaytxt .top span{font-size:12px;color:var(--muted);font-weight:500}
+/* character settings */
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.lockgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lock{aspect-ratio:3/4;border-radius:16px;background:var(--surface-2);border:1px dashed #3A3650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--muted);text-align:center;padding:6px}
+.soon{font-size:11px;font-weight:800;background:var(--yellow);color:var(--bg);border-radius:999px;padding:2px 8px}
+/* progress v2 */
+.star{border-radius:24px;padding:16px;background:linear-gradient(140deg,var(--pink),var(--violet));display:flex;flex-direction:column;gap:6px}
+.star .display{font-size:28px;line-height:1}
+.skill{display:grid;grid-template-columns:96px 1fr 36px 42px;gap:8px;align-items:center;font-size:14px}
+.skill .lvl{font-family:var(--display);font-size:18px;text-align:left}
+.skill .up{font-size:12px;color:var(--mint);font-weight:800;text-align:left;direction:ltr}
+.work{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:20px;padding:12px 14px}
+.work .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.work .t b{font-size:15px}
+.work .t span{font-size:12px;color:var(--muted)}
+.work button{height:38px;border-radius:14px;border:0;background:var(--surface-2);font-size:13px;font-weight:800;padding:0 12px;white-space:nowrap}
+.xpbars{display:flex;gap:8px;align-items:flex-end;height:90px;direction:ltr}
+.xpbars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.xpbars i{width:100%;border-radius:6px 6px 2px 2px;background:var(--pink);display:block}
+.xpbars .cur i{background:var(--yellow)}
+.ckrow{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px}
+.ckrow .dot{flex:0 0 12px;height:12px;border-radius:99px;margin-top:5px;background:#77748a}
+.ckrow.ok .dot{background:#4BE3A6}.ckrow.bad .dot{background:#FF4D6D}.ckrow.wait .dot{background:#B794FF}
+.ckrow b{display:block;font-size:14px}.ckrow p{margin:2px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted,#B4B1C4)}
+.ckrow .play{margin-inline-start:auto;flex-shrink:0}
+.setupcard{background:linear-gradient(160deg,rgba(255,26,110,.18),rgba(139,92,255,.14));border:1px solid rgba(255,26,110,.45);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:8px;margin-block:6px}
+.setupcard b{font-size:16px}.setupcard span{font-size:14px;line-height:1.55;color:#E6E4F0}.setupcard .primary{height:46px;font-size:15px}
+.vtoast{position:absolute;z-index:30;top:10px;left:50%;transform:translateX(-50%);max-width:90%;background:rgba(11,10,16,.85);border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:999px;padding:8px 14px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* idle animation of the presented character */
+@keyframes idleL{0%,100%{transform:translateY(0) rotate(0deg) scale(1)}35%{transform:translateY(-5px) rotate(-.7deg) scale(1.004,1.008)}70%{transform:translateY(-2px) rotate(.4deg) scale(1.002,1.004)}}
+@keyframes idleC{0%,100%{transform:translateX(-50%) translateY(0) rotate(0deg) scale(1)}35%{transform:translateX(-50%) translateY(-6px) rotate(.6deg) scale(1.004,1.008)}70%{transform:translateX(-50%) translateY(-2px) rotate(-.4deg) scale(1.002,1.004)}}
+@keyframes enterL{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes enterC{from{opacity:0;transform:translateX(-50%) translateY(40px) scale(.96)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:1}}
+.slide img{transform-origin:50% 100%;animation:idleL 5s ease-in-out infinite}
+.gnav.oncall{background:rgba(11,10,16,.5)}
+.hero img.enter{animation:enterL .55s cubic-bezier(.2,.8,.2,1) both, idleL 5s ease-in-out .55s infinite}
+.cphero img{transform-origin:50% 100%;animation:idleL 5s ease-in-out infinite}
+.cphero img.enter{animation:enterL .55s cubic-bezier(.2,.8,.2,1) both, idleL 5s ease-in-out .55s infinite}
+.hero::before,.cphero::before{content:"";position:absolute;left:10%;right:10%;top:12%;height:70%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.28),rgba(255,255,255,0));animation:glow 4s ease-in-out infinite;pointer-events:none}
+.castbtn .face{transition:transform .2s ease}
+.castbtn:hover .face{transform:translateY(-3px) scale(1.05)}
+.castbtn[aria-pressed="true"] .face{animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.hero img,.cphero img,.hero img.enter,.cphero img.enter,.castbtn[aria-pressed="true"] .face,.hero::before,.cphero::before{animation:none}}
+</style>
+
+<div class="app" id="app">
+  <div class="vtoast" id="vtoast" hidden></div>
+
+  <!-- HOME -->
+  <section class="view" id="v-home">
+    <div class="homescroll gut">
+      <div class="weekcard" aria-label="רצף ימים ויעד">
+        <div class="wkhead">
+          <div class="flame"><svg width="18" height="18" viewBox="0 0 24 24" fill="#B794FF" aria-hidden="true"><path d="M12 2c1.2 4.4 6 6.6 6 12a6 6 0 0 1-12 0c0-3.2 2.1-4.6 2.3-7.6 1.2 1.1 2.3 2.2 3.4 2.3C11.9 6.6 12.2 4.3 12 2z"/></svg><b id="streakN">6</b><span>ימים ברצף</span></div>
+          <span class="wkxp" id="goalTxt">עוד 30 XP ליעד</span>
+        </div>
+        <div class="week" id="week"></div>
+      </div>
+      <button class="banner" type="button" id="keyNudge" hidden style="text-align:start;cursor:pointer;border-color:var(--yellow)"><b style="color:var(--yellow)">לתשובות מהירות:</b> מדביקים פעם אחת מפתח Gemini חינמי (דקה, בלי טלפון). לחצי כאן ←</button>
+      <div class="herocard" id="herocard" aria-roledescription="קרוסלה" aria-label="החלקה הצידה להחלפת דמות">
+        <div class="slide" id="slide">
+          <span class="bgname display" id="heroBgName" aria-hidden="true"></span>
+          <img id="heroImg" src="" alt="" draggable="false">
+          <span class="nametag" id="heroName"></span>
+          <div class="greet" id="greet"></div>
+        </div>
+        <div class="day display" aria-label="יום 7 מתוך 30"><small>DAY</small><span class="dayrow"><span class="big">07</span><span class="of">/30</span></span></div>
+        <button class="swipebtn prev" type="button" id="prevChar" aria-label="הדמות הקודמת"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="swipebtn next" type="button" id="nextChar" aria-label="הדמות הבאה"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="dots5" id="dots5" aria-hidden="true"></div>
+      </div>
+      <div class="actions">
+        <button class="act call" type="button" data-go="call">
+          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg></span>
+          <span class="tx"><b>שיחת וידאו</b><small id="actCallSub">עם Max · בקול</small></span>
+        </button>
+        <button class="act chat" type="button" data-go="chat">
+          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8FB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg></span>
+          <span class="tx"><b>צ'אט</b><small id="actChatLine">כתיבה או הקלטה</small></span>
+        </button>
+      </div>
+      <div class="daycard" aria-label="ההתקדמות של היום">
+        <div class="dchead"><span class="label">ההתקדמות של היום</span><span class="xpn" dir="ltr"><b id="xpToday">20</b><small>/50 XP</small></span></div>
+        <div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="50" id="pbar"><i id="pfill"></i></div>
+        <div class="ptasks" id="ptasks"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAST -->
+  <section class="view" id="v-cast" hidden>
+    <div class="pagehead gut"><span class="display">THE CAST</span><span class="small">עם מי מדברים היום?</span></div>
+    <div class="scroll gut"><div class="castgrid" id="castgrid"></div>
+      <div class="youcard"><b class="display">YOU 2.0</b><span>דמות מהתמונה שלך, שמדברת בקול שלך</span><span class="soon">בקרוב</span></div>
+    </div>
+  </section>
+
+  <!-- CHARACTER PAGE -->
+  <section class="view" id="v-char" hidden>
+    <div class="cphero">
+      <span class="bgname display" id="cpBgName" aria-hidden="true"></span>
+      <img id="cpImg" src="" alt="">
+      <div class="greet cpgreet" id="cpGreet"></div>
+      <button class="pill iconbtn cpback" type="button" data-go="home" aria-label="חזרה"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+      <div class="cpname"><span class="arch" id="cpArch"></span><span class="display" id="cpName"></span></div>
+    </div>
+    <div class="cpbody gut">
+      <div class="actions cpactions">
+        <button class="act call" type="button" data-go="call"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg></span><span class="tx"><b>שיחת וידאו</b><small id="cpCallLbl">בקול</small></span></button>
+        <button class="act chat" type="button" data-go="chat"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF8FB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg></span><span class="tx"><b>צ'אט</b><small>כתיבה או הקלטה</small></span></button>
+      </div>
+      <p id="cpDesc" style="margin:0;font-size:15px;line-height:1.6"></p>
+      <div class="card">
+        <div class="label" id="cpTalkLbl">ככה הוא מדבר</div>
+        <div class="quote"><p id="cpQuote"></p><button class="round ghost" type="button" id="cpPlay" aria-label="השמעה"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg></button></div>
+      </div>
+      <div class="card">
+        <div class="label">אופי</div>
+        <div class="stack" id="cpTraits"></div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="label">הגדרות הדמות</div><button class="play" type="button" id="cpTest">שמעי את הקול</button></div>
+        <label class="small" for="cpVoice">קול</label>
+        <select id="cpVoice"></select>
+        <p class="small" id="cpVoiceNote"></p>
+        <div class="small">מהירות דיבור</div>
+        <div class="seg" id="cpRates">
+          <button class="choice" type="button" data-v="0.85">לאט</button><button class="choice" type="button" data-v="1">רגיל</button><button class="choice" type="button" data-v="1.12">מהיר</button>
+        </div>
+        <div class="small">כמה לעקוץ</div>
+        <div class="seg" id="cpTones">
+          <button class="choice" type="button" data-v="gentle and very encouraging, no teasing">עדין</button><button class="choice" type="button" data-v="friendly with light, playful teasing now and then">חברי</button><button class="choice" type="button" data-v="cheeky like a close friend who lovingly roasts you, never mean">בלי רחמים</button>
+        </div>
+        <div class="small">רמת אנגלית בשיחה</div>
+        <div class="seg" id="cpLevels">
+          <button class="choice" type="button" data-v="very simple words and short sentences">פשוטה</button><button class="choice" type="button" data-v="everyday conversational English">יומיומית</button><button class="choice" type="button" data-v="richer, natural native-speed English with idioms">מתקדמת</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row"><div class="label">ארון בגדים</div><span class="soon">בקרוב</span></div>
+        <div class="lockgrid">
+          <div class="lock"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4B1C4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4l4 2 4-2 4 3-2 4h-2v9H8v-9H6L4 7z"/></svg>סטריט<br>רצף 7 ימים</div>
+          <div class="lock"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4B1C4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19h18M5 19l2-9 5 4 5-4 2 9"/></svg>חגיגי<br>500 XP</div>
+          <div class="lock"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4B1C4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/><circle cx="12" cy="12" r="10"/></svg>טיול<br>שבוע נסיעות</div>
+        </div>
+        <p class="small">בגדים ואביזרים נפתחים כשמתמידים: רצף ימים, נקודות XP ומשימות.</p>
+      </div>
+      <div class="card">
+        <div class="label">הכי טוב בשביל</div>
+        <div class="tags" id="cpTags"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHAT -->
+  <section class="view" id="v-chat" hidden>
+    <div class="chathead gut">
+      <button class="pill iconbtn" type="button" data-go="home" aria-label="חזרה"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+      <span class="face" id="chatFace" style="width:44px;height:44px;border:2px solid var(--pink)" aria-hidden="true"></span>
+      <button class="who" type="button" data-go="char" aria-label="לדף הדמות"><b id="chatName"></b><span id="chatStatus">מחובר</span></button>
+      <button class="pill iconbtn" type="button" data-go="call" aria-label="שיחת וידאו"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M16 10l6-3v10l-6-3"/></svg></button>
+      <button class="pill" type="button" data-end>סיום</button>
+    </div>
+    <div class="log gut" id="log" aria-live="polite"></div>
+    <div class="gut"><div class="banner" id="chatTip" hidden></div></div>
+    <form class="composer gut" id="chatForm">
+      <button class="round ghost" type="button" id="chatMic" aria-label="הקלטה"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <input id="chatInput" type="text" placeholder="Message…" autocomplete="off" aria-label="הודעה">
+      <button class="round send" type="submit" id="chatSend" aria-label="שליחה"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 3.5L3 11l7 2.5 2.5 7z" fill="#fff" stroke="none" transform="matrix(-1 0 0 1 24 0)"/></svg></button>
+    </form>
+  </section>
+
+  <!-- CALL -->
+  <section class="view call" id="v-call" hidden>
+    <div class="ring" aria-hidden="true"></div>
+    <div class="rig" id="rig" aria-hidden="true">
+      <img class="base" id="rigBase" src="" alt="">
+      <span class="mouth" id="rigMouth"></span>
+      <img class="jaw" id="rigJaw" src="" alt="">
+    </div>
+    <div class="shade"></div>
+    <div class="calltop"><b id="callName"></b><span><i class="dot"></i><span id="callStatus">בשיחה · 00:00</span></span></div>
+    <div class="selfcam" id="selfcam"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B4B1C4" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span id="selfLbl">את</span></div>
+    <div class="callbottom gut">
+      <div class="callfix" id="callFix"></div>
+      <div class="cap" id="cap" aria-live="polite"></div>
+      <div class="youline" id="youLine"></div>
+      <div class="banner" id="callTip" hidden></div>
+      <div class="topics" id="callTopics" hidden></div>
+      <form class="callinput" id="callForm">
+        <button class="round ghost" type="button" id="callMic" aria-label="הקלטה" style="width:48px;height:48px;border-radius:999px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <input id="callInput" type="text" placeholder="Speak or type…" autocomplete="off" aria-label="מה את אומרת">
+      </form>
+      <div class="controls">
+        <button class="ctl" type="button" id="capBtn" aria-pressed="false"><span class="c"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h6M7 14h10"/></svg></span>הסתר כתוביות</button>
+        <button class="ctl end" type="button" data-end><span class="c"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15c5-5 13-5 18 0l-2 3-4-1v-3c-2-1-4-1-6 0v3l-4 1z"/></svg></span>סיום</button>
+        <button class="ctl" type="button" id="muteBtn" aria-pressed="false"><span class="c"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></span>השתק קול</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORDS -->
+  <section class="view" id="v-words" hidden>
+    <div class="pagehead gut"><span class="display">WORDS</span><span class="muted" id="wordsCount"></span></div>
+    <div class="scroll gut" id="wordsList"></div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section class="view" id="v-progress" hidden>
+    <div class="pagehead gut"><span class="display">PROGRESS</span><span class="small">השבוע · נתוני דוגמה</span></div>
+    <div class="scroll gut">
+      <div class="star">
+        <div class="label" style="color:rgba(255,255,255,.85)">במה היית תותחית השבוע</div>
+        <div class="display">FLUENCY +12</div>
+        <div style="font-size:14px;line-height:1.5">דיברת עם Zoe 4 דקות ברצף בלי לעצור, ופחות "אממ" מכל שבוע קודם.</div>
+      </div>
+      <div class="card">
+        <div class="label">המיומנויות שלך</div>
+        <div class="stack" id="skills"></div>
+      </div>
+      <div class="label">על מה עוד לעבוד</div>
+      <div class="stack" id="workList"></div>
+      <div class="card">
+        <div class="row"><div class="label">XP בשבוע האחרון</div><span class="small" id="xpWeekTotal"></span></div>
+        <div class="xpbars" id="xpBars"></div>
+      </div>
+      <div class="label">היום, מהשיחות שלך</div>
+      <div class="stats">
+        <div class="stat"><span class="display" id="stMsgs">0</span><span>הודעות שלך</span></div>
+        <div class="stat"><span class="display" id="stFix" style="color:var(--yellow)">0</span><span>תיקונים</span></div>
+        <div class="stat"><span class="display" id="stWords" style="color:#C8B4FF">0</span><span>מילים חדשות</span></div>
+      </div>
+      <div class="label">30 הימים שלך</div>
+      <div class="grid30" id="grid30"></div>
+    </div>
+  </section>
+
+  <!-- GLOBAL NAV -->
+  <nav class="nav gnav" id="gnav" aria-label="ניווט">
+    <button type="button" data-go="home" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>בית</button>
+    <button type="button" data-go="cast"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.6c2.8.1 4.9 1.8 5.5 4.9"/></svg>דמויות</button>
+    <button type="button" data-go="words"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="13" height="16" rx="2"/><path d="M8 8h5M8 12h5M20 7v13"/></svg>מילים</button>
+    <button type="button" data-go="progress"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>התקדמות</button>
+    <button type="button" data-open="settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>הגדרות</button>
+  </nav>
+
+  <!-- SETTINGS -->
+  <div class="overlay" id="settings" hidden>
+    <div class="panel gut">
+      <h2 class="display">SETTINGS</h2>
+      <div class="banner" id="envNote"></div>
+      <div class="label">מאיפה מגיעים הקולות</div>
+      <div class="chips" id="engines">
+        <button class="choice" type="button" aria-pressed="true" data-v="browser">של המכשיר (מיידי)</button>
+        <button class="choice" type="button" aria-pressed="false" data-v="local">איכותי (הורדה גדולה)</button>
+        <button class="choice" type="button" aria-pressed="false" data-v="cloud">ענן (Puter)</button>
+      </div>
+      <div class="label">מהירות דיבור</div>
+      <div class="chips" id="rates">
+        <button class="choice" type="button" aria-pressed="false" data-v="0.85">לאט</button>
+        <button class="choice" type="button" aria-pressed="true" data-v="1">רגיל</button>
+        <button class="choice" type="button" aria-pressed="false" data-v="1.12">מהיר</button>
+      </div>
+      <div class="label">כמה לעקוץ</div>
+      <div class="chips" id="tones">
+        <button class="choice" type="button" aria-pressed="false" data-v="gentle and very encouraging, no teasing">עדין</button>
+        <button class="choice" type="button" aria-pressed="true" data-v="friendly with light, playful teasing now and then">חברי</button>
+        <button class="choice" type="button" aria-pressed="false" data-v="cheeky like a close friend who lovingly roasts you, never mean">בלי רחמים</button>
+      </div>
+      <div class="row"><div><b>הקראה אוטומטית בצ'אט</b><p class="small">כל תשובה בצ'אט תושמע בקול</p></div><button class="switch" id="autoReadSw" type="button" aria-pressed="false" aria-label="הקראה אוטומטית"></button></div>
+      <button class="play" type="button" id="openCheck" style="align-self:flex-start">בדיקה שהכול עובד</button>
+      <button class="primary" type="button" data-close="settings">סגירה</button>
+    </div>
+  </div>
+
+  <!-- SYSTEM CHECK -->
+  <div class="overlay" id="check" hidden>
+    <div class="panel gut">
+      <h2 class="display">CHECK</h2>
+      <p class="small">כל שורה ירוקה עובדת. שורה אדומה מסבירה מה לעשות.</p>
+      <div class="stack" id="checkRows"></div>
+      <div class="card" id="howLink" hidden>
+        <div class="label">פתחי את האפליקציה מהקישור: <span dir="ltr">photoplus952-ai.github.io/talkback</span></div>
+        <ol class="small" style="margin:0;padding-inline-start:18px;line-height:1.8">
+          <li>במחשב, היכנסי ל-<b dir="ltr">app.netlify.com/drop</b> ופתחי חשבון חינמי.</li>
+          <li>שימי את הקובץ <b dir="ltr">index.html</b> לבד בתיקייה, וגררי את התיקייה לחלון.</li>
+          <li>תקבלי קישור שמתחיל ב-https. פתחי אותו במחשב ובטלפון (בכרום).</li>
+          <li>חזרי לבדיקה הזו בקישור החדש. הכול אמור להיות ירוק.</li>
+        </ol>
+      </div>
+      <button class="primary" type="button" data-close="check">סגירה</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="overlay" id="summary" hidden>
+    <div class="panel gut">
+      <h2 class="display">NICE TALK.</h2>
+      <p class="small" id="sumIntro"></p>
+      <div class="label">תיקונים חשובים</div><div class="stack" id="sumMain"></div>
+      <div class="label">טעויות קטנות</div><div class="stack" id="sumMinor"></div>
+      <div class="label">מילים חדשות</div><div class="stack" id="sumWords"></div>
+      <button class="primary" type="button" id="newTalk">שיחה חדשה</button>
+      <button class="secondary" type="button" data-close="summary">חזרה לשיחה</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const isHe = (t) => /[֐-׿]/.test(t);
+  const IN_CLAUDE = !!window.claude;
+  // Opened as a file (file:// or content://): no web origin, so Puter (AI + cloud voices) can't sign in.
+  const NO_ORIGIN = !IN_CLAUDE && (/^(file|content):$/.test(location.protocol) || location.origin === "null");
+
+  // ================= engines =================
+  // AI: Claude inside the Claude app; Puter (free, sign-in once) when the file is opened on its own in Chrome.
+  let sample = null, puterReady = false;
+  if (IN_CLAUDE) { (async () => { try { sample = await window.claude.use("sample"); } catch { sample = null; } })(); }
+  function loadPuter() { if (window.puter || loadPuter.on || NO_ORIGIN || IN_CLAUDE) return; loadPuter.on = 1; const s = document.createElement("script"); s.src = "https://js.puter.com/v2/"; s.onload = () => (puterReady = true); document.head.appendChild(s); }
+  // Voice: cloud voices (Puter → OpenAI / Polly) work on any device with no download.
+  // Kokoro runs locally and is opt-in (computer only, ~90MB once). Browser voices are the last fallback.
+  const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+  let voiceMode = IN_CLAUDE ? "browser" : (store.get("tb_voice4") || "browser");
+  if (NO_ORIGIN && voiceMode === "cloud") voiceMode = "browser";
+  if (voiceMode === "cloud") loadPuter();
+  let kokoro = null, kokoroState = "off";
+  function toast(msg, ms) { const v = $("vtoast"); v.textContent = msg; v.hidden = false; clearTimeout(toast.t); if (ms) toast.t = setTimeout(() => (v.hidden = true), ms); }
+  function setVoiceMode(m) {
+    voiceMode = m; store.set("tb_voice4", m); if (m === "cloud") loadPuter();
+    if (m === "local") loadLocal();
+    document.querySelectorAll("#engines .choice").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === m)));
+    envNote(); fillVoiceSelect();
+  }
+  function loadKokoro() {
+    kokoroState = "loading";
+    (async () => {
+      toast("טוענת קולות מקומיים...");
+      let KokoroTTS = null;
+      for (const u of ["https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js", "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm", "https://unpkg.com/kokoro-js@1.2.1/dist/kokoro.web.js"]) {
+        try { ({ KokoroTTS } = await import(u)); if (KokoroTTS) break; } catch (e) { console.warn("kokoro import failed", u, e); }
+      }
+      try {
+        if (!KokoroTTS) throw new Error("import");
+        const seen = {};
+        kokoro = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
+          dtype: "q8", device: "wasm",
+          progress_callback: (p) => { if (p && p.status === "progress" && p.total) { seen[p.file] = [p.loaded, p.total]; let a = 0, b = 0; for (const k in seen) { a += seen[k][0]; b += seen[k][1]; } toast("מורידה קולות איכותיים · " + Math.round((a / b) * 100) + "% (פעם אחת)"); } },
+        });
+        kokoroState = "ready"; toast("הקולות המקומיים מוכנים", 3000);
+      } catch (e) { console.warn(e); kokoroState = "failed"; toast("הקולות האיכותיים לא נטענו. ממשיכים בקול המכשיר", 6000); }
+      envNote(); fillVoiceSelect();
+    })();
+  }
+  // Phones: Piper (light, fast, one ~60MB voice per character, downloaded on first use). Computers: Kokoro.
+  let piper = null, piperState = "off"; const piperReady = new Set(), piperBusy = new Set();
+  const PIPER_VOICES = [["en_US-joe-medium","Joe · גברי יבש"],["en_US-ryan-medium","Ryan · גברי אנרגטי"],["en_US-hfc_male-medium","גברי · רגוע"],["en_US-john-medium","John · גברי חם"],["en_US-norman-medium","Norman · גברי מבוגר"],["en_US-amy-medium","Amy · נשי חי"],["en_US-hfc_female-medium","נשי · רך"],["en_US-kristin-medium","Kristin · נשי בהיר"],["en_US-lessac-medium","Lessac · נשי ברור"]];
+  function loadLocal() { if (IS_MOBILE) loadPiper(); else if (kokoroState === "off") loadKokoro(); }
+  async function loadPiper() {
+    if (piperState === "loading" || piperState === "ready") { ensurePiperVoice(ch.pv); return; }
+    piperState = "loading"; toast("מכינה את הקולות לטלפון...");
+    try {
+      piper = await import("https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web@1.0.3/+esm");
+      piperState = "ready";
+      try { (await piper.stored()).forEach((v) => piperReady.add(v)); } catch {}
+      ensurePiperVoice(ch.pv);
+    } catch (e) { console.warn(e); piperState = "failed"; toast("הקולות לטלפון לא נטענו. ממשיכים בקול המכשיר", 6000); envNote(); }
+  }
+  async function ensurePiperVoice(v) {
+    if (!piper || piperReady.has(v) || piperBusy.has(v)) return; piperBusy.add(v);
+    const who = CHARS.find((c) => c.pv === v)?.name || "";
+    try {
+      await piper.download(v, (p) => { if (p && p.total) toast(`מורידה את הקול של ${who} · ${Math.round((p.loaded / p.total) * 100)}% (פעם אחת בלבד)`); });
+      piperReady.add(v); toast(`הקול של ${who} מוכן`, 2500);
+    } catch (e) { console.warn(e); toast("הורדת הקול נכשלה. בדקי חיבור ונסי שוב", 6000); }
+    piperBusy.delete(v); envNote(); fillVoiceSelect();
+  }
+  if (voiceMode === "local") loadLocal();
+  // Cloud voices. Each character gets its own voice and acting direction.
+  const CLOUD_VOICES = [["ash","גברי · יבש"],["onyx","גברי · עמוק"],["cedar","גברי · רגוע"],["echo","גברי · חם"],["verse","גברי · חי"],["ballad","גברי · רך"],["nova","נשי · אנרגטי"],["coral","נשי · חם"],["shimmer","נשי · בהיר"],["marin","נשי · טבעי"],["sage","נשי · שקט"],["alloy","ניטרלי"],["fable","ניטרלי · מספר"]];
+  let cloudFails = 0, lastCloudErr = "", lastEngine = "";
+  const errText = (e) => (e && (e.message || e.error?.message || e.code || (typeof e === "string" ? e : JSON.stringify(e)))) || "שגיאה לא ידועה";
+  async function genCloud(text) {
+    if (!window.puter?.ai?.txt2speech) throw new Error("Puter עוד לא נטען");
+    const speed = (ch.rate || rate) < 0.95 ? " Speak a little slower than usual, very clearly." : (ch.rate || rate) > 1.05 ? " Speak a bit faster than usual." : "";
+    try {
+      const a = await window.puter.ai.txt2speech(text, { provider: "openai", model: "gpt-4o-mini-tts", voice: ch.cv, response_format: "mp3", instructions: "Natural, relaxed General American accent, like a real person on a casual call. " + ch.vi + speed });
+      return a.src;
+    } catch (e) {
+      console.warn("openai voice failed, trying polly", e);
+      const a = await window.puter.ai.txt2speech(text, { voice: ch.g === "f" ? "Ruth" : "Matthew", engine: "neural", language: "en-US" });
+      return a.src;
+    }
+  }
+  function wavBlob(audio) {
+    try { if (audio.toBlob) return audio.toBlob(); } catch {}
+    try { if (audio.toWav) return new Blob([audio.toWav()], { type: "audio/wav" }); } catch {}
+    const d = audio.audio || audio.data, sr = audio.sampling_rate || 24000;
+    const buf = new ArrayBuffer(44 + d.length * 2), v = new DataView(buf);
+    const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, "RIFF"); v.setUint32(4, 36 + d.length * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, d.length * 2, true);
+    for (let i = 0; i < d.length; i++) { const s = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
+    return new Blob([buf], { type: "audio/wav" });
+  }
+  const KOKORO_VOICES = ["af_heart","af_bella","af_nova","af_sarah","af_nicole","af_sky","af_jessica","af_river","af_aoede","af_kore","af_alloy","am_liam","am_michael","am_onyx","am_adam","am_echo","am_eric","am_fenrir","am_puck","am_santa"];
+  function envNote() {
+    const n = $("envNote");
+    if (IN_CLAUDE) n.innerHTML = "בתוך Claude: הקול מגיע מהדפדפן וההקלטה עוברת דרך הכתבה (<kbd>Win</kbd>+<kbd>H</kbd>). לקולות טבעיים ומיקרופון אמיתי, פתחי את קובץ ה-HTML ישירות בכרום.";
+    else if (NO_ORIGIN) n.textContent = "הקובץ פתוח ישירות מהמכשיר. ככה אין שיחה עם AI ואין קולות מהענן. כדי שהכול יעבוד, פתחי את האפליקציה מקישור באינטרנט. הסבר בבדיקה שהכול עובד.";
+    else n.textContent = voiceMode === "cloud" ? "קולות מהענן דרך Puter. דורש חשבון Puter (שעלול לבקש מספר טלפון)."
+      : voiceMode === "local" ? (useKokoro() ? "קולות איכותיים פעילים. רצים על המכשיר, בלי חשבון ובלי עלות." : kokoroState === "failed" ? "הקולות האיכותיים לא נטענו במכשיר הזה. ממשיכים בקול של המכשיר." : (IS_MOBILE ? (piperState === "failed" ? "הקולות לטלפון לא נטענו. ממשיכים בקול המכשיר." : "קולות איכותיים לטלפון: לכל דמות קול משלה, יורד פעם אחת (כ-60MB לדמות). עד שהקול יורד, מדברים בקול המכשיר.") : "טוענת קולות איכותיים (כ-90MB, פעם אחת בלבד)... בינתיים קול המכשיר."))
+      : hasNatural() ? "קולות טבעיים של המכשיר, לכל דמות קול אחר. בלי הורדה ובלי חשבון."
+      : "קולות המכשיר. במחשב הם הכי טבעיים בדפדפן Microsoft Edge: פתחי שם את הקישור ותקבלי לכל דמות קול טבעי, בלי הורדה. בטלפון, אפשר לבחור למטה \"איכותי\" (הורדה של כ-60MB לדמות).";
+    const eng = $("engines"); if (eng) { eng.hidden = IN_CLAUDE; eng.previousElementSibling.hidden = IN_CLAUDE; eng.querySelector('[data-v="cloud"]').hidden = NO_ORIGIN; }
+    document.querySelectorAll("#engines .choice").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === voiceMode)));
+  }
+
+  // ================= characters =================
+  const CHARS = [
+    { id: "cynic", name: "Max", he: "הציני", img: "{{cynic}}", mx: .5193, my: .1118, mw: .0445, a: 1.336, g: "m", kv: "am_liam", cv: "ash", pv: "en_US-joe-medium", pitch: 0.9, vi: "Dry, deadpan and unimpressed, a little sarcastic, but warm underneath.",
+      persona: "the Cynic: dry, deadpan humor, acts unimpressed and rolls his eyes, but is secretly very supportive. Short, witty lines.",
+      desc: "עושה את עצמו לא מתרשם מכלום, מגלגל עיניים ועוקץ ביובש. מאחורי הציניות, הוא הראשון שישים לב שהשתפרת.",
+      quote: "Oh wow, you used the past tense. Should I call the newspapers?", greet: "שוב את? טוב, בואי נראה מה יש לך.",
+      traits: [["ציניות", 92], ["סבלנות", 55], ["פרגון", 40]], tags: ["למי שאוהבת הומור", "שיחה חופשית", "לא להיבהל מטעויות"] },
+    { id: "speedrunner", name: "Zoe", he: "הממהרת", img: "{{speedrunner}}", mx: .5071, my: .1874, mw: .0495, a: 1.376, g: "f", kv: "af_nova", cv: "nova", pv: "en_US-amy-medium", pitch: 1.15, vi: "Upbeat, quick and energetic, a playful kind of impatient.",
+      persona: "the Speedrunner: high-energy, fast, impatient in a fun way, loves quick back-and-forth and short punchy questions.",
+      desc: "מהירה, אנרגטית וקצרת רוח בכיף. שאלות קצרות, תשובות קצרות, והרבה פינג-פונג. מושלמת כשיש רק חמש דקות.",
+      quote: "Okay, okay, quick one: where are you flying next, and why there?", greet: "יאללה יאללה, אין לנו כל היום. מתחילות?",
+      traits: [["מהירות", 95], ["סבלנות", 20], ["אנרגיה", 90]], tags: ["אימון קצר", "תגובה מהירה", "נסיעות"] },
+    { id: "perfectionist", name: "Leo", he: "הפרפקציוניסט", img: "{{perfectionist}}", mx: .465, my: .1148, mw: .0307, a: 1.386, g: "m", kv: "am_michael", cv: "cedar", pv: "en_US-hfc_male-medium", pitch: 1.0, vi: "Calm, precise and articulate, gently picky about details.",
+      persona: "the Perfectionist: polite, precise, a little formal, notices details and loves the exact right word.",
+      desc: "מנומס, מדויק ושם לב לכל פרט. אוהב את המילה המדויקת ומלמד ניסוחים מקצועיים. השותף הכי טוב לפגישות עבודה.",
+      quote: "Let's find the precise word. Is it a draft, or a final deliverable?", greet: "שלום. נעבוד מסודר היום, כן?",
+      traits: [["דיוק", 96], ["רשמיות", 70], ["הומור", 35]], tags: ["אנגלית לעבודה", "פגישות עם לקוחות", "ניסוח מקצועי"] },
+    { id: "overthinker", name: "Mia", he: "זו שחושבת", img: "{{overthinker}}", mx: .5014, my: .1252, mw: .0353, a: 1.361, g: "f", kv: "af_heart", cv: "coral", pv: "en_US-hfc_female-medium", pitch: 1.08, vi: "Warm and thoughtful, sometimes pausing as if thinking out loud.",
+      persona: "the Overthinker: thoughtful, gentle and curious, asks deeper 'why' and 'what if' questions, a bit dreamy.",
+      desc: "רגישה, סקרנית ושואלת שאלות עמוקות של \"למה\" ו\"מה אם\". שיחות איתה הולכות למקומות לא צפויים.",
+      quote: "Wait, but why that color? What did you want people to feel?", greet: "חשבתי עלייך... כלומר, על מה נדבר היום.",
+      traits: [["סקרנות", 94], ["עדינות", 85], ["מהירות", 30]], tags: ["להביע דעה", "שיחות עומק", "עיצוב ורעיונות"] },
+    { id: "coach", name: "Dan", he: "המאמן", img: "{{coach}}", mx: .5041, my: .1107, mw: .0874, a: 1.302, g: "m", kv: "am_onyx", cv: "onyx", pv: "en_US-ryan-medium", pitch: 0.8, vi: "Confident, motivating sports-coach energy, encouraging and clear.",
+      persona: "the Coach: warm, big-hearted, motivating, celebrates every small win and pushes you to say a bit more.",
+      desc: "חם, גדול ומפרגן. חוגג כל הצלחה קטנה ודוחף אותך עוד צעד. כשאין חשק, הוא מחזיר את הביטחון.",
+      quote: "That's it! Now say it again, but tell me one more detail.", greet: "הנה האלופה! יום 7, רצף של 6. קדימה.",
+      traits: [["פרגון", 98], ["אנרגיה", 80], ["ציניות", 5]], tags: ["ביטחון לדבר", "מתחילים", "ימים קשים"] },
+  ];
+  let ch = CHARS[0];
+  function faceStyle(el, c, Z = 3.2) {
+    const fx = c.mx, fy = c.my - 0.022;
+    const px = ((fx * Z - 0.5) / (Z - 1)) * 100;
+    const H = Z * c.a; const py = ((fy * H - 0.5) / (H - 1)) * 100;
+    el.style.backgroundImage = `url(${c.img})`; el.style.backgroundSize = Z * 100 + "% auto";
+    el.style.backgroundPosition = `${px.toFixed(1)}% ${py.toFixed(1)}%`;
+  }
+  function applyChar(c) {
+    ch = c; if (voiceMode === "local" && IS_MOBILE && piper) ensurePiperVoice(c.pv);
+    $("heroImg").src = c.img; $("heroImg").alt = `${c.name}, ${c.he}`;
+    ["cpImg"].forEach((id) => { const el = $(id); el.classList.remove("enter"); void el.offsetWidth; el.classList.add("enter"); });
+    $("greet").textContent = c.greet; $("heroName").textContent = `${c.name} · ${c.he}`;
+    $("dots5").innerHTML = CHARS.map((x) => `<i class="${x.id === c.id ? "on" : ""}"></i>`).join("");
+    $("chatName").textContent = c.name; $("callName").textContent = c.name;
+    faceStyle($("chatFace"), c);
+    $("actCallSub").textContent = `עם ${c.name} · בקול`;
+    $("heroBgName").textContent = c.name.toUpperCase(); $("cpBgName").textContent = c.name.toUpperCase();
+    const g = $("cpGreet"); g.textContent = c.greet; g.style.animation = "none"; void g.offsetWidth; g.style.animation = "";
+    placeChars();
+    $("chatInput").placeholder = `Message ${c.name}…`;
+    // character page
+    $("cpImg").src = c.img; $("cpImg").alt = `${c.name}, ${c.he}`;
+    $("cpName").textContent = c.name.toUpperCase(); $("cpArch").textContent = c.he;
+    $("cpDesc").textContent = c.desc; $("cpQuote").textContent = c.quote;
+    $("cpTraits").innerHTML = c.traits.map(([n, v]) => `<div class="trait"><span>${esc(n)}</span><span class="bar"><i style="width:${v}%"></i></span><span class="muted">${v}</span></div>`).join("");
+    $("cpTags").innerHTML = c.tags.map((t) => `<span>${esc(t)}</span>`).join("");
+    $("cpCallLbl").textContent = `עם ${c.name} · בקול`; $("cpTalkLbl").textContent = c.g === "f" ? "ככה היא מדברת" : "ככה הוא מדבר";
+    // rig
+    $("rigBase").src = c.img; $("rigJaw").src = c.img; buildRig();
+    fillVoiceSelect();
+    document.querySelectorAll(".ccard").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === c.id)));
+    syncCharSettings();
+  }
+  // put the character so her face sits at a fixed spot in the card (waist-up crop)
+  function placeImg(img, box, fx, hf, c) {
+    const H = box.clientHeight * hf; if (!H) return; const W = H / c.a;
+    img.style.height = H + "px"; img.style.left = Math.round(box.clientWidth * fx - c.mx * W) + "px";
+  }
+  function placeChars(c = ch) {
+    placeImg($("heroImg"), $("herocard"), 0.27, 1.95, c);
+    placeImg($("cpImg"), document.querySelector(".cphero"), 0.34, 1.85, c);
+  }
+  window.addEventListener("resize", () => placeChars());
+  function pickChar(c) { if (c.id !== ch.id && turns.length) resetTalk(); applyChar(c); }
+  function renderCast() {
+    $("castgrid").innerHTML = CHARS.map((c) => `<button class="ccard" type="button" data-id="${c.id}" aria-pressed="${c.id === ch.id}"><img src="${c.img}" alt="">${c.id === ch.id ? '<span class="now">נבחר</span>' : ""}<span class="cc"><span class="display">${c.name.toUpperCase()}</span><span>${esc(c.he)}</span></span></button>`).join("");
+  }
+  $("castgrid").addEventListener("click", (e) => { const b = e.target.closest(".ccard"); if (!b) return; pickChar(CHARS.find((c) => c.id === b.dataset.id)); go("char"); });
+  // swipe the home card to switch character (the background stays, the character and text slide)
+  let swapping = false;
+  function swapChar(dir, fromDx = 0) {
+    if (swapping) return; swapping = true;
+    const hc = $("herocard"), sl = $("slide"), w = hc.clientWidth;
+    const i = CHARS.findIndex((c) => c.id === ch.id), n = CHARS[(i + dir + CHARS.length) % CHARS.length];
+    const out = sl.cloneNode(true); out.removeAttribute("id"); out.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+    out.style.transition = "none"; out.style.transform = `translateX(${fromDx}px)`; hc.insertBefore(out, sl);
+    pickChar(n);
+    sl.style.transition = "none"; sl.style.transform = `translateX(${dir * w + fromDx}px)`; void sl.offsetWidth;
+    const ease = "transform .42s cubic-bezier(.22,.8,.24,1)";
+    out.style.transition = ease; sl.style.transition = ease;
+    out.style.transform = `translateX(${-dir * w}px)`; sl.style.transform = "translateX(0)";
+    setTimeout(() => { out.remove(); swapping = false; }, 440);
+  }
+  (() => {
+    const hc = $("herocard"), sl = $("slide"); let x0 = null, dx = 0, moved = false;
+    hc.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; x0 = e.clientX; dx = 0; moved = false; sl.style.transition = "none"; });
+    hc.addEventListener("pointermove", (e) => { if (x0 === null || swapping) return; dx = e.clientX - x0; if (Math.abs(dx) > 6) moved = true; sl.style.transform = `translateX(${dx}px)`; });
+    const end = () => {
+      if (x0 === null) return; x0 = null;
+      if (Math.abs(dx) > 50) swapChar(dx < 0 ? -1 : 1, dx);
+      else { sl.style.transition = "transform .25s"; sl.style.transform = "translateX(0)"; if (!moved) go("char"); }
+    };
+    hc.addEventListener("pointerup", end); hc.addEventListener("pointercancel", end); hc.addEventListener("pointerleave", () => { if (x0 !== null) end(); });
+    $("nextChar").addEventListener("click", () => swapChar(-1)); $("prevChar").addEventListener("click", () => swapChar(1));
+  })();
+
+  // ================= talking rig (video call) =================
+  let jawPx = 0;
+  function buildRig() {
+    const c = ch, rig = $("rig");
+    const h = rig.getBoundingClientRect().height || 900, w = h / c.a;
+    rig.style.width = w + "px";
+    jawPx = Math.min(5, Math.max(2, w * c.mw * 0.12));
+    const ry = (c.mw * 0.62) / c.a;
+    $("rigJaw").style.clipPath = `ellipse(${(c.mw * 0.95 * 100).toFixed(2)}% ${(ry * 100).toFixed(2)}% at ${(c.mx * 100).toFixed(2)}% ${((c.my + ry) * 100).toFixed(2)}%)`;
+    const m = $("rigMouth");
+    m.style.left = (c.mx - c.mw * 0.36) * 100 + "%"; m.style.width = c.mw * 0.72 * 100 + "%";
+    m.style.top = c.my * 100 + "%"; m.style.height = (jawPx / h) * 100 + "%";
+  }
+  window.addEventListener("resize", () => { if (mode === "call") buildRig(); });
+  let level = 0, target = 0, speakingNow = false, analyser = null, audioCtx = null, t0r = performance.now();
+  function animate(t) {
+    const tt = (t - t0r) / 1000;
+    if (analyser) {
+      const d = new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(d);
+      let s = 0; for (const v of d) s += (v - 128) * (v - 128); target = Math.min(1, Math.sqrt(s / d.length) / 22);
+    } else if (speakingNow) {
+      target = Math.max(0, Math.sin(tt * 17) * 0.55 + Math.sin(tt * 7.3) * 0.35 + 0.15);
+    } else target = 0;
+    level += (target - level) * 0.45;
+    $("rigJaw").style.transform = `translateY(${(level * jawPx).toFixed(2)}px)`;
+    $("rigMouth").style.transform = `scaleY(${level.toFixed(3)})`;
+    const breathe = Math.sin(tt * 1.6) * 0.004, sway = Math.sin(tt * 0.7) * 0.6 + (speakingNow ? Math.sin(tt * 2.6) * 0.9 : 0);
+    const nod = speakingNow ? Math.sin(tt * 3.1) * 2 : 0;
+    $("rig").style.transform = `translateX(-50%) translateY(${nod.toFixed(2)}px) rotate(${(sway * 0.35).toFixed(3)}deg) scale(${(1 + breathe).toFixed(4)})`;
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+  function setSpeaking(on) { speakingNow = on; $("v-call").classList.toggle("speaking", on); if (!on) analyser = null; }
+
+  // ================= state & nav =================
+  let focus = "", mode = "home", scenario = "", tone = "", rate = 1, turns = [], busy = false, ctl = null, autoRead = false, muted = false;
+  const S = { fixes: [], minor: [], words: [], msgs: 0 };
+  const exampleWords = [
+    { en: "deliverables", he: "התוצרים שמגישים ללקוח", ex: "I'll send the final deliverables by Friday." },
+    { en: "walk me through", he: "תסביר לי שלב אחרי שלב", ex: "Could you walk me through the brief?" },
+    { en: "follow up", he: "לחזור אל מישהו בהמשך", ex: "I'll follow up with an email tomorrow." },
+    { en: "I'm checking in", he: "אני עושה צ'ק-אין", ex: "Hi, I'm checking in. The name is Levi." },
+  ];
+  function go(v) {
+    if (v === mode) return;
+    stopSpeech(); stopRec();
+    ["home", "cast", "char", "chat", "call", "words", "progress"].forEach((n) => ($("v-" + n).hidden = n !== v));
+    mode = v;
+    const navKey = { char: "cast" }[v] || v;
+    document.querySelectorAll("#gnav [data-go]").forEach((b) => (b.dataset.go === navKey ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
+    $("gnav").classList.toggle("oncall", v === "call");
+    if (v === "cast") renderCast();
+    if (v === "char" || v === "home") requestAnimationFrame(() => placeChars());
+    if (v === "words") { renderWords(); store.set("tb_rev_" + new Date().toDateString(), "1"); }
+    if (v === "progress") renderProgress();
+    if (v === "home") renderHome();
+    if (v === "chat") { if (!turns.length) send(""); else $("chatInput").focus(); }
+    if (v === "call") { requestAnimationFrame(buildRig); startTimer(); renderCap("", true); if (!turns.length) send(""); else { const last = [...turns].reverse().find((t) => t.role === "assistant"); if (last) { spokenChar = 1e9; renderCap(last.content); } listenNext(); } }
+    else stopTimer();
+  }
+  document.addEventListener("click", (e) => {
+    const g = e.target.closest("[data-go]"); if (g) { go(g.dataset.go); return; }
+    const o = e.target.closest("[data-open]"); if (o) { envNote(); $(o.dataset.open).hidden = false; return; }
+    const c = e.target.closest("[data-close]"); if (c) { $(c.dataset.close).hidden = true; return; }
+    if (e.target.closest("[data-end]")) openSummary();
+  });
+  function group(id, cb) {
+    const g = $(id);
+    g.addEventListener("click", (e) => { const b = e.target.closest(".choice"); if (!b) return; g.querySelectorAll(".choice").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); cb(b.dataset.v); });
+    cb(g.querySelector('[aria-pressed="true"]').dataset.v);
+  }
+  scenario = "chosen by the learner at the start; until they choose, a friendly casual chat"; group("tones", (v) => (tone = v)); group("rates", (v) => (rate = parseFloat(v)));
+  $("engines").addEventListener("click", (e) => { const b = e.target.closest(".choice"); if (b) { stopSpeech(); setVoiceMode(b.dataset.v); } });
+  $("autoReadSw").addEventListener("click", (e) => { autoRead = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(autoRead)); });
+
+  let t0 = 0, tick = null;
+  function startTimer() { t0 = Date.now(); clearInterval(tick); tick = setInterval(() => { if (busy || speakingNow) return; const s = Math.floor((Date.now() - t0) / 1000); $("callStatus").textContent = "בשיחה · " + String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }, 1000); }
+  function stopTimer() { clearInterval(tick); }
+
+  // ================= voices =================
+  const synth = window.speechSynthesis;
+  let bVoices = [];
+  const FEM = /aria|jenny|ava|emma|michelle|samantha|zira|ana|nancy|sara|libby|female|amber|ashley|cora|elizabeth|monica|jane|joanna|salli|kimberly|ivy|kendra|susan/i;
+  const MAL = /guy|andrew|brian|christopher|eric|roger|david|mark|steffan|davis|jason|tony|male|matthew|justin|joey|james|daniel|alex|fred|tom/i;
+  function loadVoices() {
+    if (!synth) return;
+    const rank = (v) => (/natural|online|neural/i.test(v.name) ? 0 : /google/i.test(v.name) ? 1 : 2);
+    bVoices = synth.getVoices().filter((v) => /^en[-_]US/i.test(v.lang)).sort((a, b) => rank(a) - rank(b));
+    assignVoices();
+    fillVoiceSelect();
+  }
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+  function useKokoro() { return voiceMode === "local" && (IS_MOBILE ? piperState === "ready" && piperReady.has(ch.pv) : kokoroState === "ready"); }
+  function useCloud() { return voiceMode === "cloud" && !IN_CLAUDE; }
+  var PREF = { cynic: ["Andrew", "Brian", "Christopher", "Davis", "Mark", "David"], perfectionist: ["Christopher", "Eric", "Steffan", "Roger", "Brian", "David", "Mark"], coach: ["Guy", "Roger", "Davis", "Tony", "Jason", "Brian", "Mark", "David"],
+    speedrunner: ["Ava", "Emma", "Aria", "Ana", "Michelle", "Zira", "Samantha"], overthinker: ["Jenny", "Michelle", "Emma", "Aria", "Nancy", "Zira", "Samantha"] };
+  var bAssign = {};
+  function assignVoices() {
+    if (!PREF) return; bAssign = {}; const used = new Set();
+    for (const c of CHARS) {
+      const names = PREF[c.id] || []; let pick = null;
+      for (const pass of [0, 1]) {
+        for (const n of names) { const v = bVoices.find((x) => x.name.includes(n) && (pass || !used.has(x.name))); if (v) { pick = v; break; } }
+        if (pick) break;
+      }
+      if (!pick) { const re = c.g === "f" ? FEM : MAL; pick = bVoices.find((x) => re.test(x.name) && !used.has(x.name)) || bVoices.find((x) => re.test(x.name)) || bVoices[0]; }
+      if (pick) { bAssign[c.id] = pick.name; used.add(pick.name); }
+    }
+  }
+  function hasNatural() { return bVoices.some((v) => /natural|online/i.test(v.name)); }
+  function charBrowserVoice() {
+    if (ch.bv) return bVoices.find((v) => v.name === ch.bv) || bVoices[0];
+    if (!bAssign || !bAssign[ch.id]) assignVoices();
+    return bVoices.find((v) => v.name === (bAssign || {})[ch.id]) || bVoices[0];
+  }
+  function fillVoiceSelect() {
+    const sel = $("cpVoice"); if (!sel) return; sel.innerHTML = "";
+    if (useCloud()) {
+      CLOUD_VOICES.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = v.replace(/^./, (x) => x.toUpperCase()) + " · " + l; sel.appendChild(o); });
+      sel.value = ch.cv; $("cpVoiceNote").textContent = "קול טבעי מהענן, עם משחק שמתאים לאופי של הדמות.";
+    } else if (useKokoro() && IS_MOBILE) {
+      PIPER_VOICES.forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l + (piperReady.has(v) ? "" : " · יורד בבחירה"); sel.appendChild(o); });
+      sel.value = ch.pv; $("cpVoiceNote").textContent = "קול איכותי שרץ על הטלפון. קול חדש יורד פעם אחת (כ-60MB).";
+    } else if (useKokoro()) {
+      KOKORO_VOICES.filter((v) => v[1] === (ch.g === "f" ? "f" : "m")).concat(KOKORO_VOICES.filter((v) => v[1] !== (ch.g === "f" ? "f" : "m"))).forEach((v) => {
+        const o = document.createElement("option"); o.value = v; o.textContent = v.slice(3).replace(/^./, (x) => x.toUpperCase()) + (v[1] === "f" ? " · נשי" : " · גברי"); sel.appendChild(o);
+      });
+      sel.value = ch.kv; $("cpVoiceNote").textContent = "קול טבעי (Kokoro). אפשר להחליף ולשמוע בכפתור ההשמעה.";
+    } else {
+      bVoices.forEach((v) => { const o = document.createElement("option"); o.value = v.name; o.textContent = v.name.replace(/Microsoft |Google /g, "").replace(/ - English \(United States\)/, ""); sel.appendChild(o); });
+      const cv = charBrowserVoice(); if (cv) sel.value = cv.name;
+      $("cpVoiceNote").textContent = IN_CLAUDE ? "בתוך Claude אלה קולות הדפדפן. בקובץ הנפרד (גם בטלפון) יש קולות טבעיים מהענן." : (voiceMode === "local" ? "הקולות המקומיים בטעינה..." : "קולות הדפדפן. אפשר לעבור לענן בהגדרות.");
+      if (!bVoices.length) { const o = document.createElement("option"); o.textContent = "אין קולות אנגלית בדפדפן"; sel.appendChild(o); }
+    }
+  }
+  function segWire(id, key, dflt) {
+    $(id).addEventListener("click", (e) => { const b = e.target.closest(".choice"); if (!b) return; ch[key] = key === "rate" ? parseFloat(b.dataset.v) : b.dataset.v; syncCharSettings(); });
+  }
+  function syncCharSettings() {
+    const mark = (id, val) => document.querySelectorAll("#" + id + " .choice").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === String(val))));
+    mark("cpRates", ch.rate || rate); mark("cpTones", ch.tone || tone); mark("cpLevels", ch.level || "everyday conversational English");
+  }
+  segWire("cpRates", "rate"); segWire("cpTones", "tone"); segWire("cpLevels", "level");
+  $("cpTest").addEventListener("click", () => { stopSpeech(); toast("משמיעה: " + engineLabel(), 3500); sayChunk(ch.quote, 0); });
+  $("cpVoice").addEventListener("change", (e) => { if (useCloud()) ch.cv = e.target.value; else if (useKokoro() && IS_MOBILE) { ch.pv = e.target.value; ensurePiperVoice(ch.pv); } else if (useKokoro()) ch.kv = e.target.value; else ch.bv = e.target.value; });
+
+  // speech queue
+  let pending = 0, onSpoken = null, spokenChar = 0, token = 0, genChain = Promise.resolve(), playChain = Promise.resolve(), curAudio = null;
+  function finishOne() { pending = Math.max(0, pending - 1); if (!pending) { setSpeaking(false); onSpoken?.(); onSpoken = null; afterSpeech(); } }
+  function sayChunk(text, base, onB) {
+    if (!text.trim()) return;
+    const my = token; pending++;
+    const cloud = useCloud() && !!window.puter?.ai?.txt2speech;
+    if (cloud || useKokoro()) {
+      let gen;
+      if (cloud) gen = genCloud(text).then((u) => { cloudFails = 0; lastEngine = "ענן · " + ch.cv; return u; }).catch((e) => { console.warn(e); lastCloudErr = errText(e); return null; }); // start at once, in parallel
+      else if (IS_MOBILE) { const pv = ch.pv; gen = (genChain = genChain.then(() => (my === token ? piper.predict({ text, voiceId: pv }) : null)).catch((e) => { console.warn(e); return null; })).then((b) => (b ? URL.createObjectURL(b) : null)); }
+      else gen = (genChain = genChain.then(() => (my === token ? kokoro.generate(text, { voice: ch.kv, speed: ch.rate || rate }) : null)).catch(() => null)).then((a) => (a ? URL.createObjectURL(wavBlob(a)) : null));
+      const pRate = IS_MOBILE && !cloud ? (ch.rate || rate) : 1;
+      playChain = playChain.then(async () => {
+        const url = await gen;
+        if (my !== token) return;
+        if (!url) {
+          if (cloud) { toast("קול הענן נכשל: " + lastCloudErr + ". מנגנת בקול הדפדפן", 7000); if (++cloudFails >= 3) setVoiceMode("browser"); }
+          await speakBrowser(text, base, onB); return;
+        }
+        await new Promise((res) => {
+          const el = new Audio(url); curAudio = el; el.preservesPitch = true; el.playbackRate = pRate;
+          // Route through the analyser only for local audio; remote audio without CORS would go silent.
+          if (/^(blob|data):/.test(url)) {
+            try {
+              audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+              if (audioCtx.state === "suspended") audioCtx.resume();
+              const src = audioCtx.createMediaElementSource(el); const an = audioCtx.createAnalyser(); an.fftSize = 512;
+              src.connect(an); an.connect(audioCtx.destination); analyser = an;
+            } catch { analyser = null; }
+          } else analyser = null;
+          el.ontimeupdate = () => { if (el.duration) onB?.(base + Math.floor(text.length * (el.currentTime / el.duration))); };
+          el.onplay = () => setSpeaking(true);
+          el.onended = el.onerror = () => { onB?.(base + text.length); if (url.startsWith("blob:")) URL.revokeObjectURL(url); res(); };
+          el.play().catch(() => res());
+        });
+      }).finally(() => { if (my === token) finishOne(); });
+      return;
+    }
+    if (!synth) { finishOne(); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = ch.rate || rate; u.pitch = ch.pitch || 1; const v = charBrowserVoice(); if (v) u.voice = v;
+    u.onstart = () => { setSpeaking(true); onB?.(base); };
+    u.onboundary = (ev) => { if (!ev.name || ev.name === "word") onB?.(base + ev.charIndex); };
+    u.onend = u.onerror = () => { onB?.(base + text.length); if (my === token) finishOne(); };
+    synth.speak(u);
+  }
+  function speakBrowser(text, base, onB) {
+    return new Promise((res) => {
+      if (!synth) return res();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US"; u.rate = ch.rate || rate; u.pitch = ch.pitch || 1; const v = charBrowserVoice(); if (v) u.voice = v;
+      u.onstart = () => { setSpeaking(true); onB?.(base); };
+      u.onboundary = (ev) => { if (!ev.name || ev.name === "word") onB?.(base + ev.charIndex); };
+      u.onend = u.onerror = () => { onB?.(base + text.length); res(); };
+      synth.speak(u);
+    });
+  }
+  function stopSpeech() {
+    token++; pending = 0; genChain = Promise.resolve(); playChain = Promise.resolve();
+    if (synth) synth.cancel(); if (curAudio) { curAudio.pause(); curAudio = null; }
+    setSpeaking(false); document.querySelectorAll(".play.on").forEach((b) => b.classList.remove("on"));
+  }
+  function engineLabel() { return useCloud() ? (window.puter?.ai ? "קול ענן · " + ch.cv : "קול המכשיר (Puter עוד לא נטען)") : useKokoro() ? "קול איכותי · " + (IS_MOBILE ? ch.pv.split("-")[1] : ch.kv) : (voiceMode === "local" ? "קול המכשיר (האיכותי עוד נטען) · " : "קול המכשיר · ") + (charBrowserVoice()?.name || "ברירת מחדל"); }
+  $("cpPlay").addEventListener("click", () => { stopSpeech(); toast("משמיעה: " + engineLabel(), 3500); sayChunk(ch.quote, 0); });
+
+  // ================= microphone =================
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, recFor = null, recTimer = null;
+  function showTip(where) {
+    const t = $(where === "call" ? "callTip" : "chatTip"); t.hidden = false;
+    t.innerHTML = IN_CLAUDE
+      ? 'בתוך Claude אין גישה למיקרופון, אז מדברים דרך ההכתבה של המכשיר: במחשב <kbd>Win</kbd>+<kbd>H</kbd>, בטלפון המיקרופון במקלדת. ההודעה נשלחת לבד אחרי הפסקה קצרה.<br>למיקרופון אמיתי, פתחי את קובץ ה-HTML ישירות בכרום.'
+      : !window.isSecureContext ? 'הקובץ נפתח ישירות מהמכשיר, ולכן הדפדפן חוסם את המיקרופון. צריך לפתוח את האפליקציה מקישור באינטרנט (https). בינתיים אפשר לדבר דרך המיקרופון שבמקלדת.'
+      : !SR ? 'הדפדפן הזה לא תומך בזיהוי דיבור. פתחי בכרום. בינתיים אפשר לדבר דרך המיקרופון שבמקלדת.'
+      : 'הדפדפן חסם את המיקרופון. אשרי גישה בסמל המנעול שליד הכתובת, או דברי דרך המיקרופון שבמקלדת.';
+    autoSendTyping = true;
+  }
+  function startRec(where) {
+    const inp = $(where === "call" ? "callInput" : "chatInput"), btn = $(where === "call" ? "callMic" : "chatMic");
+    if (!SR || IN_CLAUDE) { showTip(where); inp.focus(); return; }
+    stopRec(); stopSpeech();
+    try {
+      rec = new SR(); recFor = where; rec.lang = "en-US"; rec.interimResults = true; rec.continuous = true;
+      btn.classList.add("rec"); if (where === "call") { $("selfcam").classList.add("talking"); $("callStatus").textContent = "מקשיב לך..."; }
+      rec.onresult = (ev) => {
+        let txt = ""; for (const r of ev.results) txt += r[0].transcript;
+        inp.value = txt.trim(); if (where === "call") $("youLine").textContent = inp.value;
+        clearTimeout(recTimer);
+        const fin = ev.results[ev.results.length - 1]?.isFinal;
+        recTimer = setTimeout(() => { if (inp.value.trim()) { stopRec(); $(where === "call" ? "callForm" : "chatForm").requestSubmit(); } }, fin ? 350 : 900);
+      };
+      rec.onerror = (e) => { if (e.error === "not-allowed" || e.error === "service-not-allowed") { stopRec(); showTip(where); } };
+      rec.onend = () => { if (rec && recFor === "call" && mode === "call" && !busy && !speakingNow) { try { rec.start(); } catch {} } else { btn.classList.remove("rec"); $("selfcam").classList.remove("talking"); } };
+      rec.start();
+    } catch { stopRec(); showTip(where); }
+  }
+  function stopRec() {
+    clearTimeout(recTimer);
+    if (rec) { const r = rec; rec = null; try { r.onend = null; r.stop(); } catch {} }
+    ["callMic", "chatMic"].forEach((id) => $(id).classList.remove("rec")); $("selfcam").classList.remove("talking");
+  }
+  $("chatMic").addEventListener("click", () => (rec && recFor === "chat" ? stopRec() : startRec("chat")));
+  $("callMic").addEventListener("click", () => (rec && recFor === "call" ? stopRec() : startRec("call")));
+  function listenNext() { if (mode === "call" && SR && !IN_CLAUDE && !muted) startRec("call"); else if (mode === "call") $("callInput").focus(); }
+  function afterSpeech() { if (mode === "call" && !busy) listenNext(); }
+
+  // ================= system check =================
+  const CK = [
+    { id: "https", t: "פתוח מקישור באינטרנט (https)" },
+    { id: "key", t: "מפתח Gemini לשיחה עם הדמות (חובה)", btn: "שמירה" },
+    { id: "ai", t: "הדמות עונה", btn: "בדיקה" },
+    { id: "voice", t: "הקול של הדמות", btn: "בדיקה" },
+    { id: "mic", t: "גישה למיקרופון", btn: "בדיקה" },
+    { id: "sr", t: "זיהוי דיבור באנגלית", btn: "דברי" },
+  ];
+  function ckSet(id, st, msg) { const r = $("ck_" + id); if (!r) return; r.className = "ckrow " + st; r.querySelector("p").textContent = msg; }
+  async function runCheck() {
+    $("checkRows").innerHTML = CK.map((c) => `<div class="ckrow" id="ck_${c.id}"><span class="dot"></span><div style="flex:1;min-width:0"><b>${c.t}</b><p></p>${c.id === "key" ? '<input id="gemKeyIn" type="password" dir="ltr" placeholder="AIza... או AQ...." autocomplete="off" style="margin-top:8px;width:100%;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:#fff;padding:0 12px;font-size:14px"><p><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--pink)">לקבלת מפתח חינמי (חשבון Google, בלי טלפון ובלי כרטיס אשראי)</a></p>' : ""}</div>${c.btn ? `<button class="play" type="button" data-ck="${c.id}">${c.btn}</button>` : ""}</div>`).join("");
+    const secure = !NO_ORIGIN && window.isSecureContext;
+    if (IN_CLAUDE) ckSet("https", "bad", "את בתוך Claude. כאן יש רק קול דפדפן והמיקרופון חסום. לבדיקה מלאה פתחי את הקישור באינטרנט.");
+    else ckSet("https", secure ? "ok" : "bad", secure ? "מעולה. מיקרופון, AI וקולות יכולים לעבוד." : "הקובץ נפתח ישירות מהמכשיר. פתחי את האפליקציה מהקישור באינטרנט.");
+    $("howLink").hidden = secure || IN_CLAUDE;
+    if (gemKey()) { $("gemKeyIn").value = gemKey(); ckSet("key", "ok", "נשמר במכשיר הזה בלבד."); }
+    else ckSet("key", IN_CLAUDE ? "ok" : "bad", IN_CLAUDE ? "בתוך Claude לא צריך מפתח." : "1. לחצי על הקישור הוורוד (נפתח בלשונית חדשה) והתחברי עם חשבון Google. 2. לחצי Create API key. 3. העתיקי את המפתח (מתחיל ב-AIza או ב-AQ.), חזרי לכאן, הדביקי ולחצי שמירה.");
+    ckSet("ai", "", "לחצי על בדיקה. הדמות תענה במשפט אחד.");
+    ckSet("voice", "", "לחצי על בדיקה. עכשיו: " + engineLabel());
+    ckSet("mic", "", "לחצי על בדיקה ואשרי גישה כשהדפדפן שואל.");
+    ckSet("sr", SR ? "" : "bad", SR ? "לחצי על דברי ותגידי משפט באנגלית." : "הדפדפן לא תומך בזיהוי דיבור. פתחי בכרום.");
+  }
+  $("openCheck").addEventListener("click", () => { $("settings").hidden = true; $("check").hidden = false; runCheck(); });
+  $("keyNudge").addEventListener("click", () => openSetup());
+  document.addEventListener("click", (e) => { if (e.target.closest("[data-setup]")) openSetup(); });
+  function openSetup() { $("check").hidden = false; runCheck(); toast("רגע לפני השיחה: מדביקים מפתח Gemini חינמי, פעם אחת", 6000); }
+  $("checkRows").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-ck]"); if (!b) return; const id = b.dataset.ck;
+    if (id === "key") {
+      const k = $("gemKeyIn").value.trim();
+      if (!k) { ckSet("key", "bad", "לא הודבק מפתח."); return; }
+      store.set("tb_gem", k); ckSet("key", "ok", "נשמר במכשיר הזה בלבד. עכשיו לחצי בדיקה בשורה הבאה.");
+    }
+    if (id === "ai") {
+      ckSet("ai", "wait", "שואלת את Max...");
+      try {
+        const t = await llm([{ role: "user", content: "You are Max, a dry, deadpan but friendly character in an English-practice app. Reply with ONE short English sentence." }, { role: "user", content: "Say hi to me." }], () => {}, new AbortController().signal);
+        ckSet("ai", t ? "ok" : "bad", t ? "עובד. Max אמר: " + t.trim() : "לא התקבלה תשובה.");
+      } catch (er) {
+        const m = { no_key: "קודם צריך לשמור מפתח בשורה הקודמת.", gem_key: "המפתח לא תקין. העתיקי אותו שוב מ-Google.", gem_quota: "המכסה החינמית לדקה נגמרה. חכי דקה ונסי שוב.", net: "אין חיבור לאינטרנט.", no_origin: "צריך לפתוח מהקישור באינטרנט." }[er?.code];
+        ckSet("ai", "bad", "נכשל: " + (m || errText(er)));
+      }
+    }
+    if (id === "voice") {
+      ckSet("voice", "wait", "משמיעה...");
+      const label = engineLabel();
+      stopSpeech(); const prev = onSpoken; onSpoken = () => { ckSet("voice", "ok", "נשמע? זה היה: " + label + ". אם זה נשמע רובוטי, נסי בהגדרות את \"איכותי\"."); };
+      sayChunk(`Hey. This is ${ch.name}. If you can hear me, the voice works.`, 0);
+    }
+    if (id === "mic") {
+      try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach((t) => t.stop()); ckSet("mic", "ok", "יש גישה למיקרופון."); }
+      catch (er) { ckSet("mic", "bad", (er.name === "NotAllowedError" ? "הגישה נחסמה. אשרי מיקרופון בסמל המנעול שליד הכתובת." : !navigator.mediaDevices ? "אין גישה למיקרופון בדף לא מאובטח (בלי https)." : er.name + ": " + er.message)); }
+    }
+    if (id === "sr") {
+      if (!SR) return;
+      try {
+        const r = new SR(); r.lang = "en-US"; r.interimResults = true; let got = "";
+        ckSet("sr", "wait", "מקשיבה... תגידי משהו באנגלית");
+        r.onresult = (ev) => { got = Array.from(ev.results).map((x) => x[0].transcript).join(" "); ckSet("sr", "wait", "שומעת: " + got); };
+        r.onerror = (ev) => ckSet("sr", "bad", "נכשל: " + ev.error + (ev.error === "not-allowed" ? " (המיקרופון חסום)" : ev.error === "network" ? " (צריך אינטרנט)" : ""));
+        r.onend = () => { if (got) ckSet("sr", "ok", "עובד. שמעתי: " + got); };
+        r.start(); setTimeout(() => { try { r.stop(); } catch {} }, 6000);
+      } catch (er) { ckSet("sr", "bad", "נכשל: " + errText(er)); }
+    }
+  });
+
+  // ================= captions =================
+  let capText = "", capFix = new Set();
+  function renderCap(text, reset) {
+    if (reset) { spokenChar = 0; capFix = new Set(); }
+    capText = text; const cap = $("cap");
+    if (!text) { cap.innerHTML = busy ? '<span class="dots"><i></i><i></i><i></i></span>' : ""; return; }
+    let html = "", m; const re = /\S+/g;
+    while ((m = re.exec(text))) {
+      const key = m[0].toLowerCase().replace(/[^a-z']/g, "");
+      html += `<span class="w${m.index < spokenChar ? " on" : ""}${capFix.has(key) ? " fix" : ""}">${esc(m[0])}</span> `;
+    }
+    cap.innerHTML = html;
+  }
+  $("capBtn").addEventListener("click", (e) => { const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(on)); $("cap").style.visibility = on ? "hidden" : "visible"; });
+  $("muteBtn").addEventListener("click", (e) => { muted = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(muted)); if (muted) { stopSpeech(); spokenChar = 1e9; renderCap(capText); } });
+
+  // ================= chat log =================
+  let typingEl = null;
+  function setChatStatus(t, typing) { const s = $("chatStatus"); s.textContent = t; s.classList.toggle("typing", !!typing); }
+  function scrollLog() { const l = $("log"); l.scrollTop = l.scrollHeight; }
+  function addMe(text) { const m = document.createElement("div"); m.className = "msg me"; const b = document.createElement("div"); b.className = "bubble" + (isHe(text) ? " he" : " en"); b.textContent = text; m.appendChild(b); $("log").appendChild(m); scrollLog(); return m; }
+  function showTyping() { typingEl?.remove(); typingEl = document.createElement("div"); typingEl.className = "dots"; typingEl.innerHTML = "<i></i><i></i><i></i>"; $("log").appendChild(typingEl); scrollLog(); setChatStatus("מקליד...", true); }
+  function addAi() {
+    typingEl?.remove(); typingEl = null;
+    const m = document.createElement("div"); m.className = "msg ai";
+    const b = document.createElement("div"); b.className = "bubble en";
+    const p = document.createElement("button"); p.type = "button"; p.className = "play"; p.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>שמעי';
+    p.addEventListener("click", () => { const was = p.classList.contains("on"); stopSpeech(); if (was) return; p.classList.add("on"); onSpoken = () => p.classList.remove("on"); sayChunk(b.textContent, 0); });
+    m.append(b, p); $("log").appendChild(m); scrollLog(); return { m, b };
+  }
+  const TOPICS = [
+    ["פגישה עם לקוח", "a first meeting with a new design client about a logo project", "Let's practice a meeting with a new client."],
+    ["צ'ק-אין במלון", "checking in at a hotel in New York after a long flight", "Let's do a hotel check-in."],
+    ["מסעדה", "ordering food at a busy diner in the US", "Let's order food at a restaurant."],
+    ["שדה תעופה", "at a US airport: check-in, security and finding the gate", "Let's practice at the airport."],
+    ["שיחה חופשית", "a casual chat about the learner's day, plans and interests", "Let's just chat."],
+  ];
+  let topicChosen = false;
+  function showTopics(where) {
+    hideTopics();
+    const box = where === "call" ? $("callTopics") : document.createElement("div");
+    box.className = "topics"; box.innerHTML = '<span class="tlabel">על מה מדברים? אפשר לבחור, או פשוט לענות במילים שלך</span>' + TOPICS.map((t, i) => `<button type="button" data-t="${i}">${t[0]}</button>`).join("");
+    if (where === "call") box.hidden = false; else { box.id = "chatTopics"; $("log").appendChild(box); scrollLog(); }
+    box.onclick = (e) => { const b = e.target.closest("[data-t]"); if (!b) return; const t = TOPICS[+b.dataset.t]; scenario = t[1]; topicChosen = true; hideTopics(); send(t[2]); };
+  }
+  function hideTopics() { $("callTopics").hidden = true; $("callTopics").innerHTML = ""; document.getElementById("chatTopics")?.remove(); }
+  function chip(cls, main, sub) { const c = document.createElement("div"); c.className = "fixchip " + cls; c.innerHTML = `<b>${main}</b><span>${esc(sub)}</span>`; return c; }
+
+  // ================= AI =================
+  function rules() {
+    return `You are ${ch.name}, ${ch.persona} You speak fluent, natural American English and you are the learner's partner in a live ${mode === "call" ? "voice call" : "text chat"} in an English-practice app. Stay in character.
+Learner: Hebrew speaker, basic-to-intermediate English, wants fluent spoken English for travel and for work as a graphic designer.
+Scenario: ${scenario}. A loose starting point; follow wherever the learner takes it.
+Teasing level: ${ch.tone || tone}. English level to use: ${ch.level || "everyday conversational English"}.${focus ? " Today's focus: " + focus + ". Create natural chances to practice it." : ""} Keep every topic clean, friendly and appropriate.
+
+Reply rules:
+- 1-2 short sentences, at most 30 words, natural spoken American English with contractions. React to what they actually said, then ask ONE good open question that gets them talking (details, past events, plans, opinions). Nudge them to use past and future tenses.
+- If their last message had an error that hurts meaning or used the wrong tense, naturally say the correct form inside your reply (a recast, no lecture). Small slips (articles, prepositions, word order, spelling) are NOT mentioned in the reply.
+- About every third turn, use one useful word or phrase slightly above their level.
+- If they write Hebrew or ask what something means, explain briefly in Hebrew in "helpHe" and continue in English.
+
+OUTPUT FORMAT (exact):
+First the spoken reply as plain text only.
+Then a line with exactly ###
+Then one JSON object: {"helpHe":"","corrections":[{"wrong":"","right":"","why":"short Hebrew"}],"minor":[{"wrong":"","right":""}],"newWords":[{"en":"","he":""}]}
+Use empty arrays when nothing applies.`;
+  }
+  async function gemini(convo, onText, signal) {
+    const key = gemKey(); const sys = convo[0].content;
+    let contents = convo.slice(1).map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+    if (!contents.length || contents[0].role !== "user") contents.unshift({ role: "user", parts: [{ text: "(start)" }] });
+    let lastErr;
+    const models = [["gemini-3.5-flash-lite", { thinkingConfig: { thinkingLevel: "minimal" } }], ["gemini-3.6-flash", { thinkingConfig: { thinkingLevel: "minimal" } }], ["gemini-2.5-flash", { thinkingConfig: { thinkingBudget: 0 } }], ["gemini-flash-lite-latest", {}], ["gemini-flash-latest", {}]];
+    const start = Math.max(0, models.findIndex((m) => m[0] === store.get("tb_gem_model")));
+    for (const [model, cfg] of models.slice(start).concat(models.slice(0, start))) {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, signal,
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: sys }] }, contents, generationConfig: { temperature: 0.9, ...cfg } }),
+      }).catch((e) => { if (signal?.aborted) throw { code: "cancelled" }; throw { code: "net", message: e.message }; });
+      if (r.status === 404 || r.status === 400) { lastErr = { code: "gem_" + r.status, message: (await r.text()).slice(0, 200) }; if (r.status === 400 && /API key/i.test(lastErr.message)) throw { code: "gem_key" }; continue; }
+      if (r.status === 403 || r.status === 401) { const t = await r.text(); console.warn('gemini auth', t); throw { code: "gem_key", message: t.slice(0, 160) }; }
+      if (r.status === 429) throw { code: "gem_quota" };
+      if (!r.ok) throw { code: "gem_err", message: String(r.status) };
+      store.set("tb_gem_model", model);
+      const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", text = "";
+      for (;;) {
+        const { done, value } = await rd.read(); if (done) break;
+        buf += dec.decode(value, { stream: true }); let i;
+        while ((i = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+          if (!line.startsWith("data:")) continue;
+          try { const j = JSON.parse(line.slice(5)); const t = (j.candidates?.[0]?.content?.parts || []).map((x) => x.text || "").join(""); if (t) { text += t; onText({ text }); } } catch {}
+        }
+      }
+      return text;
+    }
+    throw lastErr || { code: "gem_err" };
+  }
+  const gemKey = () => store.get("tb_gem") || "";
+  // Free AI with no key at all (Pollinations). Slower and less reliable than Gemini; used until a key is added.
+  async function freeAI(convo, onText, signal) {
+    const msgs = [{ role: "system", content: convo[0].content }, ...convo.slice(1)];
+    const routes = [
+      ["https://text.pollinations.ai/openai", { model: "openai", messages: msgs }],
+      ["https://gen.pollinations.ai/v1/chat/completions", { model: "openai", messages: msgs }],
+      ["https://text.pollinations.ai/openai", { model: "openai-fast", messages: msgs }],
+    ];
+    for (const [url, body] of routes) {
+      const to = new AbortController(); const tm = setTimeout(() => to.abort(), 11000);
+      const onAbort = () => to.abort(); signal?.addEventListener("abort", onAbort);
+      try {
+        const r = await fetch(url, { method: "POST", signal: to.signal, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        if (!r.ok) throw new Error("free " + r.status);
+        const j = await r.json(); const text = (j.choices?.[0]?.message?.content || "").trim();
+        if (!text) throw new Error("empty");
+        for (let i = 14; i < text.length; i += 14) { if (signal?.aborted) throw { code: "cancelled" }; onText({ text: text.slice(0, i) }); await new Promise((res) => setTimeout(res, 14)); }
+        onText({ text }); return text;
+      } catch (e) { if (signal?.aborted) throw { code: "cancelled" }; console.warn("free AI route failed", url, e); }
+      finally { clearTimeout(tm); signal?.removeEventListener("abort", onAbort); }
+    }
+    throw { code: "free_fail" };
+  }
+
+  async function llm(convo, onText, signal) {
+    if (sample) { const r = await sample(convo, { modelTier: "quick", cache: false, signal, onText }); return r.text; }
+    if (!IN_CLAUDE && gemKey()) return gemini(convo, onText, signal);
+    if (!IN_CLAUDE && !NO_ORIGIN) throw { code: "no_key" }; // the keyless services stopped answering (Oct 2026), so ask for the free key right away
+    if (!IN_CLAUDE && window.puter?.ai) {
+      const msgs = [{ role: "system", content: convo[0].content }, ...convo.slice(1)];
+      const resp = await window.puter.ai.chat(msgs, { model: "openai/gpt-5.4-nano", stream: true });
+      let text = "";
+      for await (const part of resp) { if (signal.aborted) throw { code: "cancelled" }; if (part?.text) { text += part.text; onText({ text }); } }
+      return text;
+    }
+    throw { code: IN_CLAUDE ? "no_sample" : NO_ORIGIN ? "no_origin" : "no_key" };
+  }
+  function parseMeta(s) { if (!s) return {}; s = s.replace(/```(json)?/g, "").trim(); const a = s.indexOf("{"), b = s.lastIndexOf("}"); try { return JSON.parse(s.slice(a, b + 1)); } catch { return {}; } }
+
+  async function send(userText) {
+    if (busy) return;
+    const inMode = mode;
+    stopSpeech(); stopRec();
+    busy = true; $("chatSend").disabled = true;
+    let meEl = null;
+    if (userText) { if (!topicChosen) { topicChosen = true; hideTopics(); } turns.push({ role: "user", content: userText }); S.msgs++; meEl = addMe(userText); $("youLine").textContent = userText; }
+    showTyping(); renderCap("", true);
+    if (inMode === "call") $("callStatus").textContent = "חושב על תשובה...";
+    const convo = [{ role: "user", content: rules() }, ...turns.slice(-10)];
+    if (!turns.length) convo.push({ role: "user", content: "(Open the conversation now: greet me in character in a few words, then ask what I'd like to practice today, for example a client meeting, a hotel, a restaurant, the airport, or just chatting. One short question.)" });
+    ctl = new AbortController();
+    let ai = null, queued = 0, reply = "";
+    const speakIt = () => (inMode === "call" ? !muted : autoRead);
+    const feed = (final) => {
+      if (!speakIt()) return;
+      while (true) {
+        const rest = reply.slice(queued); if (!rest.trim()) break;
+        const m = rest.match(/[.!?…]+["')\]]?(\s|$)/); let end = -1;
+        if (m) { end = m.index + m[0].length; if (end >= rest.length && !final && !m[1]) end = -1; }
+        if (end < 0) { if (final) end = rest.length; else break; }
+        sayChunk(rest.slice(0, end), queued, (c) => { spokenChar = Math.max(spokenChar, c); if (mode === "call") renderCap(capText); });
+        queued += end;
+      }
+    };
+    try {
+      const text = await llm(convo, ({ text }) => {
+        const i = text.indexOf("###");
+        reply = (i < 0 ? text : text.slice(0, i)).replace(/#+\s*$/, "").trimStart();
+        if (!reply) return;
+        if (!ai) ai = addAi();
+        ai.b.textContent = reply; scrollLog();
+        if (inMode === "call") { if (!speakIt()) spokenChar = 1e9; renderCap(reply); }
+        feed(i >= 0);
+      }, ctl.signal);
+      const i = text.indexOf("###");
+      reply = (i < 0 ? text : text.slice(0, i)).trim();
+      const meta = parseMeta(i < 0 ? "" : text.slice(i + 3));
+      if (!ai) ai = addAi(); ai.b.textContent = reply;
+      feed(true);
+      turns.push({ role: "assistant", content: reply });
+      const corr = Array.isArray(meta.corrections) ? meta.corrections.filter((c) => c && c.right) : [];
+      const minor = Array.isArray(meta.minor) ? meta.minor.filter((c) => c && c.right) : [];
+      const nw = Array.isArray(meta.newWords) ? meta.newWords.filter((w) => w && (w.en || typeof w === "string")) : [];
+      S.fixes.push(...corr); S.minor.push(...minor); nw.forEach((w) => S.words.push(typeof w === "string" ? { en: w, he: "" } : w));
+      $("callFix").innerHTML = "";
+      corr.forEach((c) => {
+        const html = `<s>${esc(c.wrong)}</s> → ${esc(c.right)}`;
+        meEl?.appendChild(chip("", html, c.why || "תיקון")); $("callFix").appendChild(chip("", html, c.why || "תיקון"));
+        String(c.right).split(/\s+/).forEach((w) => capFix.add(w.toLowerCase().replace(/[^a-z']/g, "")));
+      });
+      nw.forEach((w) => { const en = typeof w === "string" ? w : w.en; const he = typeof w === "string" ? "" : w.he; ai.m.appendChild(chip("word", esc(en), he ? "מילה חדשה: " + he : "מילה חדשה")); });
+      if (meta.helpHe) ai.m.appendChild(chip("help", "עזרה", meta.helpHe));
+      if (inMode === "call") renderCap(reply);
+      scrollLog();
+    } catch (e) {
+      typingEl?.remove(); typingEl = null;
+      const msg = { cancelled: "", not_granted: "צריך לאשר לדף לדבר עם Claude.", rate_limited: "יותר מדי הודעות ברצף. נסי שוב בעוד רגע.", session_expired: "צריך להתחבר מחדש ל-Claude.", no_sample: "השיחה עם הדמות עובדת כשפותחים את הדף בתוך Claude.", no_ai: "חיבור ה-AI עוד נטען. שלחי שוב בעוד רגע.", free_fail: "השירות החינמי בלי מפתח עמוס כרגע. עם מפתח Gemini חינמי זה עובד מהר ויציב: הגדרות ← בדיקה שהכול עובד.", no_key: "כדי לדבר עם הדמות צריך מפתח Gemini חינמי. הגדרות ← בדיקה שהכול עובד ← מפתח Gemini.", gem_key: "מפתח ה-Gemini לא תקין. הדביקי אותו שוב בהגדרות ← בדיקה שהכול עובד.", gem_quota: "הגעת למכסה החינמית של Gemini לדקה. חכי רגע ושלחי שוב.", net: "אין חיבור לאינטרנט. שלחי שוב.", no_origin: "הקובץ פתוח ישירות מהמכשיר, ולכן אין חיבור ל-AI. פתחי את האפליקציה מהקישור באינטרנט (הגדרות ← בדיקה שהכול עובד)." }[e?.code] ?? "החיבור נקטע. שלחי שוב.";
+      if (e?.code === "no_key" || e?.code === "gem_key") {
+        const d = document.createElement("div"); d.className = "setupcard";
+        d.innerHTML = `<b>${e.code === "gem_key" ? "המפתח לא עבד" : "רגע לפני שמתחילים"}</b><span>כדי ש-${esc(ch.name)} יוכל לענות, צריך מפתח Gemini חינמי של Google. לוקח דקה, בלי טלפון ובלי כרטיס אשראי, ועושים את זה רק פעם אחת.</span><button class="primary" type="button" data-setup>להגדרה עכשיו</button>`;
+        $("log").appendChild(d); scrollLog(); $("cap").textContent = ""; if (inMode === "call") openSetup();
+      } else if (msg) { const d = document.createElement("div"); d.className = "banner"; d.textContent = msg; $("log").appendChild(d); $("cap").textContent = msg; }
+    } finally {
+      busy = false; $("chatSend").disabled = false; setChatStatus("מחובר", false); renderHome();
+      if (turns.length === 1 && turns[0].role === "assistant" && !topicChosen) showTopics(inMode);
+      if (inMode === "call" && mode === "call" && !pending) listenNext();
+      if (mode === "chat") $("chatInput").focus();
+    }
+  }
+
+  // ================= typing inputs =================
+  let autoSendTyping = false;
+  function wire(formId, inputId, auto) {
+    const f = $(formId), inp = $(inputId); let t = null;
+    f.addEventListener("submit", (e) => { e.preventDefault(); clearTimeout(t); const v = inp.value.trim(); if (!v || busy) return; inp.value = ""; send(v); });
+    inp.addEventListener("input", () => { clearTimeout(t); if (inp.value.trim() && !rec && auto()) t = setTimeout(() => f.requestSubmit(), 1600); });
+  }
+  wire("chatForm", "chatInput", () => autoSendTyping);
+  wire("callForm", "callInput", () => true);
+
+  // ================= words & progress =================
+  function wordCard(w, isEx) {
+    const d = document.createElement("div"); d.className = "wcard";
+    const t = document.createElement("div"); t.className = "t";
+    t.innerHTML = `<span class="tag">${isEx ? "דוגמה" : "מהשיחה"}</span><b class="en" style="text-align:right">${esc(w.en)}</b><span>${esc(w.he || "")}</span>` + (w.ex ? `<em>${esc(w.ex)}</em>` : "");
+    const p = document.createElement("button"); p.type = "button"; p.className = "round ghost"; p.setAttribute("aria-label", "השמעה");
+    p.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>';
+    p.addEventListener("click", () => { stopSpeech(); sayChunk(w.en + (w.ex ? ". " + w.ex : ""), 0); });
+    d.append(t, p); return d;
+  }
+  function renderWords() { const l = $("wordsList"); l.innerHTML = ""; S.words.slice().reverse().forEach((w) => l.appendChild(wordCard(w, false))); exampleWords.forEach((w) => l.appendChild(wordCard(w, true))); $("wordsCount").textContent = S.words.length ? `${S.words.length} חדשות היום` : ""; }
+  function xpToday() { return Math.min(80, 20 + S.msgs * 5 + S.fixes.length * 2 + S.words.length * 3); }
+  function renderHome() {
+    $("keyNudge").hidden = IN_CLAUDE || NO_ORIGIN || !!gemKey();
+    const xp = xpToday(); $("xpToday").textContent = xp;
+    const pct = Math.min(100, Math.round((xp / 50) * 100));
+    $("pfill").style.width = pct + "%"; $("pbar").setAttribute("aria-valuenow", String(Math.min(50, xp)));
+    $("goalTxt").textContent = xp >= 50 ? "היעד הושג! הרצף נשמר" : `עוד ${50 - xp} XP ליעד`;
+    const talked = S.msgs >= 3, revised = !!store.get("tb_rev_" + new Date().toDateString());
+    const tasks = [
+      { t: "שיחה של 5 דקות", s: "וידאו או צ'אט", xp: 20, done: talked || true, go: "call" },
+      { t: "חזרה על 8 מילים", s: "מהשיחות שלך", xp: 15, done: revised, go: "words" },
+      { t: "Shadowing", s: "3 משפטים · בקרוב", xp: 15, done: false, go: "" },
+    ];
+    const ICON = { call: '<path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/>', words: '<rect x="4" y="4" width="13" height="16" rx="2"/><path d="M8 8h5M8 12h5M20 7v13"/>', "": '<path d="M3 12h2l2-6 3 12 3-9 2 3h6"/>' };
+    $("ptasks").innerHTML = tasks.map((k) => `<button class="ptask ${k.done ? "done" : ""}" type="button" ${k.go ? `data-go="${k.go}"` : "disabled"}><span class="pi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${k.done ? '<path d="M5 12l5 5 9-10"/>' : ICON[k.go]}</svg></span><span class="pt"><b>${k.t}</b><span>${k.s}</span></span><span class="px">${k.done ? "בוצע" : "+" + k.xp + " XP"}</span></button>`).join("");
+    const names = ["א", "ב", "ג", "ד", "ה", "ו", "ש"], today = new Date().getDay(), w = $("week"); w.innerHTML = "";
+    names.forEach((n, i) => {
+      const d = document.createElement("div");
+      d.className = "wd " + (i < today ? (i === 1 ? "miss" : "done") : i === today ? (xp >= 50 ? "done" : "now") : "");
+      const ok = d.classList.contains("done");
+      d.innerHTML = `<i>${ok ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>' : ""}</i>` + n; if (i === today) d.style.setProperty("--p", pct + "%");
+      w.appendChild(d);
+    });
+  }
+  const WORK = [
+    { t: "זמן עבר", s: "12 טעויות השבוע · go → went, fly → flew", focus: "the past simple tense (irregular verbs)", c: "perfectionist" },
+    { t: "לשאול שאלות", s: "Do you…? / Did you…? · סדר המילים בשאלה", focus: "forming questions in English", c: "speedrunner" },
+    { t: "a / the", s: "7 טעויות השבוע", focus: "using a / an / the correctly", c: "coach" },
+  ];
+  function renderProgress() {
+    $("stMsgs").textContent = S.msgs; $("stFix").textContent = S.fixes.length; $("stWords").textContent = S.words.length;
+    const skills = [["אוצר מילים", 64 + Math.min(10, S.words.length), 6], ["שטף", 58 + Math.min(10, S.msgs), 12], ["דקדוק", 47, 3], ["הגייה", 52, 5], ["שליטה וביטחון", 61 + Math.min(8, S.msgs), 9]];
+    $("skills").innerHTML = skills.map(([n, v, d]) => `<div class="skill"><span>${n}</span><span class="bar"><i style="width:${v}%"></i></span><span class="lvl">${v}</span><span class="up">+${d}</span></div>`).join("");
+    const wl = $("workList"); wl.innerHTML = "";
+    const live = S.fixes.slice(-2).reverse().map((c) => ({ t: c.right, s: "מהשיחה של היום · " + (c.why || ""), focus: `the correct use of "${c.right}"`, c: ch.id }));
+    [...live, ...WORK].slice(0, 4).forEach((w) => {
+      const c = CHARS.find((x) => x.id === w.c) || ch;
+      const d = document.createElement("div"); d.className = "work";
+      d.innerHTML = `<span class="face" style="width:40px;height:40px"></span><div class="t"><b>${esc(w.t)}</b><span>${esc(w.s)}</span></div>`;
+      faceStyle(d.querySelector(".face"), c);
+      const b = document.createElement("button"); b.type = "button"; b.textContent = "לתרגל עם " + c.name;
+      b.addEventListener("click", () => { resetTalk(); applyChar(c); focus = w.focus; go("chat"); });
+      d.appendChild(b); wl.appendChild(d);
+    });
+    const xs = [30, 45, 20, 55, 10, 40, xpToday()], names = ["א", "ב", "ג", "ד", "ה", "ו", "היום"];
+    $("xpBars").innerHTML = xs.map((v, i) => `<div class="${i === 6 ? "cur" : ""}"><i style="height:${Math.round((v / 80) * 70) + 4}px"></i>${names[i]}</div>`).join("");
+    $("xpWeekTotal").textContent = xs.reduce((a, b) => a + b, 0) + " XP";
+    const g = $("grid30"); g.innerHTML = ""; for (let i = 1; i <= 30; i++) { const c = document.createElement("i"); if (i < 7 && i !== 3) c.className = "d"; if (i === 3) c.className = "m"; if (i === 7) c.className = "t"; g.appendChild(c); }
+  }
+
+  // ================= summary =================
+  function sumCard(c, why) { const d = document.createElement("div"); d.className = "sum"; d.innerHTML = `<div class="wrong">${esc(c.wrong)}</div><div class="right">${esc(c.right)}</div>` + (why && c.why ? `<div class="why">${esc(c.why)}</div>` : ""); return d; }
+  function fill(id, arr, fn, empty) { const el = $(id); el.innerHTML = ""; if (!arr.length) { const p = document.createElement("p"); p.className = "small"; p.textContent = empty; el.appendChild(p); } else arr.forEach((x) => el.appendChild(fn(x))); }
+  function openSummary() {
+    stopSpeech(); stopRec(); ctl?.abort(); stopTimer();
+    $("sumIntro").textContent = S.msgs ? `${S.msgs} הודעות שלך, ${S.fixes.length} תיקונים חשובים, ${S.words.length} מילים חדשות.` : "עוד לא דיברנו. אפשר לחזור לשיחה.";
+    fill("sumMain", S.fixes, (c) => sumCard(c, true), "אין תיקונים חשובים. יפה.");
+    fill("sumMinor", S.minor, (c) => sumCard(c, false), "אין.");
+    fill("sumWords", S.words, (w) => { const d = document.createElement("div"); d.className = "sum"; d.innerHTML = `<div class="right">${esc(w.en)}</div><div class="small">${esc(w.he || "")}</div>`; return d; }, "עוד לא נוספו מילים.");
+    $("summary").hidden = false;
+  }
+  function resetTalk() { ctl?.abort(); stopSpeech(); stopRec(); turns = []; topicChosen = false; hideTopics(); S.fixes.length = S.minor.length = 0; S.msgs = 0; $("log").innerHTML = ""; $("callFix").innerHTML = ""; $("youLine").textContent = ""; renderCap("", true); }
+  $("newTalk").addEventListener("click", () => { resetTalk(); focus = ""; $("summary").hidden = true; go("home"); });
+
+  applyChar(CHARS[0]); envNote(); renderHome();
+  window.__talkback = { setSpeaking, buildRig, applyChar: (i) => applyChar(CHARS[i]) };
+})();
+</script>
