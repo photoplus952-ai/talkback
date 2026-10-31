@@ -2,8 +2,11 @@
 import { load, save } from '../lib/store';
 import { API_URL } from '../config';
 import { CHARS } from './characters';
+import { cutoutCharacter } from '../lib/cutout';
 
-export type YouCharacter = { mimeType: string; data: string; createdAt: number };
+/** cutout: transparent PNG framed like the Cast; mx/my/a as in CHARS. Older saves have no cutout. */
+export type YouCharacter = { mimeType: string; data: string; createdAt: number; cutout?: boolean; mx?: number; my?: number; a?: number };
+export type YouImage = { mimeType: string; data: string; mx: number; my: number; a: number };
 const KEY = 'you.character';
 
 export const loadYou = () => load<YouCharacter | null>(KEY, null);
@@ -11,11 +14,17 @@ export const saveYou = (y: YouCharacter) => save(KEY, y);
 export const deleteYou = () => save<YouCharacter | null>(KEY, null);
 
 export const YOU_PROMPT =
-  'Turn the person in the LAST image into a character in exactly the same stylized 3D animated style as the ' +
-  'reference characters (the first images): same rendering, lighting, proportions and line quality. ' +
-  'Keep her facial features, face shape, skin tone, eye color and hairstyle so she is clearly recognizable. ' +
-  'Modest, casual clothing in dark tones like the references, long sleeves. Full body, standing, relaxed confident pose, ' +
-  'facing the camera, friendly slight smile. Plain flat solid background in pink #FF1A6E. No text, no logo, no frame.';
+  'The first images are the reference characters. Turn the person in the LAST image into a new character of the same cast: ' +
+  'exactly the same stylized 3D animated style, rendering, proportions, line quality and level of detail. ' +
+  'LIGHTING must match the references exactly: dark, moody, low-key lighting; a soft cool key light on the face; ' +
+  'strong saturated hot-pink (#FF1A6E) rim light along both sides of the hair, face edges, shoulders, arms and legs; ' +
+  'deep shadows; slightly desaturated, cool skin tones; high contrast. ' +
+  'Keep her facial features, face shape, eye color and hairstyle so she is clearly recognizable. ' +
+  'Modest casual clothing in black and dark tones with small pink accents, long sleeves, long pants or skirt, sneakers. ' +
+  'Full body from head to shoes, standing, relaxed confident pose, facing the camera, friendly slight smile. ' +
+  'The whole figure inside the frame with a small margin, portrait 3:4. ' +
+  'BACKGROUND: a perfectly flat, uniform, pure chroma-key green (#00FF00) background, no shadow on the floor, no gradient, ' +
+  'no green anywhere on the character. No text, no logo, no frame.';
 
 export function dataUrl(y: { mimeType: string; data: string }) {
   return `data:${y.mimeType};base64,${y.data}`;
@@ -61,8 +70,7 @@ export class ImageError extends Error {
   }
 }
 
-/** One version of her character. */
-export async function generateOne(photo: { mimeType: string; data: string }): Promise<{ mimeType: string; data: string }> {
+async function requestImage(photo: { mimeType: string; data: string }): Promise<{ mimeType: string; data: string }> {
   const refs = await castRefs();
   let r: Response;
   try {
@@ -81,4 +89,14 @@ export async function generateOne(photo: { mimeType: string; data: string }): Pr
   const j = (await r.json()) as { images: { mimeType: string; data: string }[] };
   if (!j.images?.[0]) throw new ImageError('server');
   return j.images[0];
+}
+
+/** One version of her character, cut out of the background. Off-style results are requested again, at most twice. */
+export async function generateOne(photo: { mimeType: string; data: string }): Promise<YouImage> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const raw = await requestImage(photo);
+    const cut = await cutoutCharacter(raw);
+    if (cut) return cut;
+  }
+  throw new ImageError('server');
 }

@@ -13,6 +13,14 @@ function castImg(c: Character) {
   return { height: h, left: W * 0.5 - c.mx * w, top: 38 - c.my * h };
 }
 
+/** Waist-up crop: face at 22% across, 30% down a 260px card (the art sits on the left side in RTL). */
+function youArt(y: YouCharacter) {
+  const cardH = 260;
+  const h = cardH * 2.1;
+  const w = h / (y.a || 1.37);
+  return { height: h, left: `calc(26% - ${(y.mx ?? 0.5) * w}px)`, top: cardH * 0.24 - (y.my ?? 0.115) * h };
+}
+
 export function Profile() {
   const [you, setYou] = useState<YouCharacter | null | undefined>(undefined);
   useEffect(() => {
@@ -27,17 +35,28 @@ export function Profile() {
         </a>
       </div>
 
-      <section class="you-card" aria-label="You 2.0" style={you ? { paddingInlineEnd: '45%' } : undefined}>
-        {you ? <img class="you-art" src={dataUrl(you)} alt="הדמות שלי" /> : <span class="bgword display">YOU</span>}
+      <section class={`you-card${you ? ' has-art' : ''}`} aria-label="You 2.0" style={you ? { paddingInlineEnd: '46%' } : undefined}>
+        {you?.cutout ? (
+          <img class="you-art" src={dataUrl(you)} alt="הדמות שלי" style={youArt(you)} />
+        ) : you ? (
+          <img class="you-art old" src={dataUrl(you)} alt="הדמות שלי" />
+        ) : (
+          <span class="bgword display">YOU</span>
+        )}
+        {you && <span class="hero-name display" style={{ fontSize: 150, left: -8, bottom: -10 }}>YOU</span>}
         <div class="col g4" style={{ position: 'relative' }}>
           <span class="display" style={{ fontSize: 34, color: 'var(--pink-tint)' }}>YOU 2.0</span>
           <span class="t-body">את, רק שוטפת</span>
           <span class="t-sm muted">
-            {you ? 'הקול שלך באנגלית מגיע בקרוב.' : 'תמונה אחת שלך, ואת חלק מהצוות.'}
+            {you && !you.cutout
+              ? 'יש גרסה חדשה: בלי רקע ובתאורה של הצוות.'
+              : you
+                ? 'הקול שלך באנגלית מגיע בקרוב.'
+                : 'תמונה אחת שלך, ואת חלק מהצוות.'}
           </span>
           {you && (
-            <a class="t-sm tint" href={href('you')} style={{ marginTop: 4 }}>
-              ליצור מחדש
+            <a class={you.cutout ? 't-sm' : 'chip on plain'} href={href('you')} style={{ marginTop: 4, color: '#fff', alignSelf: 'flex-start' }}>
+              {you.cutout ? 'ליצור מחדש' : 'לעדכן את הדמות'}
             </a>
           )}
         </div>

@@ -1,4 +1,42 @@
 import { expect, test, type Page } from '@playwright/test';
+import { deflateSync } from 'node:zlib';
+
+/** A 120x160 green-screen PNG with a dark figure and pink rim, like the model should return. */
+function greenScreenPng(): string {
+  const w = 120, h = 160;
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  for (let y = 0; y < h; y++) {
+    raw[y * (w * 3 + 1)] = 0;
+    for (let x = 0; x < w; x++) {
+      const fig = (x - 60) ** 2 / 400 + (y - 30) ** 2 / 400 <= 1 || (x >= 40 && x <= 80 && y >= 48 && y <= 150);
+      const rim = fig && (x === 40 || x === 80);
+      const [r, g, b] = rim ? [255, 26, 110] : fig ? [24, 20, 30] : [0, 255, 0];
+      raw.set([r, g, b], y * (w * 3 + 1) + 1 + x * 3);
+    }
+  }
+  const crcTable = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (buf: Buffer) => {
+    let c = 0xffffffff;
+    for (const v of buf) c = crcTable[(c ^ v) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type: string, data: Buffer) => {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const td = Buffer.concat([Buffer.from(type), data]);
+    const c = Buffer.alloc(4); c.writeUInt32BE(crc(td));
+    return Buffer.concat([len, td, c]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0)),
+  ]).toString('base64');
+}
 
 const API = 'https://talkback-api.myappp20266.workers.dev';
 const sse = (text: string) =>
@@ -18,7 +56,7 @@ function wav(): Buffer {
 }
 
 async function mockApi(page: Page) {
-  const seen: { chat: any[]; tts: string[]; image: number } = { chat: [], tts: [], image: 0 };
+  const seen: { chat: any[]; tts: string[]; image: number; prompt: string } = { chat: [], tts: [], image: 0, prompt: '' };
   await page.route(`${API}/chat`, async (r) => {
     seen.chat.push(r.request().postDataJSON());
     await r.fulfill({
@@ -41,9 +79,8 @@ async function mockApi(page: Page) {
   });
   await page.route(`${API}/image`, async (r) => {
     seen.image++;
-    // a 1x1 pink PNG
-    const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
-    await r.fulfill({ json: { images: [{ mimeType: 'image/png', data: png }] }, headers: { 'Access-Control-Allow-Origin': '*' } });
+    seen.prompt = r.request().postDataJSON().prompt;
+    await r.fulfill({ json: { images: [{ mimeType: 'image/png', data: greenScreenPng() }] }, headers: { 'Access-Control-Allow-Origin': '*' } });
   });
   return seen;
 }
@@ -97,6 +134,17 @@ test('you 2.0: photo to 4 versions, pick one, saved on the profile', async ({ pa
   await page.locator('input[type=file]:not([capture])').setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: png });
   await expect(page.locator('.you-opt img')).toHaveCount(4);
   expect(seen.image).toBe(4);
+  expect(seen.prompt).toContain('rim light');
+  expect(seen.prompt).toContain('#00FF00');
+  // the green is gone: the chosen image is a transparent PNG
+  const transparentCorner = await page.locator('.you-opt img').first().evaluate(async (img: HTMLImageElement) => {
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const x = c.getContext('2d')!; x.drawImage(img, 0, 0);
+    return x.getImageData(1, c.height - 2, 1, 1).data[3];
+  });
+  expect(transparentCorner).toBe(0);
   await page.getByRole('button', { name: 'גרסה 2' }).click();
   await page.getByRole('button', { name: 'זו אני' }).click();
   await expect(page.getByAltText('הדמות שלי')).toBeVisible();
