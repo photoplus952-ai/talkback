@@ -21,7 +21,8 @@
 
 ### You 2.0, photo part (first version)
 - `src/screens/You.tsx` (`#/you`): privacy card, camera/gallery, photo downscaled in memory only and dropped after use, 4 parallel `/image` calls with the 5 Cast images as style references (prompt in `src/data/you.ts`), pick one, saved in IndexedDB only. Shown on the profile; delete in settings.
-- Not done yet: background removal, face/mouth detection, voice (Modal), animation loops.
+- Background: the model draws on a chroma-green screen; `src/lib/cutout.ts` removes it on the device (flood fill from the borders, soft edge, despill), crops and frames like the Cast (aspect ~1.37) and estimates mx/my. Off-style results (no green screen) are requested again, at most twice. Lighting is described in the prompt (dark, low-key, hot-pink rim light).
+- Not done yet: real face/mouth detection (mx/my is estimated), voice (Modal), animation loops.
 
 ### The old prototype
 - `public/old/index.html`: the working single-file prototype, served at https://photoplus952-ai.github.io/talkback/old/

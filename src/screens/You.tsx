@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { Icon } from '../components/Icon';
 import { toast } from '../components/toast';
 import { href } from '../router';
-import { dataUrl, generateOne, ImageError, readPhoto, saveYou } from '../data/you';
+import { dataUrl, generateOne, ImageError, readPhoto, saveYou, type YouImage } from '../data/you';
 
 type Img = { mimeType: string; data: string };
-type Slot = { state: 'wait' } | { state: 'ok'; img: Img } | { state: 'bad' };
+type Slot = { state: 'wait' } | { state: 'ok'; img: YouImage } | { state: 'bad' };
 
 const ERR: Record<ImageError['code'], string> = {
   quota: 'נגמרה המכסה החינמית של יצירת תמונות להיום. אפשר לנסות שוב מחר.',
@@ -63,7 +63,7 @@ export function You() {
   async function choose() {
     const s = picked !== null ? slots[picked] : null;
     if (!s || s.state !== 'ok') return;
-    await saveYou({ ...s.img, createdAt: Date.now() });
+    await saveYou({ ...s.img, createdAt: Date.now(), cutout: true });
     photo.current = null;
     toast('הנה את. שמרתי את הדמות רק בטלפון שלך.');
     location.hash = href('profile');
@@ -116,7 +116,7 @@ export function You() {
         <>
           <h1 class="t-screen">בחרי אחת</h1>
           <p class="t-sm muted" style={{ margin: 0 }} aria-live="polite">
-            {pending ? 'מציירים אותך... זה לוקח בערך חצי דקה.' : 'לחצי על הגרסה שהכי את.'}
+            {pending ? 'מציירים אותך ומכינים אותך לצוות... זה לוקח בערך חצי דקה.' : 'לחצי על הגרסה שהכי את.'}
           </p>
           <div class="you-grid">
             {slots.map((s, i) => (
