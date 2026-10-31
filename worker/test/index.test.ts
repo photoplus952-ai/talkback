@@ -125,6 +125,18 @@ describe('image', () => {
   });
 });
 
+describe('transcribe', () => {
+  it('sends the audio and returns the text', async () => {
+    vi.stubGlobal('fetch', async (_u: string, init: RequestInit) => {
+      const body = JSON.parse(String(init.body));
+      expect(body.contents[0].parts[0].inlineData).toEqual({ mimeType: 'audio/webm', data: 'QUJD' });
+      return Response.json({ candidates: [{ content: { parts: [{ text: ' Yesterday I go to the client. ' }] } }] });
+    });
+    const r = await worker.fetch(post('/transcribe', { audio: 'QUJD', mimeType: 'audio/webm' }), env());
+    expect(await r.json()).toEqual({ text: 'Yesterday I go to the client.' });
+  });
+});
+
 describe('helpers', () => {
   it('pcmToWav writes a valid header', () => {
     const w = pcmToWav(new Uint8Array(10), 24000);

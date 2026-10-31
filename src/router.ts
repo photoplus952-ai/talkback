@@ -1,27 +1,35 @@
 import { useEffect, useState } from 'preact/hooks';
 
 // Hash routes, so GitHub Pages never 404s on a reload.
-export type Route = 'home' | 'practice' | 'profile' | 'words' | 'progress' | 'settings' | 'check';
-const ROUTES: Route[] = ['home', 'practice', 'profile', 'words', 'progress', 'settings', 'check'];
+export type Route = 'home' | 'practice' | 'profile' | 'words' | 'progress' | 'settings' | 'check' | 'chat' | 'you';
+const ROUTES: Route[] = ['home', 'practice', 'profile', 'words', 'progress', 'settings', 'check', 'chat', 'you'];
 
 export function parseHash(hash: string): Route {
-  const r = hash.replace(/^#\/?/, '').split(/[/?]/)[0];
-  return (ROUTES as string[]).includes(r) ? (r as Route) : 'home';
+  return parseLocation(hash).route;
 }
 
-export function href(r: Route): string {
-  return r === 'home' ? '#/' : `#/${r}`;
+export function parseLocation(hash: string): { route: Route; param: string } {
+  const [r, param = ''] = hash.replace(/^#\/?/, '').split(/[?]/)[0].split('/');
+  return (ROUTES as string[]).includes(r) ? { route: r as Route, param } : { route: 'home', param: '' };
 }
 
-export function useRoute(): Route {
-  const [route, setRoute] = useState<Route>(() => parseHash(location.hash));
+export function href(r: Route, param?: string): string {
+  return r === 'home' ? '#/' : `#/${r}${param ? `/${param}` : ''}`;
+}
+
+export function useLocation(): { route: Route; param: string } {
+  const [loc, setLoc] = useState(() => parseLocation(location.hash));
   useEffect(() => {
     const on = () => {
-      setRoute(parseHash(location.hash));
+      setLoc(parseLocation(location.hash));
       window.scrollTo(0, 0);
     };
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
-  return route;
+  return loc;
+}
+
+export function useRoute(): Route {
+  return useLocation().route;
 }

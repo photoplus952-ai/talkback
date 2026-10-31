@@ -50,14 +50,14 @@ export function Home() {
       <CharacterCard day={day} onChange={setCh} />
 
       <div class="duo">
-        <button class="btn btn-primary btn-tile" onClick={() => toast(`שיחת וידאו עם ${ch.name} נפתחת בשלב הבא. בינתיים, תכירי את הצוות.`)}>
+        <button class="btn btn-primary btn-tile" onClick={() => toast(`שיחת וידאו עם ${ch.name} נפתחת בקרוב. בינתיים, הצ'אט כבר מדבר.`)}>
           <Icon name="video" />
           שיחת וידאו
         </button>
-        <button class="btn btn-secondary btn-tile" onClick={() => toast(`הצ'אט עם ${ch.name} מגיע בשלב הבא. כמעט שם.`)}>
+        <a class="btn btn-secondary btn-tile plain" href={href('chat', ch.id)}>
           <Icon name="msg" class="tint" />
           צ'אט
-        </button>
+        </a>
       </div>
 
       <a class="card row g12 plain" href={href('practice')}>

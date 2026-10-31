@@ -11,6 +11,7 @@
     "test:screens": "playwright test"
   },
   "dependencies": {
+    "idb-keyval": "^6.3.0",
     "preact": "^10.29.8"
   },
   "devDependencies": {

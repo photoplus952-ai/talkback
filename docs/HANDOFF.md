@@ -13,6 +13,16 @@
 - CI: `.github/workflows/deploy-app.yml` (Pages, source must be "GitHub Actions"), `deploy-worker.yml` (needs `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` repo secrets). Owner steps: `docs/SETUP.md` (Hebrew).
 - Not yet verified against the real Gemini API: the `/live-token` request shape and the model names (they come from the docs). Check them at M2/M3.
 
+### M2 chat (first version)
+- `src/screens/Chat.tsx` (`#/chat/<id>`): streaming reply, `###` meta parsed (`src/brain/parse.ts`), correction chips under her message, new-word chips, speaker button, auto-read (Gemini TTS sentence by sentence, cached in IndexedDB), mic with an energy VAD (500 ms silence, no model download) and `/transcribe`.
+- Prompt from BRAIN.md in `src/brain/prompt.ts` (gentle mode, last 10 openers avoided). Memory (`src/data/memory.ts`, max 50, dedup, 5 most relevant injected) and words (`src/data/words.ts`) live in IndexedDB.
+- Speed is logged on the device (`src/lib/metrics.ts`, key `metrics`): first token, transcribe, TTS, first audio. The voice path is record → transcribe → chat → TTS, so first audio under 1.5 s is not yet guaranteed: measure on the phone.
+- Not done yet from M2: `tests/brain.eval.ts` against the real model, slang list, conversation summary screen.
+
+### You 2.0, photo part (first version)
+- `src/screens/You.tsx` (`#/you`): privacy card, camera/gallery, photo downscaled in memory only and dropped after use, 4 parallel `/image` calls with the 5 Cast images as style references (prompt in `src/data/you.ts`), pick one, saved in IndexedDB only. Shown on the profile; delete in settings.
+- Not done yet: background removal, face/mouth detection, voice (Modal), animation loops.
+
 ### The old prototype
 - `public/old/index.html`: the working single-file prototype, served at https://photoplus952-ai.github.io/talkback/old/
   - Screens: home (swipeable character card, week strip, daily progress), characters, character page, chat, video call (mouth animation driven by voice), summary, words, progress, settings, a "check that everything works" screen.
