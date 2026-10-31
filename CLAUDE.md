@@ -7,6 +7,7 @@ An app that turns basic English into fluent spoken American English in 30 days. 
 - `docs/DESIGN.md`: design system v3, UX rules, specs for every screen
 - `docs/BRAIN.md`: the characters' brain: prompts, corrections, humor, slang, memory, output format
 - `docs/VOICE.md`: voices and speech: Gemini Live, Gemini TTS, speech recognition
+- `docs/ANIMATION.md`: **high priority.** High-end animation for the characters, especially in video calls
 - `docs/YOU20.md`: **high priority.** The main character is the user: photo to character, her own voice
 - `docs/ROADMAP.md`: milestones, with acceptance criteria for each
 - `docs/HANDOFF.md`: what already exists in the code, what works and what doesn't
@@ -27,9 +28,10 @@ Visual reference: `docs/design/*.html` (open in a browser). These are exports of
 3. **No big downloads** to the device and no "fallback voice" in the normal flow. Voices come from the cloud.
 4. **Speed:** first audio within 1.5 s of the end of her speech. Measure and log it.
 5. **UI in Hebrew (RTL), addressed in the feminine.** All English content renders LTR, in Bricolage Grotesque.
-6. **High-quality characters only.** Use `assets/characters/*.webp` (about 1450px, quality 90) or the PNG masters in `assets/characters/master/`. Never compress or shrink them.
-7. **Clean content:** respectful, modest, appropriate characters and topics.
-8. **Owner communication:** short, in Hebrew, no technical jargon. Ask only about real product decisions.
+6. **High-end animation:** characters feel alive (video loops, real lip sync, acting by conversation state). Per ANIMATION.md.
+7. **High-quality characters only.** Use `assets/characters/*.webp` (about 1450px, quality 90) or the PNG masters in `assets/characters/master/`. Never compress or shrink them.
+8. **Clean content:** respectful, modest, appropriate characters and topics.
+9. **Owner communication:** short, in Hebrew, no technical jargon. Ask only about real product decisions.
 
 ## Technical stack (recommended)
 - Vite + TypeScript + Preact (or React), installable as a PWA, deployed on GitHub Pages.

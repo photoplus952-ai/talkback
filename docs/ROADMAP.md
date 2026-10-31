@@ -17,13 +17,14 @@ Each milestone is finished only when its acceptance criteria are tested on the o
 
 ## M3: Video call (Gemini Live)
 - [ ] Ephemeral token, two-way audio, barge-in, karaoke captions, corrections after each turn.
-- [ ] Mouth animation driven by the audio.
-**Done when:** a 5-minute conversation without pauses, and she can interrupt.
+- [ ] High-end animation per ANIMATION.md: video loops (idle, listening, thinking, talking, reactions), visemes with real lip sync, acting by conversation state.
+**Done when:** a 5-minute conversation without pauses, she can interrupt, and the character looks alive (60fps, no style jumps, lip delay under 80 ms).
 
 ## M4: You 2.0 (high priority)
 - [ ] Profile screen (You 2.0 at the top, the Cast below).
 - [ ] Photo to 4 characters in the Cast style, background removal, face detection.
 - [ ] Voice sample (encrypted, device-only), Modal with Chatterbox, warm-up, Y5 call.
+- [ ] Animation loops and visemes for You 2.0, created automatically after the character.
 **Done when:** the character looks like part of the Cast, the voice is recognizably hers in English, and nothing is stored outside the device.
 
 ## M5: Daily practices
