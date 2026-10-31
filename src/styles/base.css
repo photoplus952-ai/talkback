@@ -1,0 +1,108 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+#app {
+  min-height: 100%;
+}
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--pink-tint);
+  outline-offset: 2px;
+}
+img {
+  display: block;
+}
+
+/* English content: always LTR, Bricolage */
+.en {
+  font-family: var(--font-en);
+  font-weight: 600;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
+}
+/* Numbers and English names */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 0.85;
+  direction: ltr;
+  unicode-bidi: isolate;
+  letter-spacing: 0.01em;
+}
+
+/* type scale */
+.t-screen {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
+}
+.t-section {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0;
+}
+.t-body {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.t-sm {
+  font-size: 13px;
+}
+.t-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+.muted {
+  color: var(--muted);
+}
+.tint {
+  color: var(--pink-tint);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
