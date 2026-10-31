@@ -56,3 +56,7 @@ Each screen's spec sits next to it on the "All screens v3.2" and "You 2.0" board
 - **Today's practice:** a winding path with stations. The current station glows and has a card and a button.
 - **Character page:** the character with her bubble, then video/chat buttons, then about, voice and settings (as a list that opens a bottom sheet).
 - **Profile:** You 2.0 at the top, then the Cast, then settings via the gear.
+
+## App icon (final, approved by the owner)
+- Files: `assets/icon/icon_1024.png`, `icon_512.png`, `icon_192.png`, `icon_180.png` (apple-touch-icon), `icon_maskable_512.png` (Android, content in the safe zone).
+- Design: the owner's character from the waist up, a dark background with a pink glow behind the head and violet in the corner, and a white sound wave with a soft glow in the corner, **with no circle around it**.
