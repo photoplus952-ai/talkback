@@ -7,7 +7,7 @@
   - `src/components/Icon.tsx`: the single icon set (paths from the v3.2 board, plus upload/camera/shield/refresh/sun/cloud).
   - `src/components/CharacterCard.tsx`: home card with the swipe carousel (slide, no fade; background stays put). Face placement per DESIGN.md.
   - Screens: home, practice, profile (You 2.0 placeholder + Cast), words (empty state), progress, settings, check (server, key, install, mic). Hash routes (`#/words`).
-  - App icon: `scripts/make-icons.mjs` draws it (speech bubble in the brand gradient with the brand sound wave) and renders `public/icons/*`. Preview: `docs/design/app-icon.png`.
+  - App icon: the owner-approved icon from `assets/icon/` (see DESIGN.md), copied to `public/icons/` (192, 512, maskable 512, apple-touch 180).
   - `src/config.ts`: Worker URL (or `VITE_API_URL` / repo variable `API_URL`).
 - `worker/`: Cloudflare Worker `talkback-api`. Routes `/health`, `/chat` (SSE, model fallback), `/tts` (WAV), `/live-token` (ephemeral, single use), `/image`. Only allowed origins; no request logging; key in the `GEMINI_API_KEY` secret. Models are `[vars]` in `wrangler.toml`. Tests: `cd worker && npm test`.
 - CI: `.github/workflows/deploy-app.yml` (Pages, source must be "GitHub Actions"), `deploy-worker.yml` (needs `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` repo secrets). Owner steps: `docs/SETUP.md` (Hebrew).

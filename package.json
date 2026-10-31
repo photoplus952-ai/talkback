@@ -8,8 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:screens": "playwright test",
-    "icons": "node scripts/make-icons.mjs"
+    "test:screens": "playwright test"
   },
   "dependencies": {
     "preact": "^10.29.8"
