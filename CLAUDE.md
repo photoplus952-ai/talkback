@@ -11,7 +11,7 @@ An app that turns basic English into fluent spoken American English in 30 days. 
 - `docs/ROADMAP.md`: milestones, with acceptance criteria for each
 - `docs/HANDOFF.md`: what already exists in the code, what works and what doesn't
 
-Visual reference: the design canvas (link in HANDOFF). The "All screens v3.2" and "You 2.0" boards are the source of truth.
+Visual reference: `docs/design/*.html` (open in a browser). These are exports of the design canvas boards and the source of truth.
 
 ## Hard rules
 1. **Privacy:**

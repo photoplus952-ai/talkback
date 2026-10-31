@@ -1,0 +1,116 @@
+<!doctype html><html lang="he"><head><meta charset="utf-8"><title>מערכת עיצוב v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Heebo:wght@400;500;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ds{--bg:#0E0B14;--s1:#18141F;--s2:#221C2B;--ln:rgba(255,255,255,.08);--tx:#F6F3FA;--mu:#A39DB3;--pk:#FF1A6E;--vi:#7B4DFF;--lv:#7B4DFF;--mi:#7B4DFF;--rd:#FF4D5E;
+width:1500px;height:1700px;box-sizing:border-box;padding:64px;background:var(--bg);color:var(--tx);font-family:Heebo,sans-serif;display:flex;flex-direction:column;gap:40px}
+.ds h1{margin:0;font-family:Anton,sans-serif;font-weight:400;font-size:88px;line-height:1;color:var(--pk)}
+.ds h2{margin:0 0 14px;font-size:24px;font-weight:800}
+.ds .sub{font-size:19px;color:var(--mu);line-height:1.6;max-width:1050px}
+.row{display:grid;gap:24px}
+.box{background:var(--s1);border-radius:28px;padding:28px;box-shadow:inset 0 0 0 1px var(--ln)}
+.sw{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--mu)}
+.sw i{display:block;height:84px;border-radius:20px;box-shadow:inset 0 0 0 1px var(--ln)}
+.sw b{color:var(--tx);font-size:15px}
+.ty{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid var(--ln)}
+.ty:first-of-type{border-top:0}
+.ty span:last-child{font-size:13px;color:var(--mu);white-space:nowrap}
+.btn{height:56px;border-radius:999px;border:0;font:800 17px Heebo,sans-serif;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:0 28px}
+.p{background:linear-gradient(135deg,#FF1A6E,#7B4DFF);box-shadow:0 10px 26px rgba(255,26,110,.3)}
+.s{background:var(--s2);box-shadow:inset 0 0 0 1px var(--ln)}
+.g{background:transparent;color:#FF7AA8}
+.chip{display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:999px;background:var(--s2);font-size:14px;font-weight:700}
+.chip.on{background:var(--pk)}
+.fix{display:inline-flex;flex-direction:column;gap:2px;background:rgba(183,148,255,.1);box-shadow:inset 0 0 0 1px rgba(183,148,255,.45);border-radius:14px;padding:8px 12px}
+.fix b{font-family:'Bricolage Grotesque',sans-serif;color:#fff;direction:ltr;text-align:left;font-size:15px}
+.fix b s{color:var(--rd);font-weight:500}
+.fix span{font-size:12px;color:var(--mu)}
+.bub{max-width:300px;padding:12px 16px;border-radius:22px;font:600 16px/1.45 'Bricolage Grotesque',sans-serif;direction:ltr;text-align:left}
+.ai{background:var(--s2);border-bottom-left-radius:6px}
+.me{background:linear-gradient(135deg,#FF1A6E,#C4004F);border-bottom-right-radius:6px;margin-right:auto}
+.rule{display:flex;gap:12px;font-size:15.5px;line-height:1.55;color:#E2DDEA}
+.rule b{color:#FF7AA8;font-family:Anton,sans-serif;font-weight:400;font-size:20px;min-width:30px}
+</style>
+</head><body style="margin:0;background:#08060C">
+
+<div class="ds" dir="rtl">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <h1 dir="ltr" style="text-align:right">TALKBACK · DESIGN SYSTEM v3</h1>
+    <div class="sub">אותה שפה שהתחלנו בה: דמויות תלת־ממד על כרטיס ורוד, מספרים צרים וגדולים, רקע כהה. מה שהשתנה הוא הסדר: פלטה מצומצמת עם תפקיד ברור לכל צבע, סולם טיפוגרפי אחד, רשת של 4 פיקסלים, וכללי UX קבועים לכל המסכים.</div>
+  </div>
+
+  <div class="row" style="grid-template-columns:1.25fr 1fr">
+    <div class="box">
+      <h2>צבעים ותפקידים</h2>
+      <div class="row" style="grid-template-columns:repeat(5,minmax(0,1fr));gap:14px">
+        <div class="sw"><i style="background:#0E0B14"></i><b>Ink #0E0B14</b>רקע</div>
+        <div class="sw"><i style="background:#18141F"></i><b>Surface 1</b>כרטיסים</div>
+        <div class="sw"><i style="background:#221C2B"></i><b>Surface 2</b>שדות, צ'יפים</div>
+        <div class="sw"><i style="background:#F6F3FA"></i><b>Text</b>טקסט ראשי</div>
+        <div class="sw"><i style="background:#A39DB3"></i><b>Muted</b>טקסט משני</div>
+        <div class="sw"><i style="background:#FF1A6E"></i><b>Pink</b>מותג, כפתור ראשי, "חי"</div>
+        <div class="sw"><i style="background:#7B4DFF"></i><b>Violet #7B4DFF</b>משני: נכון ✓, היום, נבחר</div>
+        <div class="sw"><i style="background:#FF4D5E"></i><b>Red #FF4D5E</b>שגיאה, ניתוק, הקלטה</div>
+        <div class="sw"><i style="background:#FF7AA8"></i><b>Pink tint</b>טקסט מודגש קטן</div>
+        <div class="sw"><i style="background:linear-gradient(135deg,#FF1A6E,#7B4DFF)"></i><b>Gradient</b>ראשי והתקדמות</div>
+      </div>
+      <div style="margin-top:18px;height:56px;border-radius:999px;background:linear-gradient(135deg,#FF1A6E,#7B4DFF);display:flex;align-items:center;justify-content:center;font-weight:800">גרדיאנט אחד בלבד · ורוד ← סגול · לכפתור ראשי ולהתקדמות</div>
+    </div>
+    <div class="box">
+      <h2>טיפוגרפיה</h2>
+      <div class="ty"><span style="font-family:Anton,sans-serif;font-size:72px;line-height:.9;color:var(--pk)" dir="ltr">07 /30</span><span>Anton · מספרים ושמות באנגלית</span></div>
+      <div class="ty"><span style="font-size:28px;font-weight:800">כותרת מסך 28</span><span>Heebo 800</span></div>
+      <div class="ty"><span style="font-size:20px;font-weight:800">כותרת אזור 20</span><span>Heebo 800</span></div>
+      <div class="ty"><span style="font-size:16px;font-weight:500">גוף טקסט 16, שורה 1.5</span><span>Heebo 500</span></div>
+      <div class="ty"><span style="font-size:13px;color:var(--mu)">משני 13 · תוויות 12</span><span>Heebo 500/700</span></div>
+      <div class="ty"><span style="font:600 17px 'Bricolage Grotesque',sans-serif" dir="ltr">So, how did the meeting go?</span><span>Bricolage · כל תוכן באנגלית</span></div>
+    </div>
+  </div>
+
+  <div class="row" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="box" style="display:flex;flex-direction:column;gap:16px">
+      <h2>כפתורים</h2>
+      <button class="btn p" type="button">שיחת וידאו</button>
+      <button class="btn s" type="button">צ'אט</button>
+      <button class="btn g" type="button">אולי אחר כך</button>
+      <div style="font-size:13px;color:var(--mu);line-height:1.6">כפתור ראשי אחד בכל מסך. גובה 56, ובפעולות משניות 48. אזור לחיצה לפחות 44×44.</div>
+    </div>
+    <div class="box" style="display:flex;flex-direction:column;gap:14px">
+      <h2>צ'יפים ותיקונים</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip on">פגישה עם לקוח</span><span class="chip">מסעדה</span><span class="chip">שיחה חופשית</span></div>
+      <span class="fix"><b><s>go</s> → went</b><span>אתמול = זמן עבר</span></span>
+      <span class="fix" style="background:rgba(123,77,255,.2);box-shadow:inset 0 0 0 1px rgba(123,77,255,.6)"><b style="color:#fff">no cap</b><span>סלנג חדש: "בלי צחוק"</span></span>
+    </div>
+    <div class="box" style="display:flex;flex-direction:column;gap:10px">
+      <h2>בועות שיחה</h2>
+      <div class="bub ai">Oh nice, so you went to Rome! Best thing you ate there?</div>
+      <div class="bub me">Pasta, obviously.</div>
+      <div style="font-size:13px;color:var(--mu);line-height:1.6">תוכן באנגלית תמיד משמאל לימין, גם בתוך ממשק עברי.</div>
+    </div>
+  </div>
+
+  <div class="row" style="grid-template-columns:1fr 1fr">
+    <div class="box">
+      <h2>מידות</h2>
+      <div style="display:flex;gap:16px;align-items:flex-end;margin-bottom:18px">
+        <div style="width:4px;height:4px;background:var(--lv)"></div><div style="width:8px;height:8px;background:var(--lv)"></div><div style="width:12px;height:12px;background:var(--lv)"></div><div style="width:16px;height:16px;background:var(--lv)"></div><div style="width:24px;height:24px;background:var(--lv)"></div><div style="width:32px;height:32px;background:var(--lv)"></div>
+        <span style="font-size:14px;color:var(--mu)">רשת 4 · ריווח 4/8/12/16/24/32 · שוליים 20</span>
+      </div>
+      <div style="display:flex;gap:14px;align-items:center">
+        <div style="width:56px;height:56px;border-radius:12px;background:var(--s2)"></div><div style="width:56px;height:56px;border-radius:20px;background:var(--s2)"></div><div style="width:56px;height:56px;border-radius:28px;background:var(--pk)"></div><div style="width:96px;height:44px;border-radius:999px;background:var(--s2)"></div>
+        <span style="font-size:14px;color:var(--mu)">רדיוס 12 צ'יפים · 20 כרטיסים · 28 כרטיס דמות · גלולה לכפתורים</span>
+      </div>
+    </div>
+    <div class="box" style="display:flex;flex-direction:column;gap:10px">
+      <h2>כללי UX קבועים</h2>
+      <div class="rule"><b>01</b>פעולה ראשית אחת בכל מסך, בגרדיאנט. כל השאר משני.</div>
+      <div class="rule"><b>02</b>סדר במסך: מה עושים עכשיו, ואחר כך מידע. מסך דמות פותח בשיחה ולא בתיאור.</div>
+      <div class="rule"><b>03</b>צבע אף פעם לא לבד: נכון = סגול + ✓, שגיאה = אדום + קו חוצה. אין ירוק ואין סגול בהיר.</div>
+      <div class="rule"><b>04</b>ניגודיות טקסט לפחות 4.5:1. משני רק ב-Muted על Ink.</div>
+      <div class="rule"><b>05</b>כל מצב מעוצב: טעינה, ריק, שגיאה, אין מיקרופון.</div>
+      <div class="rule"><b>06</b>אייקונים: סט אחד, קו 2, פינות עגולות, בלי אימוג'י. תנועה עם מטרה: החלקה בין דמויות, מילוי טבעת, נשימה של הדמות. הכול מכבד "הפחת תנועה".</div>
+      <div class="rule"><b>07</b>מיקרוקופי בלשון נקבה, חברי ועוקצני, ותמיד עם הצעד הבא.</div>
+    </div>
+  </div>
+</div>
+</body></html>
