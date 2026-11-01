@@ -21,7 +21,7 @@
 
 ### You 2.0, photo part (first version)
 - `src/screens/You.tsx` (`#/you`): privacy card, camera/gallery, photo downscaled to 512 in memory only and dropped after use, 4 parallel `/image` calls, pick one, saved in IndexedDB only. Shown on the profile; delete in settings.
-- Image engine: FLUX.2 on Workers AI (free daily allocation on the owner's Cloudflare account, `[ai]` binding, `IMAGE_PROVIDER = "workers-ai"`). Gemini image generation is not free, so it is only a switchable fallback. References: 3 Cast images placed on the green screen at 384x512 (image 0-2) + her photo (image 3).
+- Image engine: FLUX.2 on Workers AI (free daily allocation on the owner's Cloudflare account, `[ai]` binding, `IMAGE_PROVIDER = "workers-ai"`). Gemini image generation is not free, so it is only a switchable fallback. Image 0 is her photo (likeness first); images 1-3 are Cast images cropped waist-up on the green screen at 384x512. She is generated waist-up (app and video call show her waist-up); `waistFrame` finds the head and stores mx/my/headFrac.
 - Background: the model draws on a chroma-green screen; `src/lib/cutout.ts` removes it on the device (flood fill from the borders, soft edge, despill), crops and frames like the Cast (aspect ~1.37) and estimates mx/my. Off-style results (no green screen) are requested again, at most twice. Lighting is described in the prompt (dark, low-key, hot-pink rim light).
 - Not done yet: real face/mouth detection (mx/my is estimated), voice (Modal), animation loops.
 
