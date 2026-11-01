@@ -8,13 +8,15 @@ import {
   dataUrl,
   fromUpload,
   generateOne,
+  imageEngine,
   ImageError,
+  warmEngine,
+  type Photo,
   readPhoto,
   saveYou,
   type YouImage,
 } from '../data/you';
 
-type Img = { mimeType: string; data: string };
 type Slot = { state: 'wait' } | { state: 'ok'; img: YouImage } | { state: 'bad' };
 type Step = 'start' | 'chatapp' | 'review' | 'photo' | 'choose';
 
@@ -31,13 +33,18 @@ export function You() {
   const [picked, setPicked] = useState<number | null>(null);
   const [review, setReview] = useState<YouImage | null>(null);
   const [busy, setBusy] = useState(false);
-  const photo = useRef<Img | null>(null);
+  const photo = useRef<Photo | null>(null);
+  const [strong, setStrong] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const camRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLInputElement>(null);
 
-  // privacy: drop the photo from memory when leaving this screen
-  useEffect(() => () => void (photo.current = null), []);
+  // wake the engine now, so it is ready by the time she picks a photo; drop the photo when leaving
+  useEffect(() => {
+    warmEngine();
+    imageEngine().then((e) => setStrong(e === 'modal'));
+    return () => void (photo.current = null);
+  }, []);
 
   // ---------- path 1: ChatGPT / Gemini ----------
   async function shareSheet() {
@@ -159,17 +166,35 @@ export function You() {
       {step === 'start' && (
         <>
           <h1 class="t-screen">איך ליצור אותך?</h1>
-          <button class="card col g8 choice" onClick={() => setStep('chatapp')}>
-            <span class="row g8">
-              <span class="soon">מומלץ</span>
-              <b>ב-ChatGPT או ב-Gemini</b>
-            </span>
-            <span class="t-sm muted">הכי דומה לך. יוצרים שם בעזרת הוראה מוכנה, ומעלים לכאן את מה שיצא.</span>
-          </button>
-          <button class="card col g8 choice" onClick={() => setStep('photo')}>
-            <b>כאן באפליקציה</b>
-            <span class="t-sm muted">מהיר, אבל הדמיון פחות מדויק.</span>
-          </button>
+          {strong ? (
+            <>
+              <button class="card col g8 choice" onClick={() => setStep('photo')}>
+                <span class="row g8">
+                  <span class="soon">מומלץ</span>
+                  <b>כאן באפליקציה</b>
+                </span>
+                <span class="t-sm muted">תמונה אחת שלך, ותוך כחצי דקה ארבע גרסאות בסגנון של הצוות.</span>
+              </button>
+              <button class="card col g8 choice" onClick={() => setStep('chatapp')}>
+                <b>ב-ChatGPT או ב-Gemini</b>
+                <span class="t-sm muted">יוצרים שם בעזרת הוראה מוכנה, ומעלים לכאן את מה שיצא.</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button class="card col g8 choice" onClick={() => setStep('chatapp')}>
+                <span class="row g8">
+                  <span class="soon">מומלץ</span>
+                  <b>ב-ChatGPT או ב-Gemini</b>
+                </span>
+                <span class="t-sm muted">הכי דומה לך. יוצרים שם בעזרת הוראה מוכנה, ומעלים לכאן את מה שיצא.</span>
+              </button>
+              <button class="card col g8 choice" onClick={() => setStep('photo')}>
+                <b>כאן באפליקציה</b>
+                <span class="t-sm muted">מהיר, אבל הדמיון פחות מדויק.</span>
+              </button>
+            </>
+          )}
         </>
       )}
 
@@ -269,7 +294,7 @@ export function You() {
         <>
           <h1 class="t-screen">בחרי אחת</h1>
           <p class="t-sm muted" style={{ margin: 0 }} aria-live="polite">
-            {pending ? 'מציירים אותך... זה לוקח בערך חצי דקה.' : 'לחצי על הגרסה שהכי את.'}
+            {pending ? 'מציירים אותך... בפעם הראשונה ביום זה יכול לקחת עד שתי דקות.' : 'לחצי על הגרסה שהכי את.'}
           </p>
           <div class="you-grid">
             {slots.map((s, i) => (
