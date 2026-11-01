@@ -941,3 +941,50 @@
   object-fit: cover;
   object-position: top;
 }
+
+.choice {
+  width: 100%;
+  text-align: start;
+  padding: 18px;
+}
+.choice:active {
+  transform: scale(0.98);
+}
+.steps {
+  list-style: none;
+  counter-reset: s;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.steps li {
+  counter-increment: s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-1);
+  box-shadow: inset 0 0 0 1px var(--line);
+  border-radius: var(--r-card);
+  padding: 16px 56px 16px 16px;
+}
+.steps li::before {
+  content: counter(s);
+  position: absolute;
+  right: 16px;
+  top: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gradient);
+  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.steps .btn {
+  align-self: flex-start;
+  margin-top: 4px;
+}

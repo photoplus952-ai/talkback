@@ -63,8 +63,9 @@ export function Profile() {
                 : 'תמונה אחת שלך, ואת חלק מהצוות.'}
           </span>
           {you && (
-            <a class={you.cutout ? 't-sm' : 'chip on plain'} href={href('you')} style={{ marginTop: 4, color: '#fff', alignSelf: 'flex-start' }}>
-              {you.cutout ? 'ליצור מחדש' : 'לעדכן את הדמות'}
+            <a class="chip plain" href={href('you')} style={{ marginTop: 6, alignSelf: 'flex-start', background: 'rgba(14,11,20,.55)' }}>
+              <Icon name="refresh" size={16} />
+              להחליף דמות
             </a>
           )}
         </div>

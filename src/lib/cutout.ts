@@ -5,7 +5,12 @@
 export type Px = { width: number; height: number; data: Uint8ClampedArray };
 
 /** How "background" a pixel is: 0 = surely figure, 1 = surely background. */
-function bgScore(r: number, g: number, b: number, key: [number, number, number]): number {
+function bgScore(r: number, g: number, b: number, key: [number, number, number], green: boolean): number {
+  if (!green) {
+    // any other flat background (white, gray, a solid color): by distance only
+    const d = Math.hypot(r - key[0], g - key[1], b - key[2]);
+    return Math.max(0, Math.min(1, 1 - (d - 30) / 60));
+  }
   // green dominance works for any shade of the screen (lighting gradients, compression)
   const dom = g - Math.max(r, b);
   const d = Math.hypot(r - key[0], g - key[1], b - key[2]);
@@ -27,6 +32,20 @@ export function borderColor(img: Px): [number, number, number] {
   return [r / n, g / n, b / n];
 }
 
+/** How uneven the border is (0 = perfectly flat background). */
+export function borderSpread(img: Px, key = borderColor(img)): number {
+  const { width: w, height: h, data } = img;
+  let sum = 0, n = 0;
+  const add = (x: number, y: number) => {
+    const i = (y * w + x) * 4;
+    sum += Math.hypot(data[i] - key[0], data[i + 1] - key[1], data[i + 2] - key[2]);
+    n++;
+  };
+  for (let x = 0; x < w; x += 3) { add(x, 0); add(x, h - 1); }
+  for (let y = 0; y < h; y += 3) { add(0, y); add(w - 1, y); }
+  return sum / n;
+}
+
 export function isGreenScreen(key: [number, number, number]): boolean {
   return key[1] > 120 && key[1] - Math.max(key[0], key[2]) > 60;
 }
@@ -35,8 +54,9 @@ export function isGreenScreen(key: [number, number, number]): boolean {
 export function removeBackground(img: Px): number {
   const { width: w, height: h, data } = img;
   const key = borderColor(img);
+  const green = isGreenScreen(key);
   const score = new Float32Array(w * h);
-  for (let p = 0; p < w * h; p++) score[p] = bgScore(data[p * 4], data[p * 4 + 1], data[p * 4 + 2], key);
+  for (let p = 0; p < w * h; p++) score[p] = bgScore(data[p * 4], data[p * 4 + 1], data[p * 4 + 2], key, green);
 
   // flood fill from all borders through background-ish pixels
   const bg = new Uint8Array(w * h);
@@ -71,11 +91,19 @@ export function removeBackground(img: Px): number {
     const edge = (x > 0 && bg[p - 1]) || (x < w - 1 && bg[p + 1]) || (y > 0 && bg[p - w]) || (y < h - 1 && bg[p + w]);
     if (edge) data[i + 3] = Math.round(255 * (1 - score[p] * 0.85));
     // despill: no green cast on hair and edges
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-    const lim = Math.max(r, b) + 6;
-    if (g > lim) data[i + 1] = lim;
+    if (green) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      const lim = Math.max(r, b) + 6;
+      if (g > lim) data[i + 1] = lim;
+    }
   }
   return removed / (w * h);
+}
+
+function countClear(img: Px): number {
+  let n = 0;
+  for (let i = 3; i < img.data.length; i += 16) if (img.data[i] < 16) n++;
+  return n / (img.data.length / 16);
 }
 
 /** Bounding box of visible pixels. */
@@ -134,9 +162,14 @@ export function waistFrame(box: { x0: number; y0: number; x1: number; y1: number
   return { sx, sy, W, H, mx: (headX - sx) / W, my: (mouthY - sy) / H, a: H / W, headFrac: shoulder / H };
 }
 
-/** Browser: PNG data (base64) -> transparent PNG framed like the Cast. */
-export async function cutoutCharacter(img: { mimeType: string; data: string }) {
-  const bmp = await createImageBitmap(await (await fetch(`data:${img.mimeType};base64,${img.data}`)).blob());
+/**
+ * Browser: image -> transparent PNG framed waist-up.
+ * strict: only a green screen counts (the app's own generation retries otherwise).
+ * Not strict (her upload from ChatGPT/Gemini): any flat background works; an image that is already transparent is kept.
+ */
+export async function cutoutCharacter(img: { mimeType: string; data: string } | Blob, strict = true) {
+  const src = img instanceof Blob ? img : await (await fetch(`data:${img.mimeType};base64,${img.data}`)).blob();
+  const bmp = await createImageBitmap(src);
   const cv = document.createElement('canvas');
   cv.width = bmp.width;
   cv.height = bmp.height;
@@ -145,9 +178,12 @@ export async function cutoutCharacter(img: { mimeType: string; data: string }) {
   bmp.close();
   const px = ctx.getImageData(0, 0, cv.width, cv.height);
   const key = borderColor(px);
-  if (!isGreenScreen(key)) return null; // model ignored the green screen: ask again
-  const removed = removeBackground(px);
-  if (removed < 0.15 || removed > 0.9) return null;
+  const alreadyClear = countClear(px) > 0.15;
+  if (!alreadyClear) {
+    if (!isGreenScreen(key) && (strict || borderSpread(px, key) > 28)) return null;
+    const removed = removeBackground(px);
+    if (removed < 0.15 || removed > 0.9) return null;
+  }
   const box = alphaBox(px);
   if (!box) return null;
   ctx.putImageData(px, 0, 0);

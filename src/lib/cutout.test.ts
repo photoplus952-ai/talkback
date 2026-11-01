@@ -38,6 +38,22 @@ describe('cutout', () => {
     expect(img.data[i + 1]).toBeLessThanOrEqual(Math.max(img.data[i], img.data[i + 2]) + 6);
   });
 
+  it('also cuts a flat white background (uploads from ChatGPT / Gemini)', () => {
+    const w = 40, h = 40;
+    const data = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        const fig = x >= 12 && x <= 28 && y >= 8;
+        const eye = x === 18 && y === 14; // white detail inside the figure stays
+        data.set(eye ? [250, 250, 250, 255] : fig ? [30, 25, 35, 255] : [246, 246, 244, 255], (y * w + x) * 4);
+      }
+    const img = { width: w, height: h, data };
+    removeBackground(img);
+    expect(img.data[3]).toBe(0);
+    expect(img.data[(20 * w + 20) * 4 + 3]).toBe(255);
+    expect(img.data[(14 * w + 18) * 4 + 3]).toBe(255);
+  });
+
   it('frames waist-up and finds the head', () => {
     // head: circle r=8 at (30,14); shoulders/torso from y=26 down to the bottom edge
     const w = 60, h = 80;
