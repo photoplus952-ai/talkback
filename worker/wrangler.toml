@@ -12,11 +12,18 @@ keep_vars = true
 [observability]
 enabled = false
 
+# Workers AI: free image generation (FLUX.2) on the same Cloudflare account.
+[ai]
+binding = "AI"
+
 [vars]
 # Only these sites may call the API.
 ALLOWED_ORIGINS = "https://photoplus952-ai.github.io,http://localhost:5173,http://localhost:4173"
 # Models, in fallback order (BRAIN.md, VOICE.md, YOU20.md). Change here, not in code.
 CHAT_MODELS = "gemini-3.5-flash-lite,gemini-3.6-flash"
 TTS_MODELS = "gemini-3.8-flash-lite-tts,gemini-3.8-flash-tts"
+# Photo -> character: "workers-ai" (free FLUX.2) or "gemini" (needs billing for images)
+IMAGE_PROVIDER = "workers-ai"
+FLUX_MODELS = "@cf/black-forest-labs/flux-2-dev,@cf/black-forest-labs/flux-2-klein-9b"
 IMAGE_MODELS = "gemini-3-pro-image-preview,gemini-2.5-flash-image"
 LIVE_MODEL = "gemini-live-2.5-flash-preview"

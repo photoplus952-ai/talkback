@@ -7,7 +7,7 @@
  *   POST /chat              Gemini text, streamed as SSE (model fallback)
  *   POST /tts               Gemini TTS, returns audio/wav (model fallback)
  *   POST /live-token        ephemeral token for Gemini Live (the browser connects directly)
- *   POST /image             Gemini image (photo -> character), returns base64 images
+ *   POST /image             photo -> character (FLUX.2 on Workers AI, free; or Gemini), returns base64 images
  *   POST /transcribe        short recording -> exact transcript (keeps her mistakes)
  *
  * Privacy: request bodies (photos, voice, conversations) are never logged or stored.
@@ -15,6 +15,11 @@
 
 export interface Env {
   GEMINI_API_KEY?: string;
+  /** Workers AI binding (free daily allocation on the Cloudflare account) */
+  AI?: { run(model: string, input: unknown): Promise<unknown> };
+  /** 'workers-ai' (free FLUX.2) or 'gemini' */
+  IMAGE_PROVIDER?: string;
+  FLUX_MODELS?: string;
   ALLOWED_ORIGINS: string;
   CHAT_MODELS: string;
   TTS_MODELS: string;
@@ -227,12 +232,56 @@ async function liveToken(env: Env, cors: Record<string, string>) {
   return json({ token: t.name, model: env.LIVE_MODEL, expireTime }, 200, cors);
 }
 
+export function sniffMime(b64: string): string {
+  if (b64.startsWith('/9j/')) return 'image/jpeg';
+  if (b64.startsWith('iVBOR')) return 'image/png';
+  if (b64.startsWith('UklGR')) return 'image/webp';
+  return 'image/png';
+}
+
+/**
+ * FLUX.2 on Workers AI: up to 4 reference images (each up to 512x512, resized by the app),
+ * sent as multipart fields input_image_0..3. Free daily allocation, no extra account.
+ */
+async function fluxImage(env: Env, prompt: string, images: { mimeType: string; data: string }[]) {
+  let lastErr = 'upstream';
+  for (const model of list(env.FLUX_MODELS)) {
+    try {
+      const form = new FormData();
+      form.append('prompt', prompt);
+      images.slice(0, 4).forEach((im, i) => form.append(`input_image_${i}`, new Blob([b64ToBytes(im.data)], { type: im.mimeType })));
+      form.append('width', '768');
+      form.append('height', '1024');
+      // Serialize the form to get the multipart body and its boundary.
+      const r = new Request('https://form.local', { method: 'POST', body: form });
+      const out = (await env.AI!.run(model, {
+        multipart: { body: r.body, contentType: r.headers.get('content-type') },
+      })) as { image?: string };
+      if (out?.image) return { image: { mimeType: sniffMime(out.image), data: out.image }, model };
+      lastErr = 'no_image';
+    } catch (e) {
+      const msg = String((e as Error)?.message || e);
+      lastErr = /4006|allocation|quota|limit/i.test(msg) ? 'quota' : 'upstream';
+    }
+  }
+  return { error: lastErr };
+}
+
 async function image(req: Request, env: Env, cors: Record<string, string>) {
   const b = await readJson(req);
   const prompt = typeof b?.prompt === 'string' ? b.prompt : '';
   const images = (Array.isArray(b?.images) ? b!.images : []) as { mimeType: string; data: string }[];
   if (!prompt || images.length > 8) return err(400, 'bad_request', cors);
   const count = Math.min(Math.max(Number(b?.count) || 1, 1), 4);
+  if (env.IMAGE_PROVIDER === 'workers-ai' && env.AI) {
+    const results = await Promise.all(Array.from({ length: count }, () => fluxImage(env, prompt, images)));
+    const ok = results.filter((r): r is { image: { mimeType: string; data: string }; model: string } => 'image' in r);
+    if (!ok.length) {
+      const e = (results[0] as { error: string }).error;
+      return e === 'quota' ? err(429, 'quota', cors) : err(502, e, cors);
+    }
+    return json({ images: ok.map((r) => r.image), model: ok[0].model }, 200, cors);
+  }
   const payload = {
     contents: [
       {
@@ -303,7 +352,8 @@ export default {
     // Health answers anyone (it reveals nothing). Everything else only for our app.
     if (url.pathname === '/health' && req.method === 'GET') return health(url, env, cors);
     if (!allowed) return err(403, 'origin_not_allowed');
-    if (!env.GEMINI_API_KEY) return err(503, 'no_key', cors);
+    const keyless = url.pathname === '/image' && env.IMAGE_PROVIDER === 'workers-ai' && !!env.AI;
+    if (!env.GEMINI_API_KEY && !keyless) return err(503, 'no_key', cors);
     if (req.method !== 'POST') return err(405, 'method_not_allowed', cors);
 
     try {
