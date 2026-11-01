@@ -63,7 +63,7 @@ export function You() {
   async function choose() {
     const s = picked !== null ? slots[picked] : null;
     if (!s || s.state !== 'ok') return;
-    await saveYou({ ...s.img, createdAt: Date.now(), cutout: true });
+    await saveYou({ ...s.img, createdAt: Date.now(), cutout: true, waist: true });
     photo.current = null;
     toast('הנה את. שמרתי את הדמות רק בטלפון שלך.');
     location.hash = href('profile');

@@ -13,12 +13,20 @@ function castImg(c: Character) {
   return { height: h, left: W * 0.5 - c.mx * w, top: 38 - c.my * h };
 }
 
-/** Waist-up crop: face at 22% across, 30% down a 260px card (the art sits on the left side in RTL). */
+/**
+ * Waist-up on a 260px card: the image stands on the bottom edge of the card (no floating cut line),
+ * head near the top. Older full-body saves are scaled like the Cast.
+ */
 function youArt(y: YouCharacter) {
   const cardH = 260;
+  if (y.waist) {
+    const h = cardH * 0.96;
+    const w = h / (y.a || 1.2);
+    return { height: h, left: `calc(26% - ${(y.mx ?? 0.5) * w}px)`, bottom: 0 };
+  }
   const h = cardH * 2.1;
   const w = h / (y.a || 1.37);
-  return { height: h, left: `calc(26% - ${(y.mx ?? 0.5) * w}px)`, top: cardH * 0.24 - (y.my ?? 0.115) * h };
+  return { height: h, left: `calc(26% - ${(y.mx ?? 0.5) * w}px)`, top: cardH * 0.3 - (y.my ?? 0.115) * h };
 }
 
 export function Profile() {
@@ -36,6 +44,7 @@ export function Profile() {
       </div>
 
       <section class={`you-card${you ? ' has-art' : ''}`} aria-label="You 2.0" style={you ? { paddingInlineEnd: '46%' } : undefined}>
+        {you && <span class="hero-name display" style={{ fontSize: 150, left: -8, bottom: -10 }}>YOU</span>}
         {you?.cutout ? (
           <img class="you-art" src={dataUrl(you)} alt="הדמות שלי" style={youArt(you)} />
         ) : you ? (
@@ -43,7 +52,6 @@ export function Profile() {
         ) : (
           <span class="bgword display">YOU</span>
         )}
-        {you && <span class="hero-name display" style={{ fontSize: 150, left: -8, bottom: -10 }}>YOU</span>}
         <div class="col g4" style={{ position: 'relative' }}>
           <span class="display" style={{ fontSize: 34, color: 'var(--pink-tint)' }}>YOU 2.0</span>
           <span class="t-body">את, רק שוטפת</span>

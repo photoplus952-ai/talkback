@@ -94,29 +94,44 @@ export function alphaBox(img: Px, min = 24) {
 }
 
 /**
- * Frame like the Cast: figure fills the height with a small margin, aspect (h/w) about 1.37.
- * Also estimates the mouth position (mx, my) from the head: the Cast has the mouth ~11% below the top.
+ * Waist-up framing (the app and the video call show her from the waist up).
+ * Finds the head as the top part of the figure, before the shoulders widen,
+ * and estimates the mouth position (mx, my) and the head height share (headFrac).
  */
-export function castFrame(box: { x0: number; y0: number; x1: number; y1: number }, img: Px) {
-  const figH = box.y1 - box.y0 + 1;
-  const H = Math.round(figH / 0.94);
-  const W = Math.max(Math.round(H / 1.37), Math.round((box.x1 - box.x0 + 1) * 1.06));
-  const top = box.y0 - Math.round(H * 0.02);
-  // head center: middle of the visible pixels in the top 10% of the figure
-  const headBottom = box.y0 + Math.round(figH * 0.1);
-  let sx = 0, n = 0;
-  for (let y = box.y0; y <= headBottom; y++)
+export function waistFrame(box: { x0: number; y0: number; x1: number; y1: number }, img: Px) {
+  const { width: w, data } = img;
+  const rows: { l: number; r: number }[] = [];
+  for (let y = box.y0; y <= box.y1; y++) {
+    let l = -1, r = -1;
     for (let x = box.x0; x <= box.x1; x++)
-      if (img.data[(y * img.width + x) * 4 + 3] > 128) { sx += x; n++; }
-  const headX = n ? sx / n : (box.x0 + box.x1) / 2;
-  const left = Math.round(headX - W / 2);
-  const mouthY = box.y0 + figH * 0.115;
-  return {
-    sx: left, sy: top, W, H,
-    mx: (headX - left) / W,
-    my: (mouthY - top) / H,
-    a: H / W,
-  };
+      if (data[(y * w + x) * 4 + 3] > 128) {
+        if (l < 0) l = x;
+        r = x;
+      }
+    rows.push({ l, r });
+  }
+  const figH = rows.length;
+  // head width: median width of rows 8%..20% of the figure (hair + face)
+  const band = rows.slice(Math.round(figH * 0.08), Math.max(Math.round(figH * 0.2), Math.round(figH * 0.08) + 1)).filter((r) => r.l >= 0);
+  const widths = band.map((r) => r.r - r.l).sort((a, b) => a - b);
+  const headW = widths[Math.floor(widths.length / 2)] || (box.x1 - box.x0) / 3;
+  // shoulders: first row below 15% that is much wider than the head
+  let shoulder = Math.round(figH * 0.45);
+  for (let i = Math.round(figH * 0.15); i < figH; i++)
+    if (rows[i].l >= 0 && rows[i].r - rows[i].l > headW * 1.7) {
+      shoulder = i;
+      break;
+    }
+  const headRows = rows.slice(0, shoulder).filter((r) => r.l >= 0);
+  const headX = headRows.reduce((s, r) => s + (r.l + r.r) / 2, 0) / Math.max(1, headRows.length);
+  const pad = Math.round(figH * 0.03);
+  const sy = Math.max(0, box.y0 - pad);
+  const H = box.y1 + 1 - sy;
+  const W = Math.min(img.width, Math.round((box.x1 - box.x0 + 1) * 1.06));
+  const sx = Math.round(Math.min(Math.max(0, (box.x0 + box.x1) / 2 - W / 2), img.width - W));
+  // mouth: about 62% of the way from the top of the hair to the shoulders
+  const mouthY = box.y0 + shoulder * 0.62;
+  return { sx, sy, W, H, mx: (headX - sx) / W, my: (mouthY - sy) / H, a: H / W, headFrac: shoulder / H };
 }
 
 /** Browser: PNG data (base64) -> transparent PNG framed like the Cast. */
@@ -132,11 +147,11 @@ export async function cutoutCharacter(img: { mimeType: string; data: string }) {
   const key = borderColor(px);
   if (!isGreenScreen(key)) return null; // model ignored the green screen: ask again
   const removed = removeBackground(px);
-  if (removed < 0.2 || removed > 0.9) return null;
+  if (removed < 0.15 || removed > 0.9) return null;
   const box = alphaBox(px);
   if (!box) return null;
   ctx.putImageData(px, 0, 0);
-  const f = castFrame(box, px);
+  const f = waistFrame(box, px);
   const out = document.createElement('canvas');
   out.width = f.W;
   out.height = f.H;
@@ -146,5 +161,5 @@ export async function cutoutCharacter(img: { mimeType: string; data: string }) {
   let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   cv.width = cv.height = out.width = out.height = 0;
-  return { mimeType: 'image/png', data: btoa(s), mx: f.mx, my: f.my, a: f.a };
+  return { mimeType: 'image/png', data: btoa(s), mx: f.mx, my: f.my, a: f.a, headFrac: f.headFrac };
 }

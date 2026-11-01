@@ -5,24 +5,37 @@ import { CHARS } from './characters';
 import { cutoutCharacter } from '../lib/cutout';
 
 /** cutout: transparent PNG framed like the Cast; mx/my/a as in CHARS. Older saves have no cutout. */
-export type YouCharacter = { mimeType: string; data: string; createdAt: number; cutout?: boolean; mx?: number; my?: number; a?: number };
-export type YouImage = { mimeType: string; data: string; mx: number; my: number; a: number };
+export type YouCharacter = {
+  mimeType: string;
+  data: string;
+  createdAt: number;
+  cutout?: boolean;
+  /** waist-up image; headFrac = share of the image height taken by the head (hair to shoulders) */
+  waist?: boolean;
+  headFrac?: number;
+  mx?: number;
+  my?: number;
+  a?: number;
+};
+export type YouImage = { mimeType: string; data: string; mx: number; my: number; a: number; headFrac: number };
 const KEY = 'you.character';
 
 export const loadYou = () => load<YouCharacter | null>(KEY, null);
 export const saveYou = (y: YouCharacter) => save(KEY, y);
 export const deleteYou = () => save<YouCharacter | null>(KEY, null);
 
-// Image 0-2: Cast references on a green screen. Image 3: her photo. (FLUX.2 takes up to 4 images.)
+// Image 0: her photo (first = strongest). Images 1-3: Cast references, waist-up, on the green screen.
 export const YOU_PROMPT =
-  'Create a new character: the woman from image 3, drawn in exactly the same stylized 3D animated style as the characters in images 0, 1 and 2, ' +
-  'as if she belongs to the same cast: same rendering, proportions, line quality and level of detail. ' +
-  'Lighting exactly like images 0, 1 and 2: dark, moody, low-key lighting, soft cool light on the face, ' +
-  'strong saturated hot-pink rim light along the edges of her hair, face, shoulders, arms and legs, deep shadows, slightly desaturated cool skin, high contrast. ' +
-  'Keep her face shape, facial features, eye color and hairstyle from image 3 so she is clearly recognizable. ' +
-  'Modest casual clothing in black and dark tones with small pink accents, long sleeves, long pants or long skirt, sneakers. ' +
-  'Full body from head to shoes, standing, relaxed confident pose, facing the camera, friendly slight smile, the whole figure inside the frame with a small margin. ' +
-  'Background exactly like images 0, 1 and 2: a perfectly flat, uniform, pure chroma-key green (#00FF00), no floor shadow, no gradient, no green on the character. ' +
+  'Portrait of the woman from image 0, redrawn as a stylized 3D animated character who belongs to the same cast as images 1, 2 and 3. ' +
+  'LIKENESS IS THE TOP PRIORITY: keep her exact face from image 0: face shape, jawline, cheeks, eye shape and eye color, eyebrows, nose, lips, ' +
+  'skin tone, any freckles or beauty marks, and her exact hairstyle: hair length, hair color, parting, bangs, curls or straightness, hairline. ' +
+  'If she wears glasses or a head covering in image 0, keep them exactly. She must be instantly recognizable as the same person. ' +
+  'STYLE from images 1, 2 and 3: same stylized 3D animated rendering, same level of detail and line quality, without changing her features. ' +
+  'LIGHTING exactly like images 1, 2 and 3: dark, moody, low-key; soft cool light on the face; strong saturated hot-pink rim light along her hair, ' +
+  'face edges and shoulders; deep shadows; slightly desaturated cool skin; high contrast. ' +
+  'Modest casual top in black or dark tones with small pink accents, long sleeves, high neckline. ' +
+  'Framing like images 1, 2 and 3: from the waist up, centered, facing the camera, friendly slight smile, the top of the head fully inside the frame. ' +
+  'Background exactly like images 1, 2 and 3: a perfectly flat, uniform, pure chroma-key green (#00FF00), no gradient, no green on her. ' +
   'No text, no logo, no frame.';
 
 export function dataUrl(y: { mimeType: string; data: string }) {
@@ -54,7 +67,10 @@ export async function readPhoto(file: File): Promise<{ mimeType: string; data: s
 const REF_IDS = ['speedrunner', 'overthinker', 'cynic'];
 
 let refsCache: { mimeType: string; data: string }[] | null = null;
-/** Cast references for the model only: placed on the green screen, 384x512. The app's own art is never changed. */
+/**
+ * Cast references for the model only: cropped waist-up around the face and placed on the green screen, 384x512.
+ * The app's own art is never changed.
+ */
 export async function castRefs() {
   if (refsCache) return refsCache;
   refsCache = await Promise.all(
@@ -67,9 +83,12 @@ export async function castRefs() {
       const ctx = cv.getContext('2d')!;
       ctx.fillStyle = '#00FF00';
       ctx.fillRect(0, 0, cv.width, cv.height);
-      const k = Math.min((cv.height * 0.94) / bmp.height, (cv.width * 0.94) / bmp.width);
-      const w = bmp.width * k, h = bmp.height * k;
-      ctx.drawImage(bmp, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+      // waist-up crop: from just above the hair to about 3.4x the mouth height, centered on the face
+      const cropH = Math.min(bmp.height, bmp.height * c.my * 3.4);
+      const cropW = cropH * 0.75;
+      const cx = c.mx * bmp.width;
+      const top = Math.max(0, bmp.height * c.my - cropH * 0.3);
+      ctx.drawImage(bmp, cx - cropW / 2, top, cropW, cropH, 0, 0, cv.width, cv.height);
       bmp.close();
       const blob: Blob = await new Promise((r) => cv.toBlob((b) => r(b!), 'image/png'));
       return { mimeType: 'image/png', data: await blobToB64(blob) };
@@ -91,7 +110,7 @@ async function requestImage(photo: { mimeType: string; data: string }): Promise<
     r = await fetch(`${API_URL}/image`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: YOU_PROMPT, images: [...refs, photo], count: 1 }),
+      body: JSON.stringify({ prompt: YOU_PROMPT, images: [photo, ...refs], count: 1 }),
     });
   } catch {
     throw new ImageError('offline');

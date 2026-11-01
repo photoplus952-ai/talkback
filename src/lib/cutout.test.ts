@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alphaBox, borderColor, castFrame, isGreenScreen, removeBackground, type Px } from './cutout';
+import { alphaBox, borderColor, isGreenScreen, removeBackground, waistFrame, type Px } from './cutout';
 
 /** 60x80 green screen with a dark "figure" (20..40 x 10..75) and a green button inside it. */
 function sample(): Px {
@@ -38,16 +38,26 @@ describe('cutout', () => {
     expect(img.data[i + 1]).toBeLessThanOrEqual(Math.max(img.data[i], img.data[i + 2]) + 6);
   });
 
-  it('frames like the Cast', () => {
-    const img = sample();
+  it('frames waist-up and finds the head', () => {
+    // head: circle r=8 at (30,14); shoulders/torso from y=26 down to the bottom edge
+    const w = 60, h = 80;
+    const data = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        const head = (x - 30) ** 2 + (y - 14) ** 2 <= 64;
+        const neck = x >= 27 && x <= 33 && y > 20 && y < 26;
+        const body = x >= 8 && x <= 52 && y >= 26;
+        data.set(head || neck || body ? [20, 18, 24, 255] : [0, 250, 0, 255], (y * w + x) * 4);
+      }
+    const img = { width: w, height: h, data };
     removeBackground(img);
     const box = alphaBox(img)!;
-    expect(box).toEqual({ x0: 20, y0: 10, x1: 40, y1: 75 });
-    const f = castFrame(box, img);
-    expect(f.a).toBeGreaterThan(1.3);
-    expect(f.a).toBeLessThan(1.45);
+    const f = waistFrame(box, img);
+    expect(f.headFrac).toBeGreaterThan(0.2);
+    expect(f.headFrac).toBeLessThan(0.35);
     expect(f.mx).toBeCloseTo(0.5, 1);
-    expect(f.my).toBeGreaterThan(0.08);
-    expect(f.my).toBeLessThan(0.16);
+    const mouthPx = f.sy + f.my * f.H;
+    expect(mouthPx).toBeGreaterThan(12);
+    expect(mouthPx).toBeLessThan(22);
   });
 });
