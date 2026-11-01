@@ -19,22 +19,30 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 75
-    env:
-      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
-      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - name: Check Modal access
+        env:
+          RAW_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          RAW_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
         run: |
-          if [ -z "$MODAL_TOKEN_ID" ] || [ -z "$MODAL_TOKEN_SECRET" ]; then
-            echo "::warning::Not connected to Modal yet: add MODAL_TOKEN_ID and MODAL_TOKEN_SECRET (docs/SETUP.md, step 6). Skipping."
+          # Accept whatever was pasted (just the value, or the whole "modal token set ..." line):
+          # pick out the ak-/as- parts and mask them BEFORE anything else can print them.
+          ALL="$RAW_ID $RAW_SECRET"
+          ID=$(printf '%s' "$ALL" | grep -oE 'ak-[A-Za-z0-9]+' | head -1 || true)
+          SEC=$(printf '%s' "$ALL" | grep -oE 'as-[A-Za-z0-9]+' | head -1 || true)
+          [ -n "$ID" ] && echo "::add-mask::$ID"
+          [ -n "$SEC" ] && echo "::add-mask::$SEC"
+          if [ -z "$ID" ] || [ -z "$SEC" ]; then
+            echo "::warning::Not connected to Modal yet: add MODAL_TOKEN_ID (ak-...) and MODAL_TOKEN_SECRET (as-...) (docs/SETUP.md, step 6). Skipping."
             echo "HAS_MODAL=false" >> "$GITHUB_ENV"
             exit 0
           fi
-          echo "HAS_MODAL=true" >> "$GITHUB_ENV"
-          # pasted secrets often carry stray spaces or line breaks
-          echo "MODAL_TOKEN_ID=$(printf '%s' "$MODAL_TOKEN_ID" | tr -d '[:space:]')" >> "$GITHUB_ENV"
-          echo "MODAL_TOKEN_SECRET=$(printf '%s' "$MODAL_TOKEN_SECRET" | tr -d '[:space:]')" >> "$GITHUB_ENV"
+          {
+            echo "MODAL_TOKEN_ID=$ID"
+            echo "MODAL_TOKEN_SECRET=$SEC"
+            echo "HAS_MODAL=true"
+          } >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         if: env.HAS_MODAL == 'true'
         with:
