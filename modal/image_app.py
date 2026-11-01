@@ -36,6 +36,7 @@ image = (
         "safetensors",
         "peft>=0.15.0",
         "pillow",
+        "bitsandbytes>=0.45.0",
         "huggingface_hub[hf_transfer]>=0.30",
         "fastapi[standard]",
     )
@@ -58,7 +59,7 @@ def download():
 
 @app.cls(
     image=image,
-    gpu="A100-80GB",  # H100 needs a card on file; A100-80GB runs on the free credits
+    gpu="L4",  # bigger GPUs need a card on file; the model is loaded in 4-bit to fit 24 GB
     volumes={"/models": weights},
     secrets=[modal.Secret.from_name("talkback-auth")],
     scaledown_window=120,  # shut down after 2 minutes idle
@@ -70,14 +71,22 @@ class Engine:
     def load(self):
         import torch
         from diffusers import QwenImageEditPlusPipeline
+        from diffusers.quantizers import PipelineQuantizationConfig
 
         self.torch = torch
-        self.pipe = QwenImageEditPlusPipeline.from_pretrained(MODEL, torch_dtype=torch.bfloat16).to("cuda")
+        # 4-bit weights for the two big parts, so everything fits a 24 GB L4
+        quant = PipelineQuantizationConfig(
+            quant_backend="bitsandbytes_4bit",
+            quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+            components_to_quantize=["transformer", "text_encoder"],
+        )
+        self.pipe = QwenImageEditPlusPipeline.from_pretrained(
+            MODEL, torch_dtype=torch.bfloat16, quantization_config=quant
+        ).to("cuda")
         self.pipe.set_progress_bar_config(disable=True)
         self.fast = False
         try:
             self.pipe.load_lora_weights(LIGHTNING_REPO, weight_name=LIGHTNING_FILE)
-            self.pipe.fuse_lora()
             self.fast = True
         except Exception as e:
             print("running without lightning lora:", type(e).__name__)
@@ -115,8 +124,8 @@ class Engine:
                 negative_prompt=" ",
                 num_inference_steps=steps,
                 true_cfg_scale=cfg,
-                height=1024,
-                width=768,
+                height=896,
+                width=672,
                 generator=self.torch.Generator("cuda").manual_seed(int.from_bytes(os.urandom(4), "little")),
             ).images[0]
             buf = io.BytesIO()
