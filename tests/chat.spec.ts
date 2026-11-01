@@ -129,9 +129,10 @@ test('you 2.0: photo to 4 versions, pick one, saved on the profile', async ({ pa
   const seen = await mockApi(page);
   await page.goto('./#/profile');
   await page.getByRole('link', { name: 'ליצור את הדמות שלי' }).click();
+  await page.getByRole('button', { name: /כאן באפליקציה/ }).click();
   await expect(page.getByText('התמונה שלך לא נשמרת')).toBeVisible();
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
-  await page.locator('input[type=file]:not([capture])').setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: png });
+  await page.locator('input[type=file]:not([capture])').first().setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: png });
   await expect(page.locator('.you-opt img')).toHaveCount(4);
   expect(seen.image).toBe(4);
   expect(seen.prompt).toContain('rim light');
@@ -149,4 +150,21 @@ test('you 2.0: photo to 4 versions, pick one, saved on the profile', async ({ pa
   await page.getByRole('button', { name: 'זו אני' }).click();
   await expect(page.getByAltText('הדמות שלי')).toBeVisible();
   await expect(page.getByRole('button', { name: 'לדבר עם עצמי' })).toBeVisible();
+});
+
+test('you 2.0: made in ChatGPT/Gemini, uploaded, background removed', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('./#/you');
+  await page.getByRole('button', { name: /ב-ChatGPT או ב-Gemini/ }).click();
+  await page.getByRole('button', { name: 'להעתיק' }).click();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toContain('LIKENESS IS THE TOP PRIORITY');
+  expect(copied).toContain('#00FF00');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'לשמור או לשתף' }).click()]);
+  expect(download.suggestedFilename()).toBe('talkback-cast.png');
+  await page.locator('input[type=file]').nth(2).setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: Buffer.from(greenScreenPng(), 'base64') });
+  await expect(page.getByRole('heading', { name: 'זו את?' })).toBeVisible();
+  await page.getByRole('button', { name: 'זו אני' }).click();
+  await expect(page.getByAltText('הדמות שלי')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'להחליף דמות' })).toBeVisible();
 });

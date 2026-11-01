@@ -38,6 +38,41 @@ export const YOU_PROMPT =
   'Background exactly like images 1, 2 and 3: a perfectly flat, uniform, pure chroma-key green (#00FF00), no gradient, no green on her. ' +
   'No text, no logo, no frame.';
 
+/** For her own ChatGPT / Gemini chat: she attaches her photo + the cast sheet and pastes this. */
+export const CHAT_APP_PROMPT =
+  'I am attaching two images: (1) a photo of me, (2) three characters from my app, standing on a green background.\n' +
+  'Create ONE new image: ME, drawn as a new member of that same cast.\n\n' +
+  'LIKENESS IS THE TOP PRIORITY. Keep my exact face from image 1: face shape, jawline, eye shape and color, eyebrows, nose, lips, ' +
+  'skin tone, freckles or beauty marks, and my exact hairstyle (length, color, parting, bangs, texture, hairline). ' +
+  'If I wear glasses or a head covering, keep them exactly. I must be instantly recognizable.\n\n' +
+  'STYLE exactly like image 2: the same stylized 3D animated rendering, proportions, line quality and level of detail.\n' +
+  'LIGHTING exactly like image 2: dark, moody, low-key; soft cool light on the face; strong saturated hot-pink rim light along my hair, ' +
+  'face edges and shoulders; deep shadows; slightly desaturated cool skin; high contrast.\n' +
+  'CLOTHING: modest casual top in black or dark tones with small pink accents, long sleeves, high neckline.\n' +
+  'FRAMING: from the waist up, centered, facing the camera, friendly slight smile, the whole head inside the frame. Portrait 3:4.\n' +
+  'BACKGROUND: perfectly flat, uniform pure green (#00FF00), like image 2. No gradient, no shadow, no green on me.\n' +
+  'No text, no logo, no frame.';
+
+/** The cast sheet she attaches in ChatGPT / Gemini: 3 references side by side on the green screen. */
+export async function castSheet(): Promise<Blob> {
+  const refs = await castRefs();
+  const cv = document.createElement('canvas');
+  cv.width = 384 * 3;
+  cv.height = 512;
+  const ctx = cv.getContext('2d')!;
+  for (let i = 0; i < refs.length; i++) {
+    const bmp = await createImageBitmap(await (await fetch(`data:${refs[i].mimeType};base64,${refs[i].data}`)).blob());
+    ctx.drawImage(bmp, i * 384, 0);
+    bmp.close();
+  }
+  return new Promise((r) => cv.toBlob((b) => r(b!), 'image/png'));
+}
+
+/** Her finished character from ChatGPT / Gemini -> cut out and framed. null if the background could not be removed. */
+export async function fromUpload(file: Blob): Promise<YouImage | null> {
+  return cutoutCharacter(file, false);
+}
+
 export function dataUrl(y: { mimeType: string; data: string }) {
   return `data:${y.mimeType};base64,${y.data}`;
 }
