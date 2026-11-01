@@ -158,6 +158,35 @@ describe('image via Workers AI (FLUX.2)', () => {
   });
 });
 
+describe('image via Modal', () => {
+  it('uses Modal when configured, with the app\'s Modal prompt and the shared token', async () => {
+    let sent: any = null;
+    vi.stubGlobal('fetch', async (u: string, init: RequestInit) => {
+      expect(u).toBe('https://x--talkback-image-engine-generate.modal.run');
+      sent = JSON.parse(String(init.body));
+      return Response.json({ images: [{ mimeType: 'image/png', data: 'iVBOR' }], model: 'qwen' });
+    });
+    const r = await worker.fetch(
+      post('/image', { prompt: 'flux prompt', images: [{ mimeType: 'image/png', data: 'A' }], count: 2, modal: { prompt: 'picture 1 as picture 2', images: [{ mimeType: 'image/jpeg', data: 'P' }] } }),
+      env({ GEMINI_API_KEY: undefined, MODAL_IMAGE_URL: 'https://x--talkback-image-engine-generate.modal.run', MODAL_TOKEN: 'tok' }),
+    );
+    expect(r.status).toBe(200);
+    expect(sent).toEqual({ prompt: 'picture 1 as picture 2', images: [{ mimeType: 'image/jpeg', data: 'P' }], count: 2, _auth: 'tok' });
+    expect(((await r.json()) as any).images).toHaveLength(1);
+  });
+
+  it('health tells which engine is on; warm-up answers at once', async () => {
+    const e = env({ MODAL_IMAGE_URL: 'https://a', MODAL_TOKEN: 't', MODAL_WARM_URL: 'https://w' });
+    const h = await worker.fetch(new Request('https://api.test/health'), e);
+    expect(((await h.json()) as any).imageEngine).toBe('modal');
+    const waited: Promise<unknown>[] = [];
+    vi.stubGlobal('fetch', async () => new Response('{}'));
+    const r = await worker.fetch(post('/image-warm', {}), e, { waitUntil: (p) => waited.push(p) });
+    expect(r.status).toBe(202);
+    expect(waited).toHaveLength(1);
+  });
+});
+
 describe('transcribe', () => {
   it('sends the audio and returns the text', async () => {
     vi.stubGlobal('fetch', async (_u: string, init: RequestInit) => {

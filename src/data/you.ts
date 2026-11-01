@@ -68,6 +68,10 @@ export async function castSheet(): Promise<Blob> {
   return new Promise((r) => cv.toBlob((b) => r(b!), 'image/png'));
 }
 
+async function castSheetB64() {
+  return { mimeType: 'image/png', data: await blobToB64(await castSheet()) };
+}
+
 /** Her finished character from ChatGPT / Gemini -> cut out and framed. null if the background could not be removed. */
 export async function fromUpload(file: Blob): Promise<YouImage | null> {
   return cutoutCharacter(file, false);
@@ -84,18 +88,53 @@ async function blobToB64(b: Blob): Promise<string> {
   return btoa(s);
 }
 
-/** Read her photo into memory only, scaled to the model's input size (512). Nothing is written anywhere. */
-export async function readPhoto(file: File): Promise<{ mimeType: string; data: string }> {
+export type Photo = { small: { mimeType: string; data: string }; large: { mimeType: string; data: string } };
+
+/**
+ * Read her photo into memory only: 512px (FLUX input limit) and 1024px (Modal engine, more face detail).
+ * Nothing is written anywhere.
+ */
+export async function readPhoto(file: File): Promise<Photo> {
   const bmp = await createImageBitmap(file);
-  const k = Math.min(1, 512 / Math.max(bmp.width, bmp.height));
-  const cv = document.createElement('canvas');
-  cv.width = Math.round(bmp.width * k);
-  cv.height = Math.round(bmp.height * k);
-  cv.getContext('2d')!.drawImage(bmp, 0, 0, cv.width, cv.height);
+  const scaled = async (max: number) => {
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(bmp.width * k);
+    cv.height = Math.round(bmp.height * k);
+    cv.getContext('2d')!.drawImage(bmp, 0, 0, cv.width, cv.height);
+    const blob: Blob = await new Promise((r) => cv.toBlob((b) => r(b!), 'image/jpeg', 0.92));
+    cv.width = cv.height = 0;
+    return { mimeType: 'image/jpeg', data: await blobToB64(blob) };
+  };
+  const out = { small: await scaled(512), large: await scaled(1024) };
   bmp.close();
-  const blob: Blob = await new Promise((r) => cv.toBlob((b) => r(b!), 'image/jpeg', 0.9));
-  cv.width = cv.height = 0;
-  return { mimeType: 'image/jpeg', data: await blobToB64(blob) };
+  return out;
+}
+
+/** Prompt for the Modal engine (Qwen-Image-Edit): picture 1 = her photo, picture 2 = the cast sheet. */
+export const ENGINE_PROMPT =
+  'Redraw the woman from picture 1 as a new member of the cast shown in picture 2. ' +
+  'Keep her identity exactly: the same face shape, jawline, eye shape and eye color, eyebrows, nose, lips, skin tone, freckles or marks, ' +
+  'and the same hairstyle, hair length, hair color, parting and hairline; keep glasses or a head covering if she has them. She must be instantly recognizable. ' +
+  'Use exactly the stylized 3D animated rendering of picture 2, and its lighting: dark, moody, low-key, soft cool light on the face, ' +
+  'strong hot-pink rim light along her hair, face edges and shoulders, deep shadows, high contrast. ' +
+  'Modest casual top in black or dark tones with small pink accents, long sleeves, high neckline. ' +
+  'From the waist up, centered, facing the camera, friendly slight smile, the whole head inside the frame. ' +
+  'Flat uniform pure green (#00FF00) background like picture 2. No text.';
+
+/** Wake the engine when she opens the screen, so it is ready when she picks a photo. */
+export function warmEngine() {
+  fetch(`${API_URL}/image-warm`, { method: 'POST' }).catch(() => {});
+}
+
+/** Which image engine the server runs: 'modal' means the strong in-app engine is on. */
+export async function imageEngine(): Promise<string> {
+  try {
+    const r = await fetch(`${API_URL}/health`);
+    return ((await r.json()) as { imageEngine?: string }).imageEngine || '';
+  } catch {
+    return '';
+  }
 }
 
 // Two women and one man from the Cast: style, lighting and the green screen to copy.
@@ -138,14 +177,20 @@ export class ImageError extends Error {
   }
 }
 
-async function requestImage(photo: { mimeType: string; data: string }): Promise<{ mimeType: string; data: string }> {
+async function requestImage(photo: Photo): Promise<{ mimeType: string; data: string }> {
   const refs = await castRefs();
+  const sheet = await castSheetB64();
   let r: Response;
   try {
     r = await fetch(`${API_URL}/image`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: YOU_PROMPT, images: [photo, ...refs], count: 1 }),
+      body: JSON.stringify({
+        prompt: YOU_PROMPT,
+        images: [photo.small, ...refs],
+        count: 1,
+        modal: { prompt: ENGINE_PROMPT, images: [photo.large, sheet] },
+      }),
     });
   } catch {
     throw new ImageError('offline');
@@ -160,7 +205,7 @@ async function requestImage(photo: { mimeType: string; data: string }): Promise<
 }
 
 /** One version of her character, cut out of the background. Off-style results are requested again, at most twice. */
-export async function generateOne(photo: { mimeType: string; data: string }): Promise<YouImage> {
+export async function generateOne(photo: Photo): Promise<YouImage> {
   for (let attempt = 0; attempt < 3; attempt++) {
     const raw = await requestImage(photo);
     const cut = await cutoutCharacter(raw);

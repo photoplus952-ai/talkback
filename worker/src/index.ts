@@ -8,6 +8,7 @@
  *   POST /tts               Gemini TTS, returns audio/wav (model fallback)
  *   POST /live-token        ephemeral token for Gemini Live (the browser connects directly)
  *   POST /image             photo -> character (FLUX.2 on Workers AI, free; or Gemini), returns base64 images
+ *   POST /image-warm        wakes the Modal image engine (she opened the You 2.0 screen)
  *   POST /transcribe        short recording -> exact transcript (keeps her mistakes)
  *
  * Privacy: request bodies (photos, voice, conversations) are never logged or stored.
@@ -20,6 +21,10 @@ export interface Env {
   /** 'workers-ai' (free FLUX.2) or 'gemini' */
   IMAGE_PROVIDER?: string;
   FLUX_MODELS?: string;
+  /** Modal image engine (set by the deploy workflow as secrets) */
+  MODAL_IMAGE_URL?: string;
+  MODAL_WARM_URL?: string;
+  MODAL_TOKEN?: string;
   ALLOWED_ORIGINS: string;
   CHAT_MODELS: string;
   TTS_MODELS: string;
@@ -143,7 +148,7 @@ type Candidate = { content?: { parts?: Part[] } };
 
 async function health(url: URL, env: Env, cors: Record<string, string>) {
   const hasKey = !!env.GEMINI_API_KEY;
-  const body: Json = { ok: true, hasKey, version: VERSION };
+  const body: Json = { ok: true, hasKey, version: VERSION, imageEngine: imageEngine(env) };
   if (hasKey && url.searchParams.get('deep') === '1') {
     const r = await gemini(env, '/v1beta/models?pageSize=1');
     body.keyWorks = r.ok;
@@ -267,12 +272,33 @@ async function fluxImage(env: Env, prompt: string, images: { mimeType: string; d
   return { error: lastErr };
 }
 
+export function imageEngine(env: Env): 'modal' | 'workers-ai' | 'gemini' {
+  if (env.MODAL_IMAGE_URL && env.MODAL_TOKEN) return 'modal';
+  if (env.IMAGE_PROVIDER === 'workers-ai' && env.AI) return 'workers-ai';
+  return 'gemini';
+}
+
+/** Modal (Qwen-Image-Edit): best likeness. The app may send a prompt and images made for it under "modal". */
+async function modalImage(env: Env, b: Json, count: number, cors: Record<string, string>) {
+  const m = (b.modal && typeof b.modal === 'object' ? b.modal : b) as Json;
+  const r = await fetch(env.MODAL_IMAGE_URL!, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: m.prompt, images: m.images, count, _auth: env.MODAL_TOKEN }),
+  });
+  if (!r.ok) return err(r.status === 429 ? 429 : 502, r.status === 429 ? 'quota' : r.status === 401 ? 'engine_auth' : 'upstream', cors);
+  const j = (await r.json()) as { images?: { mimeType: string; data: string }[]; model?: string };
+  if (!j.images?.length) return err(502, 'no_image', cors);
+  return json({ images: j.images, model: j.model }, 200, cors);
+}
+
 async function image(req: Request, env: Env, cors: Record<string, string>) {
   const b = await readJson(req);
   const prompt = typeof b?.prompt === 'string' ? b.prompt : '';
   const images = (Array.isArray(b?.images) ? b!.images : []) as { mimeType: string; data: string }[];
   if (!prompt || images.length > 8) return err(400, 'bad_request', cors);
   const count = Math.min(Math.max(Number(b?.count) || 1, 1), 4);
+  if (imageEngine(env) === 'modal') return modalImage(env, b!, count, cors);
   if (env.IMAGE_PROVIDER === 'workers-ai' && env.AI) {
     const results = await Promise.all(Array.from({ length: count }, () => fluxImage(env, prompt, images)));
     const ok = results.filter((r): r is { image: { mimeType: string; data: string }; model: string } => 'image' in r);
@@ -341,7 +367,7 @@ async function transcribe(req: Request, env: Env, cors: Record<string, string>) 
 // ---------- entry ----------
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx?: { waitUntil(p: Promise<unknown>): void }): Promise<Response> {
     const url = new URL(req.url);
     const origin = req.headers.get('Origin');
     const cors = corsHeaders(origin, env);
@@ -352,7 +378,14 @@ export default {
     // Health answers anyone (it reveals nothing). Everything else only for our app.
     if (url.pathname === '/health' && req.method === 'GET') return health(url, env, cors);
     if (!allowed) return err(403, 'origin_not_allowed');
-    const keyless = url.pathname === '/image' && env.IMAGE_PROVIDER === 'workers-ai' && !!env.AI;
+    if (url.pathname === '/image-warm' && req.method === 'POST') {
+      if (env.MODAL_WARM_URL) {
+        const p = fetch(env.MODAL_WARM_URL).catch(() => null);
+        if (ctx) ctx.waitUntil(p);
+      }
+      return json({ ok: true }, 202, cors);
+    }
+    const keyless = url.pathname === '/image' && imageEngine(env) !== 'gemini';
     if (!env.GEMINI_API_KEY && !keyless) return err(503, 'no_key', cors);
     if (req.method !== 'POST') return err(405, 'method_not_allowed', cors);
 

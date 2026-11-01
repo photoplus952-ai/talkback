@@ -1,0 +1,84 @@
+name: Deploy image engine (Modal)
+
+# Puts the You 2.0 image engine on Modal and connects it to the Worker.
+# Needs repo secrets MODAL_TOKEN_ID, MODAL_TOKEN_SECRET (from modal.com) and the Cloudflare ones.
+on:
+  push:
+    branches: [main]
+    paths: ['modal/**', '.github/workflows/deploy-image-engine.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-engine
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Modal access
+        run: |
+          if [ -z "$MODAL_TOKEN_ID" ] || [ -z "$MODAL_TOKEN_SECRET" ]; then
+            echo "::warning::Not connected to Modal yet: add MODAL_TOKEN_ID and MODAL_TOKEN_SECRET (docs/SETUP.md, step 6). Skipping."
+            echo "HAS_MODAL=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "HAS_MODAL=true" >> "$GITHUB_ENV"
+          # pasted secrets often carry stray spaces or line breaks
+          echo "MODAL_TOKEN_ID=$(printf '%s' "$MODAL_TOKEN_ID" | tr -d '[:space:]')" >> "$GITHUB_ENV"
+          echo "MODAL_TOKEN_SECRET=$(printf '%s' "$MODAL_TOKEN_SECRET" | tr -d '[:space:]')" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v5
+        if: env.HAS_MODAL == 'true'
+        with:
+          python-version: '3.11'
+      - run: pip install modal
+        if: env.HAS_MODAL == 'true'
+      - name: Shared token between the Worker and the engine
+        if: env.HAS_MODAL == 'true'
+        run: |
+          T=$(openssl rand -hex 24)
+          echo "::add-mask::$T"
+          echo "ENGINE_TOKEN=$T" >> "$GITHUB_ENV"
+          modal secret create talkback-auth TALKBACK_TOKEN="$T" --force
+      - name: Deploy
+        if: env.HAS_MODAL == 'true'
+        run: modal deploy modal/image_app.py 2>&1 | tee deploy.txt
+      - name: Download the open model weights (first time only, takes a while)
+        if: env.HAS_MODAL == 'true'
+        run: modal run modal/image_app.py::download
+      - uses: actions/setup-node@v4
+        if: env.HAS_MODAL == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - name: Connect the Worker to the engine
+        if: env.HAS_MODAL == 'true'
+        working-directory: worker
+        env:
+          RAW_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          RAW_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          export CLOUDFLARE_API_TOKEN="$(printf '%s' "$RAW_TOKEN" | tr -d '[:space:]')"
+          export CLOUDFLARE_ACCOUNT_ID="$(printf '%s' "$RAW_ACCOUNT" | tr -d '[:space:]')"
+          GEN=$(grep -oE 'https://[a-zA-Z0-9.-]*generate[a-zA-Z0-9.-]*\.modal\.run' ../deploy.txt | head -1)
+          WARM=$(grep -oE 'https://[a-zA-Z0-9.-]*warm[a-zA-Z0-9.-]*\.modal\.run' ../deploy.txt | head -1)
+          if [ -z "$GEN" ]; then echo "::error::No engine URL in the deploy output"; cat ../deploy.txt; exit 1; fi
+          echo "engine: $GEN"
+          npm ci
+          printf '%s' "$GEN" | npx wrangler secret put MODAL_IMAGE_URL
+          printf '%s' "$WARM" | npx wrangler secret put MODAL_WARM_URL
+          printf '%s' "$ENGINE_TOKEN" | npx wrangler secret put MODAL_TOKEN
+      - name: Wake the engine once (loads the model)
+        if: env.HAS_MODAL == 'true'
+        run: |
+          WARM=$(grep -oE 'https://[a-zA-Z0-9.-]*warm[a-zA-Z0-9.-]*\.modal\.run' deploy.txt | head -1)
+          curl -sS -m 600 "$WARM" || true
