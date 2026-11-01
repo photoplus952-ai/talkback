@@ -125,6 +125,39 @@ describe('image', () => {
   });
 });
 
+describe('image via Workers AI (FLUX.2)', () => {
+  it('sends references as input_image_N and returns the image, without needing the Gemini key', async () => {
+    const calls: { model: string; ct: string; body: string }[] = [];
+    const AI = {
+      async run(model: string, input: any) {
+        const body = await new Response(input.multipart.body).text();
+        calls.push({ model, ct: input.multipart.contentType, body });
+        if (model.includes('dev')) throw new Error('3040: capacity');
+        return { image: '/9j/AAAA' };
+      },
+    };
+    const r = await worker.fetch(
+      post('/image', { prompt: 'image 3 in the style of image 0', images: [{ mimeType: 'image/png', data: 'AAA' }, { mimeType: 'image/jpeg', data: 'BBB' }], count: 2 }),
+      env({ GEMINI_API_KEY: undefined, AI, IMAGE_PROVIDER: 'workers-ai', FLUX_MODELS: 'flux-2-dev,flux-2-klein-9b' }),
+    );
+    expect(r.status).toBe(200);
+    const j = (await r.json()) as any;
+    expect(j.images).toEqual([{ mimeType: 'image/jpeg', data: '/9j/AAAA' }, { mimeType: 'image/jpeg', data: '/9j/AAAA' }]);
+    expect(j.model).toBe('flux-2-klein-9b');
+    expect(calls[0].ct).toContain('multipart/form-data');
+    expect(calls[0].body).toContain('name="input_image_0"');
+    expect(calls[0].body).toContain('name="input_image_1"');
+    expect(calls[0].body).toContain('image 3 in the style of image 0');
+  });
+
+  it('reports the daily free limit as quota', async () => {
+    const AI = { run: async () => { throw new Error('4006: you have used up your daily free allocation of 10,000 neurons'); } };
+    const r = await worker.fetch(post('/image', { prompt: 'x', images: [] }), env({ AI, IMAGE_PROVIDER: 'workers-ai', FLUX_MODELS: 'a' }));
+    expect(r.status).toBe(429);
+    expect(await r.json()).toEqual({ error: 'quota' });
+  });
+});
+
 describe('transcribe', () => {
   it('sends the audio and returns the text', async () => {
     vi.stubGlobal('fetch', async (_u: string, init: RequestInit) => {
