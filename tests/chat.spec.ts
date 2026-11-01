@@ -142,7 +142,7 @@ test('you 2.0: photo to 4 versions, pick one, saved on the profile', async ({ pa
     const c = document.createElement('canvas');
     c.width = img.naturalWidth; c.height = img.naturalHeight;
     const x = c.getContext('2d')!; x.drawImage(img, 0, 0);
-    return x.getImageData(1, c.height - 2, 1, 1).data[3];
+    return x.getImageData(1, 1, 1, 1).data[3];
   });
   expect(transparentCorner).toBe(0);
   await page.getByRole('button', { name: 'גרסה 2' }).click();
