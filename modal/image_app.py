@@ -58,7 +58,7 @@ def download():
 
 @app.cls(
     image=image,
-    gpu="H100",
+    gpu="A100-80GB",  # H100 needs a card on file; A100-80GB runs on the free credits
     volumes={"/models": weights},
     secrets=[modal.Secret.from_name("talkback-auth")],
     scaledown_window=120,  # shut down after 2 minutes idle
