@@ -27,6 +27,24 @@ export function srHeading(parent, text, level = 'h2') {
   return h;
 }
 
+/**
+ * Pointer follower: smooth, cheap (one quickTo per property, no new tweens per
+ * mouse event). map(nx, ny) returns the target values, nx/ny in -1..1.
+ */
+export function follower(el, map, duration = 0.9) {
+  const keys = Object.keys(map(0, 0));
+  const q = Object.fromEntries(keys.map((k) => [k, gsap.quickTo(el, k, { duration, ease: 'power3.out' })]));
+  return (nx, ny) => { const v = map(nx, ny); for (const k of keys) q[k](v[k]); };
+}
+
+/** gentle lift when the pointer is over an object */
+export function hoverLift(el, vars = { scale: 1.05 }) {
+  el.classList.add('hoverable');
+  const back = Object.fromEntries(Object.keys(vars).map((k) => [k, k === 'scale' ? 1 : 0]));
+  el.addEventListener('pointerenter', () => gsap.to(el, { ...vars, duration: 0.45, ease: 'back.out(2.2)', overwrite: false }));
+  el.addEventListener('pointerleave', () => gsap.to(el, { ...back, duration: 0.7, ease: 'elastic.out(1, 0.45)', overwrite: false }));
+}
+
 /** wrap an element so pointer parallax and scroll tweens never fight */
 export function depth(parent, cls = '') {
   return el('div', `depth ${cls}`, parent);

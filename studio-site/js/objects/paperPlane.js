@@ -5,7 +5,7 @@
  * x/y = 0 is the viewport centre, +z comes toward the viewer. That keeps the
  * 3D object locked to the HTML compositions underneath it.
  *
- * The page receives a soft (VSM) shadow, so the plane really sits above the
+ * The page receives a soft contact shadow, so the plane really sits above the
  * typography. Material can morph into a cobalt silhouette (scene 03).
  */
 import * as THREE from 'three';
@@ -107,12 +107,10 @@ export class PaperPlane {
   constructor(canvas) {
     this.canvas = canvas;
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.18;
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.VSMShadowMap;
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(30, 1, 10, 20000);
@@ -120,22 +118,24 @@ export class PaperPlane {
     const hemi = new THREE.HemisphereLight('#ffffff', '#b9bfdc', 1.6);
     this.scene.add(hemi);
     const key = new THREE.DirectionalLight('#ffffff', 2.4);
-    key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
-    key.shadow.radius = 14;
-    key.shadow.blurSamples = 20;
-    key.shadow.bias = -0.0004;
     this.key = key;
     this.scene.add(key, key.target);
     const rim = new THREE.DirectionalLight('#dfe5ff', 0.7);
     rim.position.set(-600, -300, 500);
     this.scene.add(rim);
 
-    // the page: receives the plane's shadow only
-    this.groundMat = new THREE.ShadowMaterial({ opacity: 0.2, color: '#0b1240' });
-    this.ground = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.groundMat);
-    this.ground.receiveShadow = true;
-    this.scene.add(this.ground);
+    // contact shadow on the page: a soft elongated blob (much cheaper than a
+    // real-time shadow map, and softer, like the shadow in frame 01)
+    const sc = document.createElement('canvas'); sc.width = 256; sc.height = 128;
+    const sg = sc.getContext('2d');
+    const grd = sg.createRadialGradient(128, 64, 4, 128, 64, 64);
+    grd.addColorStop(0, 'rgba(11,18,64,0.55)'); grd.addColorStop(0.55, 'rgba(11,18,64,0.18)'); grd.addColorStop(1, 'rgba(11,18,64,0)');
+    sg.setTransform(2, 0, 0, 1, -128, 0); sg.fillStyle = grd; sg.fillRect(0, 0, 256, 128);
+    this.shadowMat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false, opacity: 0.3 });
+    this.shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.shadowMat);
+    this.shadow.renderOrder = -1;
+    this.scene.add(this.shadow);
+    this.fwd = new THREE.Vector3();
 
     const paper = paperTexture();
     const std = (map) => new THREE.MeshStandardMaterial({
@@ -171,15 +171,10 @@ export class PaperPlane {
     this.camera.position.set(0, 0, this.dist);
     this.camera.lookAt(0, 0, 0);
     this.camera.updateProjectionMatrix();
-    this.ground.scale.set(vw * 3, vh * 3, 1);
     // key light from the upper right, in front of the page
     const k = this.key;
     k.position.set(vw * 0.32, vh * 0.55, 1400);
     k.target.position.set(0, 0, 0);
-    const sc = k.shadow.camera;
-    sc.left = -vw * 0.9; sc.right = vw * 0.9; sc.top = vh * 0.9; sc.bottom = -vh * 0.9;
-    sc.near = 100; sc.far = 4000;
-    sc.updateProjectionMatrix();
   }
 
   /**
@@ -207,11 +202,24 @@ export class PaperPlane {
     const op = p.opacity ?? 1;
     for (const m of Object.values(this.mats)) m.opacity = op;
     this.pivot.visible = op > 0.002;
-    // shadow softens and fades as the plane climbs away from the page
+    // shadow: falls down-left (light from the upper right), grows softer and
+    // fainter as the plane climbs away from the page
     const h = Math.max(p.z, 0);
-    this.groundMat.opacity = 0.24 * (p.shadow ?? 1) * op * Math.max(0, 1 - h / 900);
-    this.key.shadow.radius = 8 + Math.min(h / 12, 30);
+    const fade = Math.max(0, 1 - h / 700);
+    this.fwd.set(1, 0, 0).applyQuaternion(p.q);
+    this.shadow.visible = op > 0.002 && fade > 0.01 && p.z > -40;
+    this.shadow.position.set(this.pivot.position.x - h * 0.35, this.pivot.position.y - h * 0.55 - p.size * 0.06, 0);
+    this.shadow.rotation.z = Math.atan2(this.fwd.y, this.fwd.x);
+    const spread = 1 + h / 260;
+    this.shadow.scale.set(p.size * 0.95 * spread, p.size * 0.3 * spread, 1);
+    this.shadowMat.opacity = 0.42 * (p.shadow ?? 1) * op * fade;
+    this.visible = this.pivot.visible;
   }
 
-  render() { this.renderer.render(this.scene, this.camera); }
+  /** draws only when something changed (an invisible plane costs nothing) */
+  render() {
+    if (!this.visible && this.wasVisible === false) return;
+    this.wasVisible = this.visible;
+    this.renderer.render(this.scene, this.camera);
+  }
 }

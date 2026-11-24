@@ -73,11 +73,6 @@ let lenis = null;
 function buildTimeline() {
   scenes.forEach((sc) => sc.scroll && sc.scroll(tl, TIMING));
   tl.set({}, {}, TIMING.total); // fix the length to 100 units
-  // page tint follows the scenes
-  const bgs = SCENES.map((c) => c.bg);
-  tl.fromTo(document.body, { backgroundColor: bgs[0] }, { backgroundColor: bgs[1], duration: 10 }, TIMING.t12[0] + 4)
-    .to(document.body, { backgroundColor: bgs[2], duration: 8 }, TIMING.t23[0] + 4)
-    .to(document.body, { backgroundColor: bgs[3], duration: 8 }, TIMING.t34[0] + 4);
 }
 
 function setupScroll() {
@@ -91,7 +86,7 @@ function setupScroll() {
     gsap.ticker.lagSmoothing(0);
   }
   st = ScrollTrigger.create({
-    trigger: scroller, start: 'top top', end: 'bottom bottom', scrub: 0.7, animation: tl,
+    trigger: scroller, start: 'top top', end: 'bottom bottom', scrub: 0.45, animation: tl,
     onUpdate: (self) => updateNav(self.progress),
   });
 }
@@ -127,7 +122,7 @@ if (!reduced) {
 }
 
 /* ---------------- headline letters lean toward the pointer ---------------- */
-// Uses the CSS `translate` property so it never fights the scroll tweens (which use `transform`).
+// Uses relative left/top offsets so it never fights GSAP, which owns `transform`.
 const MAGNET = [
   { from: -1, to: 9, items: idea.titles },
   { from: 13, to: 42, items: process.titles },
@@ -139,27 +134,33 @@ addEventListener('pointermove', (e) => { pointerActive = e.pointerType === 'mous
 document.addEventListener('pointerleave', () => { pointerActive = false; });
 
 function magnet(t) {
-  for (const g of MAGNET) {
+  MAGNET.forEach((g, gi) => {
     const live = pointerActive && t >= g.from && t <= g.to;
-    for (const it of g.items) {
+    if (!live && g.items.every((it) => Math.abs(it.x) < 0.05 && Math.abs(it.y) < 0.05)) {
+      if (g.dirty) { g.items.forEach((it) => { it.x = it.y = 0; it.els.forEach((el) => { el.style.left = el.style.top = ''; }); }); g.dirty = false; }
+      return;
+    }
+    g.dirty = true;
+    // read every rect first, then write: no forced layout per letter
+    const rects = live ? g.items.map((it) => it.els[0].getBoundingClientRect()) : null;
+    const sc = stage.scenes.get(SCENES[gi].id).fit.s;
+    g.items.forEach((it, i) => {
       let tx = 0; let ty = 0;
       if (live) {
-        const r = it.els[0].getBoundingClientRect();
+        const r = rects[i];
         const dx = pointer.cx - (r.left + r.width / 2) + it.x;
         const dy = pointer.cy - (r.top + r.height / 2) + it.y;
         const d = Math.hypot(dx, dy);
-        const R = Math.max(r.height * 1.6, 120);
-        const k = d < R ? (1 - d / R) ** 2 : 0;
-        tx = dx * 0.16 * k; ty = dy * 0.16 * k;
+        const R = Math.max(r.height * 2.4, 220);
+        const k = d < R ? (1 - d / R) ** 1.5 : 0;
+        tx = dx * 0.34 * k; ty = dy * 0.34 * k;
       }
-      if (Math.abs(tx - it.x) < 0.01 && Math.abs(ty - it.y) < 0.01 && !live) continue;
-      it.x += (tx - it.x) * 0.14;
-      it.y += (ty - it.y) * 0.14;
+      it.x += (tx - it.x) * 0.16;
+      it.y += (ty - it.y) * 0.16;
       // translate is applied inside the scaled artboard: convert screen px to frame px
-      const sc = stage.scenes.get(SCENES[MAGNET.indexOf(g)].id).fit.s;
-      for (const el of it.els) el.style.translate = `${(it.x / sc).toFixed(2)}px ${(it.y / sc).toFixed(2)}px`;
-    }
-  }
+      for (const el of it.els) { el.style.left = `${(it.x / sc).toFixed(2)}px`; el.style.top = `${(it.y / sc).toFixed(2)}px`; }
+    });
+  });
 }
 
 /* ---------------- render loop ---------------- */
@@ -183,11 +184,14 @@ function frame() {
   pointer.sx += (pointer.x - pointer.sx) * 0.05;
   pointer.sy += (pointer.y - pointer.sy) * 0.05;
   const s = stage.scale('idea');
-  if (pose.y === undefined) return;
   pose.y += Math.sin(now * 1.3) * 4 * s * (0.4 + calm);
   pose.z += Math.sin(now * 0.9) * 6 * (0.4 + calm);
-  const wob = new pose.q.constructor().setFromAxisAngle({ x: 1, y: 0, z: 0, isVector3: true }, Math.sin(now * 1.1) * 0.025 + pointer.sy * 0.05 * calm);
-  pose.q.multiply(wob);
+  // the plane leans toward the pointer and drifts with it
+  pose.x += pointer.sx * 34 * s;
+  pose.y += pointer.sy * 22 * s;
+  const Q = pose.q.constructor;
+  pose.q.multiply(new Q().setFromAxisAngle({ x: 1, y: 0, z: 0, isVector3: true }, Math.sin(now * 1.1) * 0.025 - pointer.sx * 0.16));
+  pose.q.multiply(new Q().setFromAxisAngle({ x: 0, y: 0, z: 1, isVector3: true }, -pointer.sy * 0.12));
   pose.size = planeSize * (pose.scale || 1);
   plane.setPose(pose);
   canvas.dataset.layer = pose.layer;

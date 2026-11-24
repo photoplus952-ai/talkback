@@ -44,6 +44,9 @@ export class Stage {
     return s;
   }
 
+  /** a named group whose position can change per layout (see cfg.layouts) */
+  group(id, name, el) { const s = this.scenes.get(id); (s.groups ||= {})[name] = el; return el; }
+
   /** register anything with a layout() so it re-measures on resize / font load */
   part(id, p) { this.scenes.get(id).parts.push(p); return p; }
 
@@ -53,9 +56,17 @@ export class Stage {
     const mobile = vw < 760 || vw / vh < 0.8;
     this.mode = mobile ? 'mobile' : 'desktop';
     document.documentElement.dataset.layout = this.mode;
-    const pad = mobile ? { x: 0.035, top: 0.1, bottom: 0.12 } : { x: 0.06, top: 0.09, bottom: 0.07 };
+    const pad = mobile ? { x: 0.035, top: 0.1, bottom: 0.12 } : { x: 0.05, top: 0.075, bottom: 0.06 };
     for (const s of this.scenes.values()) {
-      const [cx, cy, cw, ch] = s.cfg.crop[this.mode];
+      // a layout can rearrange named groups (e.g. side-by-side on wide screens)
+      const lay = (s.cfg.layouts && s.cfg.layouts[this.mode]) || null;
+      s.offsets = (lay && lay.groups) || {};
+      for (const [name, el] of Object.entries(s.groups || {})) {
+        const [dx, dy] = s.offsets[name] || [0, 0];
+        // layout wrappers are never animated by GSAP, so a plain transform is safe
+        el.style.transform = dx || dy ? `translate3d(${dx}px, ${dy}px, 0)` : '';
+      }
+      const [cx, cy, cw, ch] = (lay && lay.crop) || s.cfg.crop[this.mode];
       const h = staticMode ? s.section.clientHeight || vh : vh;
       const availW = vw * (1 - pad.x * 2);
       const availH = h * (1 - pad.top - pad.bottom);
@@ -69,9 +80,11 @@ export class Stage {
   }
 
   /** reference pixel -> viewport pixel (ignores camera animation) */
-  toScreen(id, x, y) {
-    const { s, tx, ty } = this.scenes.get(id).fit;
-    return [tx + x * s, ty + y * s];
+  toScreen(id, x, y, group) {
+    const sc = this.scenes.get(id);
+    const { s, tx, ty } = sc.fit;
+    const [dx, dy] = (group && sc.offsets && sc.offsets[group]) || [0, 0];
+    return [tx + (x + dx) * s, ty + (y + dy) * s];
   }
 
   scale(id) { return this.scenes.get(id).fit.s; }

@@ -8,7 +8,7 @@
  */
 import { word, copyBlock, tagline, badge } from '../core/typography.js';
 import { COLORS } from '../config.js';
-import { photo, srHeading, depth } from './common.js';
+import { photo, srHeading, depth, follower, hoverLift } from './common.js';
 import { LAYERS } from '../layers.generated.js';
 
 // when the plane passes over each object (timeline units, see flight.js)
@@ -21,7 +21,7 @@ export function createProcess(stage, cfg) {
   const P = (p) => stage.part(cfg.id, p);
 
   // workspace (photo layers, back to front)
-  const desk = depth(art, 'desk-group');
+  const desk = depth(stage.group(cfg.id, 'desk', depth(art, 'layout')), 'desk-group');
   photo(desk, 's2-desk', 'desk-plate');
   const screen = photo(desk, 's2-screen', 'desk-screen');
   const obj = {
@@ -41,11 +41,12 @@ export function createProcess(stage, cfg) {
   obj.pens.style.transformOrigin = origin('s2-pens', 652, 1092);
   obj.mug.style.transformOrigin = origin('s2-mug', 870, 1215);
 
-  const b = P(badge(art, { ...cfg.badge, numText: cfg.index }));
-  const copy = P(copyBlock(art, cfg.copy, cfg.ref.w));
-  const the = P(word(art, { ...cfg.the, color: COLORS.cobalt, cls: 'masked' }));
-  const proc = P(word(art, { ...cfg.word, color: COLORS.cobalt }));
-  const tag = P(tagline(art, cfg.tagline));
+  const text = depth(stage.group(cfg.id, 'text', depth(art, 'layout')), 'text-group');
+  const b = P(badge(text, { ...cfg.badge, numText: cfg.index }));
+  const copy = P(copyBlock(text, cfg.copy, cfg.ref.w));
+  const the = P(word(text, { ...cfg.the, color: COLORS.cobalt, cls: 'masked' }));
+  const proc = P(word(text, { ...cfg.word, color: COLORS.cobalt }));
+  const tag = P(tagline(text, cfg.tagline));
 
   /** a small physical reaction: push, then settle with a damped spring */
   function react(tl, el, at, push, settle = 'elastic.out(1, 0.35)') {
@@ -57,7 +58,7 @@ export function createProcess(stage, cfg) {
     const [a0, a1] = T.t12;
     const [b0] = T.process.build;
     // camera: enter the workspace from a steep angle
-    tl.fromTo(s.section, { opacity: 0 }, { opacity: 1, duration: 4, ease: 'power1.out' }, a0 + 4)
+    tl.fromTo(s.section, { autoAlpha: 0 }, { autoAlpha: 1, duration: 4, ease: 'power1.out' }, a0 + 4)
       .fromTo(s.cam, { rotateX: 34, scale: 1.22, yPercent: 14 }, {
         rotateX: 0, scale: 1, yPercent: 0, duration: a1 - a0 - 1, ease: 'power3.out',
       }, a0 + 3)
@@ -96,13 +97,15 @@ export function createProcess(stage, cfg) {
     // 02 -> 03: the camera rushes forward with the plane
     const [c0, c1] = T.t23;
     tl.to(s.cam, { scale: 1.9, yPercent: -4, duration: c1 - c0 - 2, ease: 'power3.in' }, c0 + 1)
-      .to(s.section, { opacity: 0, duration: 3.5, ease: 'power2.in' }, c0 + 5.5);
+      .to(s.section, { autoAlpha: 0, duration: 3.5, ease: 'power2.in' }, c0 + 5.5);
   }
 
-  /* gentle pointer tilt on the workspace */
-  function pointer(nx, ny) {
-    gsap.to(desk, { rotateY: nx * 2.2, rotateX: -ny * 1.6, x: nx * 6, duration: 1.2, ease: 'power3.out', overwrite: 'auto' });
-  }
+  /* pointer: the workspace tilts toward the pointer, the title floats against it */
+  const fDesk = follower(desk, (nx, ny) => ({ rotateY: nx * 7, rotateX: -ny * 5, x: nx * 18 }), 1.1);
+  const fText = follower(text, (nx, ny) => ({ x: nx * -16, y: ny * -10 }), 1.2);
+  function pointer(nx, ny) { fDesk(nx, ny); fText(nx, ny); }
+  // every object answers the pointer
+  Object.values(obj).forEach((o) => hoverLift(o, { scale: 1.06 }));
 
   return { s, scroll, pointer, titles: [...the.chars, ...proc.chars] };
 }

@@ -10,7 +10,7 @@
  */
 import { word, stretchE, el } from '../core/typography.js';
 import { COLORS } from '../config.js';
-import { photo, srHeading, depth } from './common.js';
+import { photo, srHeading, depth, follower, hoverLift } from './common.js';
 import { LAYERS } from '../layers.generated.js';
 
 // laptop screen: the light display area and the UI blocks that load into it (reference px)
@@ -75,7 +75,7 @@ export function createProduct(stage, cfg) {
   function scroll(tl, T) {
     const [c0, c1] = T.t23;
     const [b0] = T.product.build;
-    tl.fromTo(s.sections, { opacity: 0 }, { opacity: 1, duration: 3, ease: 'power1.out' }, c0 + 6)
+    tl.fromTo(s.sections, { autoAlpha: 0 }, { autoAlpha: 1, duration: 3, ease: 'power1.out' }, c0 + 6)
       .fromTo(s.cams, { scale: 0.72, yPercent: 6 }, { scale: 1, yPercent: 0, duration: c1 - c0 + 2, ease: 'power3.out' }, c0 + 5)
       // the stamp: the headline drops onto the page and settles
       .fromTo(dMain, { scale: 1.55, opacity: 0 }, { scale: 0.975, opacity: 1, duration: 2.6, ease: 'power3.in' }, b0 + 1.5)
@@ -104,15 +104,17 @@ export function createProduct(stage, cfg) {
     // 03 -> 04
     const [d0] = T.t34;
     tl.to(s.cams, { scale: 0.9, duration: 9, ease: 'power2.in' }, d0 + 2)
-      .to(s.sections, { opacity: 0, duration: 3 }, d0 + 8);
+      .to(s.sections, { autoAlpha: 0, duration: 3 }, d0 + 8);
   }
 
   // pointer: depth parallax on the type, devices lean toward the pointer
-  function pointer(nx, ny) {
-    const q = (el2, k) => gsap.to(el2, { x: nx * k, y: ny * k * 0.6, duration: 1.1, ease: 'power3.out', overwrite: 'auto' });
-    q(dEcho2, -14); q(dEcho1, -8); q(dMain, 5);
-    gsap.to(dev, { x: nx * 12, rotateY: nx * 4, rotateX: -ny * 2.5, duration: 1.2, ease: 'power3.out', overwrite: 'auto' });
-  }
+  const fE2 = follower(dEcho2, (nx, ny) => ({ x: nx * -40, y: ny * -22 }), 1.3);
+  const fE1 = follower(dEcho1, (nx, ny) => ({ x: nx * -24, y: ny * -13 }), 1.15);
+  const fMain = follower(dMain, (nx, ny) => ({ x: nx * 14, y: ny * 8 }), 1);
+  const fDev = follower(dev, (nx, ny) => ({ x: nx * 22, rotateY: nx * 9, rotateX: -ny * 6 }), 1.1);
+  function pointer(nx, ny) { fE2(nx, ny); fE1(nx, ny); fMain(nx, ny); fDev(nx, ny); }
+  hoverLift(phone, { scale: 1.05 });
+  hoverLift(star, { scale: 1.12, rotate: 12 });
 
   return { s, scroll, pointer, titles: [...th.chars, ...prod.chars] };
 }

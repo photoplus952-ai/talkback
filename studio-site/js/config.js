@@ -75,6 +75,10 @@ export const PROCESS = {
     text: 'FROM STRATEGY TO EXECUTION', x0: 72, x1: 868, capTop: 783, capH: 19, weight: 500, color: COLORS.ink,
     underline: { x0: 71, x1: 472, y: 819, h: 3.5 },
   },
+  // wide screens: the title block sits beside the workspace instead of above it
+  layouts: {
+    desktop: { crop: [40, 115, 1880, 880], groups: { desk: [905, -691] } },
+  },
   // swatch fan pivots around the rivet
   swatchPivot: { x: 186, y: 1318 },
 };

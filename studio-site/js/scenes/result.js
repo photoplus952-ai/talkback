@@ -9,7 +9,7 @@
  */
 import { word, stretchE, copyBlock, tagline, el } from '../core/typography.js';
 import { COLORS } from '../config.js';
-import { photo, srHeading, depth } from './common.js';
+import { photo, srHeading, depth, follower } from './common.js';
 
 export function createResult(stage, cfg) {
   const s = stage.add(cfg, document.getElementById('scene-result'));
@@ -73,7 +73,8 @@ export function createResult(stage, cfg) {
     const [d0, d1] = Tm.t34;
     const [b0] = Tm.result.build;
     // iris reveal (centre set by main.js where the plane meets the lens)
-    tl.fromTo(s.section, { '--iris': '0%' }, { '--iris': '150%', duration: d1 - d0 - 5, ease: 'power2.in' }, d0 + 5)
+    tl.fromTo(s.section, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.01 }, d0 + 5)
+      .fromTo(s.section, { '--iris': '0%' }, { '--iris': '150%', duration: d1 - d0 - 5, ease: 'power2.in' }, d0 + 5)
       .fromTo(people, { scale: 1.14, rotate: -2 }, { scale: 1, rotate: 0, duration: 12, ease: 'power3.out' }, d0 + 6)
       // band unrolls from the top, curl on its leading edge
       .fromTo(ribbon, { p: 0 }, { p: 1, duration: 7, ease: 'power2.inOut', onUpdate: drawRibbon }, b0 + 1)
@@ -105,9 +106,10 @@ export function createResult(stage, cfg) {
   band.addEventListener('pointerenter', () => gsap.to(bandWords[0].root, { '--fill': 1, duration: 0.6, ease: 'power2.out' }));
   band.addEventListener('pointerleave', () => gsap.to(bandWords[0].root, { '--fill': 0, duration: 0.8, ease: 'power2.out' }));
 
-  function pointer(nx, ny) {
-    gsap.to(people, { x: nx * 6, y: ny * 4, duration: 1.4, ease: 'power3.out', overwrite: 'auto' });
-  }
+  const fPeople = follower(people, (nx, ny) => ({ x: nx * 18, y: ny * 12 }), 1.3);
+  const fTitle = follower([outline.g, fill.g], (nx, ny) => ({ x: nx * -16, y: ny * -10 }), 1.1);
+  const fCopy = follower(copy.root, (nx, ny) => ({ x: nx * -24, y: ny * -14 }), 1.2);
+  function pointer(nx, ny) { fPeople(nx, ny); fTitle(nx, ny); fCopy(nx, ny); }
 
   // magnet: outline + fill letters move as pairs
   const titles = [...outline.th.chars, ...outline.res.chars].map((c, i) => [c, [...fill.th.chars, ...fill.res.chars][i]]);

@@ -7,7 +7,7 @@
  */
 import { word, stretchE, copyBlock, tagline, badge } from '../core/typography.js';
 import { COLORS } from '../config.js';
-import { srHeading, depth } from './common.js';
+import { srHeading, depth, follower } from './common.js';
 
 export const LANDING = 3.3; // seconds into the opening, matches INTRO in flight.js
 
@@ -82,8 +82,14 @@ export function createIdea(stage, cfg) {
       }, a0 + 1.2)
       .to([copy.root, b.root, b.num.root], { opacity: 0, y: -30, duration: 4, ease: 'power1.in' }, a0 + 1)
       .to([tag.root, tag.underline], { opacity: 0, duration: 3 }, a0 + 1.5)
-      .to(s.section, { opacity: 0, duration: 2.5, ease: 'power1.in' }, a0 + 4.5);
+      .to(s.section, { autoAlpha: 0, duration: 2.5, ease: 'power1.in' }, a0 + 4.5);
   }
 
-  return { s, intro, scroll, titles: [...the.chars, ...id.chars, ...a.chars] };
+  // pointer: the two title lines sit at different depths
+  const fBack = follower(titleBack, (nx, ny) => ({ x: nx * -26, y: ny * -16 }));
+  const fFront = follower(titleFront, (nx, ny) => ({ x: nx * 14, y: ny * 9 }));
+  const fCopy = follower(copy.root, (nx, ny) => ({ x: nx * -34, y: ny * -20 }), 1.2);
+  function pointer(nx, ny) { fBack(nx, ny); fFront(nx, ny); fCopy(nx, ny); }
+
+  return { s, intro, scroll, pointer, titles: [...the.chars, ...id.chars, ...a.chars] };
 }

@@ -7,7 +7,7 @@
  * is given it faces along its path and banks into turns automatically.
  *
  *   t      timeline units (0..100), same clock as the scroll timeline
- *   at     ['scene', x, y] in reference px, or ['vp', fx, fy] viewport fractions
+ *   at     ['scene', x, y, group?] in reference px, or ['vp', fx, fy] viewport fractions
  *   z      px toward the viewer (0 = touching the page). 'cam' values are
  *          fractions of the camera distance (1 = at the lens)
  *   rot    [x, y, z] degrees (Euler ZYX). Omit for automatic heading.
@@ -27,8 +27,8 @@ export const PATH = [
   { t: 9, at: ['idea', 800, 690], z: 280, ease: 'linear' },
   { t: 13, at: ['vp', 0.84, 0.2], z: 360, ease: 'linear', sc: 0.8 },
   { t: 17, at: ['vp', 0.7, 0.36], z: 240, ease: 'linear', sc: 0.5 },
-  { t: 21, at: ['process', 560, 990], z: 150, ease: 'linear' },
-  { t: 25, at: ['process', 240, 1170], z: 110, ease: 'linear' },
+  { t: 21, at: ['process', 560, 990, 'desk'], z: 150, ease: 'linear' },
+  { t: 25, at: ['process', 240, 1170, 'desk'], z: 110, ease: 'linear' },
   { t: 29, at: ['vp', 0.04, 0.24], z: 320, ease: 'in' },
   { t: 31, at: ['vp', -0.25, 0.1], z: 420, op: 0, ease: 'linear' },
   { t: 38, at: ['vp', -0.2, 0.95], z: 200, op: 0, ease: 'linear', sc: 0.6 },
@@ -39,7 +39,7 @@ export const PATH = [
   { t: 54, at: ['product', 1010, 760], z: -60, sil: 1, ease: 'linear' },
   { t: 58, at: ['product', 470, 820], z: -70, sil: 1, ease: 'linear' },
   { t: 61, at: ['product', 120, 600], z: 120, sil: 0.4, ease: 'linear' },
-  { t: 63.5, at: ['vp', -0.22, 0.2], z: 260, op: 0, sil: 0, layer: 'top', ease: 'linear' },
+  { t: 62.6, at: ['vp', -0.22, 0.2], z: 260, op: 0, sil: 0, layer: 'top', ease: 'linear' },
   { t: 67, at: ['vp', 0.52, 0.62], z: -1400, op: 0, ease: 'linear' },
   { t: 69, at: ['vp', 0.5, 0.58], z: -900, ease: 'linear' },
   { t: 74, at: ['vp', 0.48, 0.5], z: { cam: 0.55 }, ease: 'linear' },
@@ -87,12 +87,13 @@ export class Flight {
   resolve(camDist) {
     const { stage } = this;
     this.pts = this.keys.map((k) => {
-      const [kind, a, b] = k.at;
-      const [x, y] = kind === 'vp' ? [a * stage.vw, b * stage.vh] : stage.toScreen(kind, a, b);
+      const [kind, a, b, group] = k.at;
+      const [x, y] = kind === 'vp' ? [a * stage.vw, b * stage.vh] : stage.toScreen(kind, a, b, group);
       const z = typeof k.z === 'object' ? k.z.cam * camDist : k.z;
       return new THREE.Vector3(x, y, z);
     });
     this.explicit = this.keys.map((k) => (k.rot ? this.quatFromDeg(k.rot, new THREE.Quaternion()) : null));
+    this.tangents();
   }
 
   quatFromDeg(r, out) {
@@ -100,35 +101,53 @@ export class Flight {
     return out.setFromEuler(this.euler);
   }
 
+  /** segment index and linear progress u (0..1) inside it */
   segment(t) {
     const k = this.keys;
     if (t <= k[0].t) return [0, 0];
     for (let i = 0; i < k.length - 1; i++) {
-      if (t <= k[i + 1].t) {
-        const u = (t - k[i].t) / (k[i + 1].t - k[i].t);
-        return [i, EASE[k[i].ease || 'linear'](u)];
-      }
+      if (t <= k[i + 1].t) return [i, (t - k[i].t) / (k[i + 1].t - k[i].t)];
     }
     return [k.length - 2, 1];
   }
 
+  /**
+   * Time-knotted cubic Hermite spline: velocity is continuous across every
+   * keyframe (no speed jumps). Keys marked as rests ('inOut' / 'in' / 'out')
+   * get a zero tangent, so the plane eases in and out of them.
+   */
+  tangents() {
+    const k = this.keys; const p = this.pts; const n = k.length;
+    const still = new Set();
+    k.forEach((key, i) => {
+      if (key.ease === 'inOut') { still.add(i); still.add(i + 1); }
+      if (key.ease === 'in') still.add(i);
+      if (key.ease === 'out') still.add(i + 1);
+    });
+    this.tan = p.map((pt, i) => {
+      if (still.has(i)) return new THREE.Vector3();
+      const a = Math.max(i - 1, 0); const b = Math.min(i + 1, n - 1);
+      return p[b].clone().sub(p[a]).divideScalar(Math.max(k[b].t - k[a].t, 1e-3));
+    });
+  }
+
   position(t, out = new THREE.Vector3()) {
     const [i, u] = this.segment(t);
-    const p = this.pts;
-    const p0 = p[Math.max(i - 1, 0)]; const p1 = p[i]; const p2 = p[i + 1]; const p3 = p[Math.min(i + 2, p.length - 1)];
-    // uniform Catmull-Rom
+    const p0 = this.pts[i]; const p1 = this.pts[i + 1];
+    const dt = this.keys[i + 1].t - this.keys[i].t;
+    const m0 = this.tan[i]; const m1 = this.tan[i + 1];
     const u2 = u * u; const u3 = u2 * u;
+    const h00 = 2 * u3 - 3 * u2 + 1; const h10 = u3 - 2 * u2 + u; const h01 = -2 * u3 + 3 * u2; const h11 = u3 - u2;
     for (const ax of ['x', 'y', 'z']) {
-      out[ax] = 0.5 * ((2 * p1[ax]) + (-p0[ax] + p2[ax]) * u
-        + (2 * p0[ax] - 5 * p1[ax] + 4 * p2[ax] - p3[ax]) * u2
-        + (-p0[ax] + 3 * p1[ax] - 3 * p2[ax] + p3[ax]) * u3);
+      out[ax] = h00 * p0[ax] + h10 * dt * m0[ax] + h01 * p1[ax] + h11 * dt * m1[ax];
     }
     return out;
   }
 
   /** scalar channel (op, sil) linearly interpolated with the segment easing */
   channel(t, name, def) {
-    const [i, u] = this.segment(t);
+    const [i, u0] = this.segment(t);
+    const u = u0 * u0 * (3 - 2 * u0);
     const val = (j) => {
       for (let n = j; n >= 0; n--) if (this.keys[n][name] !== undefined) return this.keys[n][name];
       return def;
@@ -179,7 +198,7 @@ export class Flight {
     const [si, su] = this.segment(t);
     if (this.explicit[si] && this.explicit[si + 1]) {
       // both ends authored: rotate straight from one pose to the other
-      q.copy(this.explicit[si]).slerp(this.explicit[si + 1], su);
+      q.copy(this.explicit[si]).slerp(this.explicit[si + 1], su * su * (3 - 2 * su));
     } else if (qe) q.slerp(qe, best);
 
     return {
