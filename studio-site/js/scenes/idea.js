@@ -78,11 +78,11 @@ export function createIdea(stage, cfg) {
       .to(pieces, {
         x: () => rnd(-110, 110), y: () => rnd(-260, -120), scale: () => rnd(0.2, 0.45),
         rotate: () => rnd(-28, 28), opacity: 0,
-        duration: 4.2, stagger: { each: 0.22, from: 'random' }, ease: 'power2.in',
-      }, a0 + 1.2)
-      .to([copy.root, b.root, b.num.root], { opacity: 0, y: -30, duration: 4, ease: 'power1.in' }, a0 + 1)
-      .to([tag.root, tag.underline], { opacity: 0, duration: 3 }, a0 + 1.5)
-      .to(s.section, { autoAlpha: 0, duration: 2.5, ease: 'power1.in' }, a0 + 4.5);
+        duration: 3, stagger: { each: 0.12, from: 'random' }, ease: 'power2.in',
+      }, a0 + 0.5)
+      .to([copy.root, b.root, b.num.root], { opacity: 0, y: -30, duration: 2.5, ease: 'power1.in' }, a0 + 0.5)
+      .to([tag.root, tag.underline], { opacity: 0, duration: 2 }, a0 + 0.8)
+      .to(s.section, { autoAlpha: 0, duration: 1.5, ease: 'power1.in' }, a0 + 3);
   }
 
   // pointer: the two title lines sit at different depths

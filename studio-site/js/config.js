@@ -148,7 +148,7 @@ export const SCENES = [IDEA, PROCESS, PRODUCT, RESULT];
  */
 export const TIMING = {
   total: 100,
-  scrollLength: 9.5, // in viewport heights
+  scrollLength: 8, // in viewport heights
   idea: { rest: [0, 5] },
   t12: [5, 21],
   process: { build: [13, 30], rest: [30, 38] },

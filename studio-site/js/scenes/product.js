@@ -75,8 +75,8 @@ export function createProduct(stage, cfg) {
   function scroll(tl, T) {
     const [c0, c1] = T.t23;
     const [b0] = T.product.build;
-    tl.fromTo(s.sections, { autoAlpha: 0 }, { autoAlpha: 1, duration: 3, ease: 'power1.out' }, c0 + 6)
-      .fromTo(s.cams, { scale: 0.72, yPercent: 6 }, { scale: 1, yPercent: 0, duration: c1 - c0 + 2, ease: 'power3.out' }, c0 + 5)
+    tl.fromTo(s.sections, { autoAlpha: 0 }, { autoAlpha: 1, duration: 2.5, ease: 'power1.out' }, c0 + 7.5)
+      .fromTo(s.cams, { scale: 0.72, yPercent: 6 }, { scale: 1, yPercent: 0, duration: c1 - c0 - 3, ease: 'power3.out' }, c0 + 7)
       // the stamp: the headline drops onto the page and settles
       .fromTo(dMain, { scale: 1.55, opacity: 0 }, { scale: 0.975, opacity: 1, duration: 2.6, ease: 'power3.in' }, b0 + 1.5)
       .to(dMain, { scale: 1, duration: 2.2, ease: 'back.out(3)' }, b0 + 4.1)
@@ -85,8 +85,8 @@ export function createProduct(stage, cfg) {
       .fromTo(dEcho2, { yPercent: under(cfg.echoes[1].capTop), opacity: 0 }, { yPercent: 0, opacity: 1, duration: 4.4, ease: 'power3.out' }, b0 + 4.9)
       .fromTo(e.bars, { scaleX: 0.2 }, { scaleX: 1, transformOrigin: '0 50%', duration: 3.5, stagger: 0.3, ease: 'expo.out' }, b0 + 4.2)
       // devices
-      .fromTo(dev, { yPercent: 10 }, { yPercent: 0, duration: 8, ease: 'power3.out' }, c0 + 5)
-      .fromTo(lidWrap, { transform: lidOpen(82) }, { transform: lidOpen(0), duration: 7, ease: 'power2.inOut' }, b0 + 1)
+      .fromTo(dev, { yPercent: 10 }, { yPercent: 0, duration: 7, ease: 'power3.out' }, c0 + 7)
+      .fromTo(lidWrap, { transform: lidOpen(82) }, { transform: lidOpen(0), duration: 6.5, ease: 'power2.inOut' }, b0 + 2.2)
       // screen turns on, then loads block by block like a page coming up
       .fromTo(blank, { opacity: 0 }, { opacity: 1, duration: 1.4 }, b0 + 6.5)
       .fromTo(blocks, { opacity: 0, y: 14, scale: 0.94 }, {

@@ -82,6 +82,7 @@ function setupScroll() {
   if (window.Lenis) {
     lenis = new window.Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: 0.9 });
     lenis.on('scroll', ScrollTrigger.update);
+    lenis.on('scroll', queueSnap);
     gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
   }
@@ -91,9 +92,34 @@ function setupScroll() {
   });
 }
 
+/* ---------------- soft lock on each scene's resting moment ----------------
+   When scrolling stops near a scene's resting composition, the page eases
+   onto it, so every frame can be seen whole. Scrolling on overrides it. */
+let snapTimer = 0; let snapping = false;
+function queueSnap() {
+  clearTimeout(snapTimer);
+  if (snapping || !st) return;
+  snapTimer = setTimeout(trySnap, 170);
+}
+function trySnap() {
+  if (!introDone || !lenis) return;
+  const span = st.end - st.start;
+  const t = ((lenis.scroll - st.start) / span) * TIMING.total;
+  let best = null;
+  for (const a of anchors) if (Math.abs(t - a) < 7 && (best === null || Math.abs(t - a) < Math.abs(t - best))) best = a;
+  if (best === null || Math.abs(t - best) < 0.25) return;
+  snapping = true;
+  lenis.scrollTo(st.start + span * (best / TIMING.total), {
+    duration: 0.9, easing: (x) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2),
+    onComplete: () => { snapping = false; },
+  });
+  setTimeout(() => { snapping = false; }, 1100);
+}
+
 /* ---------------- navigation (works with and without motion) ---------------- */
 const navButtons = [...document.querySelectorAll('.scene-nav button')];
-const anchors = [0, TIMING.process.rest[0] + 2, TIMING.product.rest[0] + 3, TIMING.result.rest[0] + 4];
+// resting moment of each scene (timeline units): the full composition, nothing moving
+const anchors = [0, 34, 63.5, 95];
 function updateNav(progress) {
   const t = progress * TIMING.total;
   let active = 0;
@@ -165,6 +191,7 @@ function magnet(t) {
 
 /* ---------------- render loop ---------------- */
 let introDone = reduced;
+let leftTop = false; let replaying = false;
 
 function frame() {
   magnet(tl.time());
@@ -172,10 +199,17 @@ function frame() {
   const now = performance.now() / 1000;
   const t = tl.time();
   let pose;
+  // back at the top after a visit further down: the opening plays again
+  if (t > 10) leftTop = true;
+  if (leftTop && introDone && t < 0.3 && introTl) {
+    leftTop = false; replaying = true; introDone = false;
+    introTl.timeScale(1.6).restart();
+  }
+  if (replaying && t > 0.8) { introTl.progress(1); introDone = true; replaying = false; }
   if (!introDone) {
     const it = introTl ? introTl.time() : 0;
     pose = introFlight.pose(Math.min(it, INTRO[INTRO.length - 1].t));
-    if (it >= INTRO[INTRO.length - 1].t) introDone = true;
+    if (it >= INTRO[INTRO.length - 1].t) { introDone = true; replaying = false; }
   } else {
     pose = flight.pose(t);
   }

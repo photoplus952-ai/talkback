@@ -58,18 +58,18 @@ export function createProcess(stage, cfg) {
     const [a0, a1] = T.t12;
     const [b0] = T.process.build;
     // camera: enter the workspace from a steep angle
-    tl.fromTo(s.section, { autoAlpha: 0 }, { autoAlpha: 1, duration: 4, ease: 'power1.out' }, a0 + 4)
+    tl.fromTo(s.section, { autoAlpha: 0 }, { autoAlpha: 1, duration: 3, ease: 'power1.out' }, a0 + 4.5)
       .fromTo(s.cam, { rotateX: 34, scale: 1.22, yPercent: 14 }, {
-        rotateX: 0, scale: 1, yPercent: 0, duration: a1 - a0 - 1, ease: 'power3.out',
-      }, a0 + 3)
-      .fromTo(desk, { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 7, ease: 'power3.out' }, a0 + 4);
+        rotateX: 0, scale: 1, yPercent: 0, duration: a1 - a0 - 4.5, ease: 'power3.out',
+      }, a0 + 4.5)
+      .fromTo(desk, { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 6, ease: 'power3.out' }, a0 + 4.5);
 
     // the desk is set: objects land one after another
     ['plant', 'lamp', 'pens', 'clock', 'mug', 'swatches', 'notebook'].forEach((k, i) => {
-      tl.fromTo(obj[k], { y: -95 }, { y: 0, duration: 2.2, ease: 'bounce.out' }, a0 + 5.5 + i * 0.75)
-        .fromTo(obj[k], { opacity: 0 }, { opacity: 1, duration: 0.6 }, a0 + 5.5 + i * 0.75);
+      tl.fromTo(obj[k], { y: -95 }, { y: 0, duration: 2.2, ease: 'bounce.out' }, a0 + 6 + i * 0.75)
+        .fromTo(obj[k], { opacity: 0 }, { opacity: 1, duration: 0.6 }, a0 + 6 + i * 0.75);
     });
-    tl.set(obj.swatches, { rotate: -17 }, a0 + 5.4); // fan arrives closed
+    tl.set(obj.swatches, { rotate: -17 }, a0 + 5.9); // fan arrives closed
 
     // headline
     tl.fromTo(the.chars, { yPercent: 108 }, { yPercent: 0, duration: 3.5, stagger: 0.45, ease: 'power4.out' }, b0 + 1)
@@ -80,6 +80,7 @@ export function createProcess(stage, cfg) {
       .fromTo(b.num.root, { opacity: 0 }, { opacity: 1, duration: 2 }, b0 + 2.6)
       .fromTo(copy.lines.map((l) => l.firstChild), { yPercent: 110 }, { yPercent: 0, duration: 3, stagger: 0.6, ease: 'power3.out' }, b0 + 5)
       // FROM STRATEGY TO EXECUTION: words light up with the scroll, the line fills like a progress meter
+      .fromTo(tag.root, { opacity: 0 }, { opacity: 1, duration: 1.5 }, b0 + 5.5)
       .fromTo(tag.words, { color: '#CFCFDA' }, { color: COLORS.ink, duration: 1.6, stagger: 2.2, ease: 'power1.out' }, b0 + 6)
       .fromTo(tag.underline, { scaleX: 0 }, { scaleX: 1, transformOrigin: '0 50%', duration: 9, ease: 'none' }, b0 + 6);
 
@@ -97,7 +98,7 @@ export function createProcess(stage, cfg) {
     // 02 -> 03: the camera rushes forward with the plane
     const [c0, c1] = T.t23;
     tl.to(s.cam, { scale: 1.9, yPercent: -4, duration: c1 - c0 - 2, ease: 'power3.in' }, c0 + 1)
-      .to(s.section, { autoAlpha: 0, duration: 3.5, ease: 'power2.in' }, c0 + 5.5);
+      .to(s.section, { autoAlpha: 0, duration: 3, ease: 'power2.in' }, c0 + 4);
   }
 
   /* pointer: the workspace tilts toward the pointer, the title floats against it */
