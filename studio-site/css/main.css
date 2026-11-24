@@ -1,0 +1,222 @@
+/* ------------------------------------------------------------------
+   Studio — scroll story
+   Fonts: Stretch Pro (headlines, drop the file in /fonts),
+          Google Sans (copy). Archivo Expanded Black stands in until
+          Stretch Pro is provided.
+------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Stretch Pro';
+  src: url('../fonts/StretchPro.woff2') format('woff2'), url('../fonts/StretchPro.otf') format('opentype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --cobalt: #0024AA;
+  --cobalt-bright: #0838DE;
+  --royal: #0A2FD2;
+  --navy: #070C82;
+  --ink: #4B4A4E;
+  --echo: #A3B5F3;
+  --bg: #F1F1F7;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Google Sans', 'Rubik', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  overflow-x: hidden;
+}
+
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+.skip {
+  position: fixed; top: 12px; left: 12px; z-index: 100; padding: 10px 14px;
+  background: var(--cobalt); color: #fff; border-radius: 8px; transform: translateY(-150%);
+  font: 500 14px/1 'Google Sans', sans-serif; text-decoration: none;
+}
+.skip:focus { transform: none; }
+
+/* ---------------- viewport & layers ---------------- */
+.viewport {
+  position: fixed; inset: 0; overflow: hidden;
+  contain: strict;
+}
+.scene {
+  position: absolute; inset: 0;
+  perspective: 1600px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scene-result { z-index: 12; clip-path: circle(var(--iris, 150%) at var(--cx, 50%) var(--cy, 50%)); }
+.scene-product { z-index: 11; }
+.scene-process { z-index: 10; }
+.scene-idea { z-index: 13; }
+.scene.scene-front { z-index: 30; }
+
+.cam {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+}
+.art {
+  position: absolute; left: 0; top: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+.depth { position: absolute; inset: 0; transform-style: preserve-3d; }
+
+.plane-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+.plane-canvas[data-layer='mid'] { z-index: 20; }
+
+.scroller { position: relative; z-index: 0; }
+
+/* ---------------- typography ---------------- */
+.word {
+  position: absolute; white-space: nowrap;
+  font-kerning: normal;
+  font-synthesis: none;
+}
+.word .ch { display: inline-block; will-change: transform; }
+.word.masked { clip-path: inset(-2% -4% 0 -4%); }
+
+.e-stretch { position: absolute; color: var(--cobalt); }
+.e-stretch i { position: absolute; left: 0; background: currentColor; border-radius: var(--r); display: block; }
+.e-stretch .e-stem { top: 0; }
+.e-stretch .e-bar { width: 100%; }
+
+.copy {
+  position: absolute; white-space: nowrap;
+  font-feature-settings: 'kern';
+}
+.copy-line { display: block; overflow: hidden; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.copy-in { display: inline-block; }
+
+.tagline { position: absolute; white-space: nowrap; text-transform: uppercase; }
+.tag-underline { position: absolute; background: var(--cobalt-bright); display: block; }
+
+.badge {
+  position: absolute; background: var(--cobalt-bright); border-radius: 9px;
+  box-shadow: 0 6px 14px -6px rgba(8, 56, 222, 0.55);
+  pointer-events: auto; cursor: default;
+}
+.badge svg { width: 100%; height: 100%; display: block; transition: transform 0.5s cubic-bezier(.2,.8,.2,1); }
+.badge:hover svg { transform: translate(3px, 3px); }
+.badge-num { color: #545456; }
+
+/* ---------------- scene 02 ---------------- */
+.photo { position: absolute; }
+.photo img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.desk-group { transform-origin: 50% 70%; }
+.desk-plate img {
+  /* soft edges so the workspace melts into the page on wide screens */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 6%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(to bottom, transparent 0, #000 6%, #000 100%);
+  mask-composite: intersect;
+}
+.desk-screen { transform-origin: 50% 50%; }
+
+/* ---------------- scene 03 ---------------- */
+.echo { color: var(--echo); }
+.echo-fade {
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.28) 85%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.28) 85%);
+}
+.d-main { transform-origin: 40% 25%; }
+.d-echo1, .d-echo2 { transform-origin: 40% 45%; }
+.devices { transform-origin: 50% 80%; }
+.lid { transform-style: preserve-3d; }
+.dev-phone { transform-origin: 50% 100%; }
+.dev-star { transform-origin: 50% 90%; }
+
+/* ---------------- scene 04 ---------------- */
+.band {
+  position: absolute; transform-origin: 0 100%;
+  background: linear-gradient(90deg, #0129C7 0, #0129C7 88%, #0A3BE3 88%, #0533DA 100%);
+  box-shadow: 14px 6px 34px -12px rgba(0, 18, 120, 0.35);
+  pointer-events: auto;
+}
+.band-panel {
+  position: absolute; left: 16px; right: 34px; top: 0; bottom: 16px;
+  background: linear-gradient(90deg, #0022B8, #001FAA 60%, #0024B4);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), inset 6px 0 14px rgba(0,0,0,.12);
+}
+.band-line { position: absolute; transform-origin: 0 0; transform: rotate(90deg); }
+.band-line .word { color: #fff; }
+.band-stroke { --fill: 0; }
+.band-stroke .ch {
+  color: rgba(255, 255, 255, var(--fill));
+  -webkit-text-stroke: 3.2px #fff;
+  paint-order: stroke fill;
+}
+.title-outline .word .ch { color: transparent; -webkit-text-stroke: 2.4px var(--cobalt); }
+.title-outline .e-stretch i { background: transparent; box-shadow: inset 0 0 0 2.4px var(--cobalt); }
+.title-fill { will-change: clip-path; }
+.people { transform-origin: 46% 55%; }
+
+/* ---------------- navigation ---------------- */
+.scene-nav {
+  position: fixed; z-index: 60; top: 50%; right: clamp(14px, 2.4vw, 34px);
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 6px;
+  --p: 0;
+}
+.scene-nav::before {
+  content: ''; position: absolute; right: 0; top: 4px; bottom: 4px; width: 2px;
+  background: rgba(0, 36, 170, 0.12); border-radius: 2px;
+}
+.scene-nav::after {
+  content: ''; position: absolute; right: 0; top: 4px; width: 2px; height: calc((100% - 8px) * var(--p));
+  background: var(--cobalt-bright); border-radius: 2px;
+}
+.scene-nav button {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font: 500 12px/1 'Google Sans', sans-serif; letter-spacing: 0.08em;
+  color: rgba(7, 12, 130, 0.42); padding: 9px 14px 9px 6px; text-align: right;
+  transition: color .35s ease, transform .35s ease;
+}
+.scene-nav button:hover { color: var(--cobalt-bright); transform: translateX(-3px); }
+.scene-nav button[aria-current='step'] { color: var(--cobalt); }
+.scene-nav button:focus-visible { outline: 2px solid var(--cobalt-bright); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------------- art-direction overlay (?ref=1 / Alt+R) ---------------- */
+.ref-overlay {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  opacity: .45; mix-blend-mode: multiply; pointer-events: none; z-index: 999;
+}
+
+/* ---------------- loading ---------------- */
+html.js:not(.ready) .viewport { opacity: 0; }
+.viewport { transition: opacity .6s ease; }
+
+/* ---------------- static / reduced motion ---------------- */
+html.is-static .viewport { position: relative; inset: auto; contain: none; overflow: visible; }
+html.is-static .scene { position: relative; height: 100vh; min-height: 560px; overflow: hidden; }
+html.is-static .scene-front { display: none; }
+html.is-static .scene-result { clip-path: none; }
+html.is-static .plane-canvas { position: absolute; top: 0; height: 100vh; }
+html.is-static .scroller { display: none; }
+html.is-static .scene-nav::after { display: none; }
+
+@media (max-width: 759px) {
+  .scene-nav { top: auto; bottom: 14px; right: 50%; transform: translateX(50%); flex-direction: row; gap: 2px;
+    background: rgba(255,255,255,.7); backdrop-filter: blur(10px); border-radius: 999px; padding: 2px 6px; }
+  .scene-nav::before, .scene-nav::after { display: none; }
+  .scene-nav button { padding: 10px 10px; }
+}

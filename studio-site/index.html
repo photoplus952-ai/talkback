@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Idea to The Result</title>
+  <meta name="description" content="From the idea, through the process and the product, to the result.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Google+Sans:wght@400;500;700;800&display=swap">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="preload" as="image" href="assets/layers/s2-desk.webp">
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" } }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js" defer></script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#scene-nav">Skip to scene navigation</a>
+  <main id="story">
+    <div class="viewport">
+      <section id="scene-idea" aria-label="01 THE IDEA"></section>
+      <section id="scene-process" aria-label="02 THE PROCESS"></section>
+      <section id="scene-product" aria-label="03 THE PRODUCT"></section>
+      <section id="scene-result" aria-label="04 THE RESULT"></section>
+      <canvas class="plane-canvas" aria-hidden="true"></canvas>
+      <div id="scene-product-front" aria-hidden="true"></div>
+    </div>
+    <div class="scroller" aria-hidden="true"></div>
+  </main>
+  <nav class="scene-nav" id="scene-nav" aria-label="Scenes">
+    <button type="button" aria-label="01 THE IDEA">01</button>
+    <button type="button" aria-label="02 THE PROCESS">02</button>
+    <button type="button" aria-label="03 THE PRODUCT">03</button>
+    <button type="button" aria-label="04 THE RESULT">04</button>
+  </nav>
+</body>
+</html>

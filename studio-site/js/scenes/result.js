@@ -1,0 +1,84 @@
+/**
+ * 04 THE RESULT
+ * Main type effect: STROKE TO FILL. THE RESULT is first drawn as an outline,
+ * then fills with cobalt from the baseline up while its E stretches.
+ * The MADE IT HAPPEN band unrolls from the top down. The scene is revealed
+ * through an iris that opens exactly where the plane passes the lens.
+ */
+import { word, stretchE, copyBlock, tagline, el } from '../core/typography.js';
+import { COLORS } from '../config.js';
+import { photo, srHeading, depth } from './common.js';
+
+export function createResult(stage, cfg) {
+  const s = stage.add(cfg, document.getElementById('scene-result'));
+  const art = s.art;
+  srHeading(s.section, 'THE RESULT — WHERE STRATEGY BECOMES IMPACT. MADE IT HAPPEN');
+  const P = (p) => stage.part(cfg.id, p);
+
+  /* band */
+  const B = cfg.band;
+  const band = el('div', 'band', art, {
+    left: `${B.x}px`, top: `${B.y - B.length}px`, width: `${B.width}px`, height: `${B.length}px`,
+    transform: `rotate(${-B.angle}deg)`,
+  });
+  el('div', 'band-panel', band);
+  const T = cfg.bandText;
+  const line = el('div', 'band-line', band, {
+    left: `${T.inset + T.capH}px`, top: `${B.length - T.along[1]}px`,
+    width: `${T.along[1] - T.along[0]}px`, height: `${T.capH}px`,
+  });
+  const bandWords = T.parts.map((p) => P(word(line, {
+    text: p.text, x0: p.x0, x1: p.x1, capTop: 0, capH: T.capH, cls: `band-${p.style}`,
+  })));
+
+  /* people */
+  const people = depth(art, 'people');
+  photo(people, 's4-people', 'people-photo');
+
+  /* title: outline layer + fill layer (clipped) */
+  const mkTitle = (cls) => {
+    const g = depth(art, cls);
+    return {
+      g,
+      th: P(word(g, { ...cfg.th, color: COLORS.cobalt })),
+      e: P(stretchE(g, { ...cfg.e, color: COLORS.cobalt })),
+      res: P(word(g, { ...cfg.word, color: COLORS.cobalt })),
+    };
+  };
+  const outline = mkTitle('title-outline');
+  const fill = mkTitle('title-fill');
+
+  const tag = P(tagline(art, cfg.tagline));
+  const copy = P(copyBlock(art, cfg.copy, cfg.ref.w));
+
+  function scroll(tl, Tm) {
+    const [d0, d1] = Tm.t34;
+    const [b0] = Tm.result.build;
+    // iris reveal (centre set by main.js where the plane meets the lens)
+    tl.fromTo(s.section, { '--iris': '0%' }, { '--iris': '150%', duration: d1 - d0 - 5, ease: 'power2.in' }, d0 + 5)
+      .fromTo(people, { scale: 1.14, rotate: -2 }, { scale: 1, rotate: 0, duration: 12, ease: 'power3.out' }, d0 + 6)
+      // band unrolls from the top
+      .fromTo(band, { clipPath: 'inset(0 -40px 100% -40px)' }, { clipPath: 'inset(0 -40px 0% -40px)', duration: 7, ease: 'power3.inOut' }, b0 + 1)
+      .fromTo(bandWords[0].chars, { opacity: 0 }, { opacity: 1, duration: 1.2, stagger: 0.25 }, b0 + 3)
+      .fromTo(bandWords[1].chars, { xPercent: -40, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 2, stagger: 0.3, ease: 'power3.out' }, b0 + 5)
+      // stroke -> fill
+      .fromTo([outline.th.chars, outline.res.chars].flat(), { opacity: 0, yPercent: 18 }, {
+        opacity: 1, yPercent: 0, duration: 2.6, stagger: 0.18, ease: 'power3.out',
+      }, b0 + 1.5)
+      .fromTo(outline.e.root, { opacity: 0 }, { opacity: 1, duration: 1.5 }, b0 + 2)
+      .fromTo([outline.e.bars, fill.e.bars], { scaleX: 0.12 }, { scaleX: 1, transformOrigin: '0 50%', duration: 4.5, stagger: 0.2, ease: 'expo.inOut' }, b0 + 2.5)
+      .fromTo(fill.g, { clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0% 0 0 0)', duration: 5, ease: 'power2.inOut' }, b0 + 5)
+      .fromTo(tag.root, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 3.5, ease: 'power2.inOut' }, b0 + 8)
+      .fromTo(copy.lines.map((l) => l.firstChild), { yPercent: 110 }, { yPercent: 0, duration: 2.6, stagger: 0.45, ease: 'power3.out' }, b0 + 9);
+  }
+
+  /* hover: the outlined MADE IT fills, like the title did */
+  band.addEventListener('pointerenter', () => gsap.to(bandWords[0].root, { '--fill': 1, duration: 0.6, ease: 'power2.out' }));
+  band.addEventListener('pointerleave', () => gsap.to(bandWords[0].root, { '--fill': 0, duration: 0.8, ease: 'power2.out' }));
+
+  function pointer(nx, ny) {
+    gsap.to(people, { x: nx * 6, y: ny * 4, duration: 1.4, ease: 'power3.out', overwrite: 'auto' });
+  }
+
+  return { s, scroll, pointer, band };
+}
