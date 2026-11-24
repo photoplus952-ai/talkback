@@ -146,11 +146,19 @@ body {
 .dev-star { transform-origin: 50% 90%; }
 
 /* ---------------- scene 04 ---------------- */
+.band-wrap { position: absolute; transform-origin: 0 100%; }
 .band {
-  position: absolute; transform-origin: 0 100%;
+  position: absolute; inset: 0;
   background: linear-gradient(90deg, #0129C7 0, #0129C7 88%, #0A3BE3 88%, #0533DA 100%);
   box-shadow: 14px 6px 34px -12px rgba(0, 18, 120, 0.35);
   pointer-events: auto;
+}
+/* the curl that rides on the unrolling edge of the ribbon */
+.band-fold {
+  position: absolute; left: 0; top: 0; width: 100%; height: 74px;
+  transform-origin: 50% 0; pointer-events: none; opacity: 0;
+  background: linear-gradient(180deg, #001A9A 0%, #0A33D8 45%, #2B55F0 70%, #0124BE 100%);
+  box-shadow: 0 18px 24px -14px rgba(0, 14, 90, 0.55);
 }
 .band-panel {
   position: absolute; left: 16px; right: 34px; top: 0; bottom: 16px;
@@ -165,6 +173,11 @@ body {
   -webkit-text-stroke: 3.2px #fff;
   paint-order: stroke fill;
 }
+.band-fill { --f: 1; }
+.band-fill .ch { color: rgba(255, 255, 255, var(--f)); -webkit-text-stroke: 3.2px #fff; paint-order: stroke fill; }
+.tw, .cw { display: inline-block; }
+.screen-blank { position: absolute; background: linear-gradient(170deg, #FBFBFE, #EEF0FB); }
+.screen-block { will-change: transform, opacity; }
 .title-outline .word .ch { color: transparent; -webkit-text-stroke: 2.4px var(--cobalt); }
 .title-outline .e-stretch i { background: transparent; box-shadow: inset 0 0 0 2.4px var(--cobalt); }
 .title-fill { will-change: clip-path; }

@@ -126,10 +126,47 @@ if (!reduced) {
   }, { passive: true });
 }
 
+/* ---------------- headline letters lean toward the pointer ---------------- */
+// Uses the CSS `translate` property so it never fights the scroll tweens (which use `transform`).
+const MAGNET = [
+  { from: -1, to: 9, items: idea.titles },
+  { from: 13, to: 42, items: process.titles },
+  { from: 50, to: 69, items: product.titles },
+  { from: 80, to: 101, items: result.titles },
+].map((g) => ({ ...g, items: g.items.map((it) => ({ els: Array.isArray(it) ? it : [it], x: 0, y: 0 })) }));
+let pointerActive = false;
+addEventListener('pointermove', (e) => { pointerActive = e.pointerType === 'mouse'; pointer.cx = e.clientX; pointer.cy = e.clientY; }, { passive: true });
+document.addEventListener('pointerleave', () => { pointerActive = false; });
+
+function magnet(t) {
+  for (const g of MAGNET) {
+    const live = pointerActive && t >= g.from && t <= g.to;
+    for (const it of g.items) {
+      let tx = 0; let ty = 0;
+      if (live) {
+        const r = it.els[0].getBoundingClientRect();
+        const dx = pointer.cx - (r.left + r.width / 2) + it.x;
+        const dy = pointer.cy - (r.top + r.height / 2) + it.y;
+        const d = Math.hypot(dx, dy);
+        const R = Math.max(r.height * 1.6, 120);
+        const k = d < R ? (1 - d / R) ** 2 : 0;
+        tx = dx * 0.16 * k; ty = dy * 0.16 * k;
+      }
+      if (Math.abs(tx - it.x) < 0.01 && Math.abs(ty - it.y) < 0.01 && !live) continue;
+      it.x += (tx - it.x) * 0.14;
+      it.y += (ty - it.y) * 0.14;
+      // translate is applied inside the scaled artboard: convert screen px to frame px
+      const sc = stage.scenes.get(SCENES[MAGNET.indexOf(g)].id).fit.s;
+      for (const el of it.els) el.style.translate = `${(it.x / sc).toFixed(2)}px ${(it.y / sc).toFixed(2)}px`;
+    }
+  }
+}
+
 /* ---------------- render loop ---------------- */
 let introDone = reduced;
 
 function frame() {
+  magnet(tl.time());
   if (!plane) return;
   const now = performance.now() / 1000;
   const t = tl.time();

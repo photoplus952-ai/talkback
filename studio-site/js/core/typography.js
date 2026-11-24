@@ -166,6 +166,15 @@ export function stretchE(parent, o) {
   return api;
 }
 
+/** words as spans (spaces stay text, so spacing and RTL shaping are untouched) */
+function splitWords(parent, text, cls) {
+  text.split(/(\s+)/).forEach((t) => {
+    if (!t) return;
+    if (/^\s+$/.test(t)) parent.appendChild(document.createTextNode(t));
+    else { const w = el('span', cls, parent); w.textContent = t; }
+  });
+}
+
 /* ---------- Hebrew copy ---------- */
 export function copyBlock(parent, o, refW) {
   const root = el('div', `copy ${o.cls || ''}`, parent);
@@ -175,13 +184,13 @@ export function copyBlock(parent, o, refW) {
     const line = el('div', 'copy-line', root);
     const inner = el('span', 'copy-in', line);
     const d = typeof l === 'string' ? { text: l } : l;
-    inner.textContent = d.text;
+    splitWords(inner, d.text, 'cw');
     if (d.weight) inner.style.fontWeight = d.weight;
     if (d.color) inner.style.color = d.color;
     return line;
   });
   const api = {
-    root, lines,
+    root, lines, words: [...root.querySelectorAll('.cw')],
     layout() {
       const lh = o.pitch;
       Object.assign(root.style, {
@@ -207,15 +216,16 @@ export function tagline(parent, o) {
   const parts = o.parts || [{ text: o.text, weight: o.weight || 500 }];
   const spans = parts.map((p) => {
     const s = el('span', 'tag-part', root);
-    s.textContent = p.text;
+    splitWords(s, p.text, 'tw');
     s.style.fontWeight = p.weight;
     return s;
   });
+  const words = [...root.querySelectorAll('.tw')];
   const fullText = parts.map((p) => p.text).join('');
   let underline = null;
   if (o.underline) underline = el('i', 'tag-underline', parent);
   const api = {
-    root, spans, underline,
+    root, spans, words, underline,
     layout() {
       const family = FONTS.text;
       const w0 = parts[0].weight;

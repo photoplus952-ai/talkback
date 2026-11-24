@@ -107,17 +107,56 @@ def scene2():
 
     sw = grabcut(img, swatch_pts, ring=10, sure=18)
     nb = grabcut(img, note_pts, ring=10, sure=16)
+    # small objects that land on the desk one by one
+    objs = {
+        "s2-plant": ([(115, 935), (140, 945), (165, 985), (195, 980), (225, 995), (232, 1010), (205, 1030),
+                      (205, 1060), (198, 1070), (196, 1145), (180, 1160), (120, 1160), (103, 1148), (100, 1080),
+                      (80, 1080), (60, 1050), (57, 1040), (75, 1005), (100, 990), (105, 960)], 8),
+        "s2-lamp": ([(695, 830), (706, 824), (722, 843), (742, 857), (786, 874), (788, 891), (771, 897),
+                     (738, 1028), (758, 1048), (756, 1079), (720, 1087), (681, 1076), (677, 1050), (714, 1029),
+                     (744, 896), (724, 882), (719, 951), (705, 957), (623, 926), (622, 904), (650, 878),
+                     (680, 858), (690, 845)], 4),
+        "s2-pens": ([(623, 1000), (640, 988), (652, 983), (668, 986), (681, 999), (680, 1091), (650, 1098),
+                     (624, 1091)], 8),
+        "s2-clock": ([(752, 1040), (775, 1032), (836, 1049), (841, 1060), (837, 1101), (818, 1110), (757, 1096),
+                      (751, 1085)], 8),
+        "s2-mug": ([(834, 1125), (860, 1116), (896, 1121), (906, 1139), (926, 1149), (926, 1186), (906, 1201),
+                    (896, 1216), (860, 1223), (837, 1211)], 10),
+    }
+    obj_alpha = {}
+    for name, (pts, sure) in objs.items():
+        a = grabcut(img, pts, ring=8, sure=sure)
+        a = a * cv2.dilate(poly_mask(img.shape, pts), np.ones((5, 5), np.uint8))
+        obj_alpha[name] = a
     scr = poly_mask(img.shape, screen_q)
-
-    save("s2-swatches", img, sw)
-    save("s2-notebook", img, nb)
     save("s2-screen", img, scr)
 
-    # desk plate: remove movable objects (inpaint) and switch the screen "off"
-    base = img.copy()
-    hole = ((sw > 0.02) | (nb > 0.02)).astype(np.uint8) * 255
-    hole = cv2.dilate(hole, np.ones((7, 7), np.uint8))
-    base = cv2.inpaint(base, hole, 7, cv2.INPAINT_TELEA)
+    # desk plate: smooth fill where the movable objects were; each object
+    # carries its own soft contact shadow so the resting frame matches
+    movers = {"s2-swatches": sw, "s2-notebook": nb, **obj_alpha}
+    hole = np.zeros(img.shape[:2], np.uint8)
+    for a_ in movers.values():
+        hole |= (a_ > 0.02).astype(np.uint8)
+    hole = cv2.dilate(hole * 255, np.ones((31, 31), np.uint8))
+    laptop = poly_mask(img.shape, [(272, 960), (586, 924), (600, 1108), (656, 1298), (642, 1342),
+                                   (332, 1347), (300, 1292), (268, 1000)])
+    hole[laptop > 0.5] = 0
+    h, w = img.shape[:2]
+    small = cv2.resize(img, (w // 4, h // 4), interpolation=cv2.INTER_AREA)
+    hs = cv2.dilate(cv2.resize(hole, (w // 4, h // 4)), np.ones((3, 3), np.uint8))
+    fill = cv2.inpaint(small, hs, 9, cv2.INPAINT_NS)
+    fill = cv2.GaussianBlur(fill, (0, 0), 2.2)
+    fill = cv2.resize(fill, (w, h), interpolation=cv2.INTER_CUBIC).astype(np.float32)
+    grain = np.random.default_rng(3).normal(0, 1.2, img.shape[:2])[..., None]
+    hm = cv2.GaussianBlur(hole.astype(np.float32) / 255, (0, 0), 3)[..., None]
+    base = (img * (1 - hm) + (fill + grain) * hm).clip(0, 255).astype(np.uint8)
+    for name, a_ in movers.items():
+        ring = cv2.dilate((a_ > 0.02).astype(np.uint8), np.ones((29, 29), np.uint8)).astype(np.float32)
+        ring = cv2.GaussianBlur(ring, (0, 0), 4) * (1 - a_)
+        sha, shc = unmix_shadow(img, fill, ring, gain=1.0)
+        rgb = np.where(a_[..., None] > 0.01, img, shc).astype(np.uint8)
+        save(name, rgb, np.maximum(a_, sha))
+
     off = np.zeros_like(base, np.float32)
     yy = np.linspace(0, 1, base.shape[0])[:, None]
     off[...] = np.dstack([18 + 10 * yy, 19 + 10 * yy, 26 + 12 * yy])
