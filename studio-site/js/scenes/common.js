@@ -1,5 +1,5 @@
 import { LAYERS } from '../layers.generated.js';
-import { el } from '../core/typography.js';
+import { el } from '../core/text.js';
 
 export const ASSET_BASE = 'assets/layers/';
 
@@ -43,6 +43,17 @@ export function hoverLift(el, vars = { scale: 1.05 }) {
   const back = Object.fromEntries(Object.keys(vars).map((k) => [k, k === 'scale' ? 1 : 0]));
   el.addEventListener('pointerenter', () => gsap.to(el, { ...vars, duration: 0.45, ease: 'back.out(2.2)', overwrite: false }));
   el.addEventListener('pointerleave', () => gsap.to(el, { ...back, duration: 0.7, ease: 'elastic.out(1, 0.45)', overwrite: false }));
+}
+
+/**
+ * A group that holds photo layers drawn in another frame's pixels:
+ * frame px = x + layerPx * scale (y measured from refY0).
+ */
+export function mapped(parent, cls, m) {
+  const outer = el('div', 'mapped', parent, {
+    transform: `translate(${m.x}px, ${m.y - (m.refY0 || 0) * m.scale}px) scale(${m.scale})`,
+  });
+  return el('div', `depth ${cls}`, outer);
 }
 
 /** wrap an element so pointer parallax and scroll tweens never fight */

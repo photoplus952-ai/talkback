@@ -1,12 +1,12 @@
 /**
- * Stage: one fixed viewport holding the four scenes as stacked layers.
+ * Stage: one fixed viewport holding the five 1920x1080 scenes as stacked layers.
  *
  * Each scene is   section.scene > .cam > .art
  *   .art  – the composition in reference pixels (same size as the frame)
  *   .cam  – what the timeline animates (camera moves, depth, tilt)
  * The .art is fitted so that the scene's crop window is centred on screen.
  */
-import { el } from './typography.js';
+import { el } from './text.js';
 
 export class Stage {
   constructor(root) {
@@ -27,7 +27,7 @@ export class Stage {
       sec.classList.add('scene', `scene-${cfg.id}`, ...extra);
       sec.dataset.scene = cfg.id;
       const cam = el('div', 'cam', sec);
-      const art = el('div', 'art', cam, { width: `${cfg.ref.w}px`, height: `${cfg.ref.h}px` });
+      const art = el('div', 'art', cam, { width: '1920px', height: '1080px' });
       return { cam, art };
     };
     const back = mk(section, []);
@@ -56,7 +56,7 @@ export class Stage {
     const mobile = vw < 760 || vw / vh < 0.8;
     this.mode = mobile ? 'mobile' : 'desktop';
     document.documentElement.dataset.layout = this.mode;
-    const pad = mobile ? { x: 0.035, top: 0.1, bottom: 0.12 } : { x: 0.05, top: 0.075, bottom: 0.06 };
+    const pad = mobile ? { x: 0.035, top: 0.1, bottom: 0.12 } : { x: 0, top: 0, bottom: 0 };
     for (const s of this.scenes.values()) {
       // a layout can rearrange named groups (e.g. side-by-side on wide screens)
       const lay = (s.cfg.layouts && s.cfg.layouts[this.mode]) || null;

@@ -1,159 +1,169 @@
 /**
- * All approved content and every position in the four compositions.
+ * Every text and position of the five screens.
  *
- * Units: pixels of the original reference frame of each scene
- * (tools/ref/0X-*.png). The stage scales the frame to the screen, so to
- * move something just change its numbers here.
- *
- * capTop / capH: top and height of the CAPITAL letters (what you would
- * measure in the design file), not of the text box.
+ * Units: pixels of the 1920x1080 Figma frames (file "The Flying Idea —
+ * Studio Frames", page "עמוד 3"). Text positions are the top-left of the
+ * text box as in Figma; sizes and letter spacing are Figma's values.
+ * To move or reword anything, change it here.
  */
 
 export const FONTS = {
-  // Stretch Pro is loaded from /fonts if present (see fonts/README.md).
-  // Until then Archivo Expanded Black stands in for it.
-  display: "'Stretch Pro', 'Archivo', sans-serif",
-  displayWeight: 900,
-  displayStretch: '125%',
-  text: "'Google Sans', 'Rubik', system-ui, sans-serif",
+  display: "'Archivo Black', 'Archivo', 'Arial Black', sans-serif",
+  text: "'Rubik', 'Google Sans', system-ui, sans-serif",
+  latin: "'Google Sans', 'Google Sans Flex', 'Rubik', sans-serif",
 };
 
 export const COLORS = {
-  cobalt: '#0024AA',       // headline blue
-  cobaltBright: '#0838DE', // badge, Hebrew copy
-  royal: '#0A2FD2',        // MADE IT HAPPEN band
-  navy: '#070C82',         // scene 4 copy
-  ink: '#4B4A4E',          // grey taglines
-  echo: '#A3B5F3',         // THE PRODUCT echoes
+  cobalt: '#0024AA',
+  bright: '#0838DE',
+  echo1: '#A3B5F3',
+  echo2: '#C8D2F4',
+  ink: '#4B4A4E',
+  navy: '#070C82',
+  num: '#545456',
 };
 
+const FULL = [0, 0, 1920, 1080];
+
 /* ---------------------------------------------------------------- 01 */
-export const IDEA = {
-  id: 'idea',
-  index: '01',
-  label: 'THE IDEA',
-  ref: { w: 940, h: 1407, src: 'tools/ref/01-idea.png' },
-  bg: '#F1F1F7',
-  // visible window of the frame [x, y, w, h]
-  crop: { desktop: [40, 515, 880, 700], mobile: [70, 520, 836, 700] },
-  badge: { x: 94, y: 547, size: 45, num: { x: 153, capTop: 560, capH: 19 } },
+export const WELCOME = {
+  id: 'welcome', index: '01', label: 'YOU’RE WELCOME', bg: '#F1F1F7', ref: 'tools/ref/new-01.jpg',
+  crop: { desktop: FULL, mobile: [120, 240, 1790, 640] },
+  badge: { x: 185, y: 271, size: 60, num: { x: 263, y: 283, size: 35 } },
   copy: {
-    lines: ['הכול מתחיל ברעיון,', 'בפיצוח מדויק', 'ובאסטרטגיה שנכונה', 'לכאן ולעכשיו.'],
-    align: 'left', x: 562, firstTop: 630, pitch: 36, size: 29, weight: 500, color: COLORS.cobaltBright,
+    lines: ['שלום ואיזה כיף שבאתם!', 'קתצ בלה בלה בלה כמיטב המסורת', 'ועוד רגע אתם בפרוטםוליו'],
+    left: 395, top: 286, size: 20, lh: 25, weight: 500, color: COLORS.bright,
   },
-  the: { text: 'THE', x0: 79, x1: 532, capTop: 699, capH: 181 },
-  idea: {
-    capTop: 935, capH: 175,
-    id: { text: 'ID', x0: 79, x1: 312 },
-    e: { x0: 329, x1: 678, stem: 54, bar: 0.215 },
-    a: { text: 'A', x0: 683, x1: 890 },
-  },
-  tagline: {
-    text: 'WE STARTING FROM HERE', x0: 80, x1: 878, capTop: 1137, capH: 19, weight: 500, color: COLORS.ink,
-    underline: { x0: 78, x1: 444, y: 1167, h: 4.5 },
-  },
-  // the paper plane resting on the title (see objects/paperPlane.js)
-  plane: { x: 610, y: 885, length: 470 },
+  title: [
+    { text: 'Youre', x: 142, y: 310, size: 266, ls: -15 },
+    { text: 'welcome', x: 185, y: 518, size: 266, ls: -13 },
+  ],
+  // the smile under the glasses (drawn as a line, so it can be "signed")
+  smile: { d: 'M1630 652 Q1575 850 1305 812', width: 32 },
+  tagline: { text: 'WE STARTING FROM HERE', x: 187, y: 798, size: 35, ls: 30.8, line: { x: 187, y: 838, w: 487, h: 4 } },
+  // the glasses at rest (centre, width) — see objects/glasses.js
+  glasses: { x: 1482, y: 491, w: 845 },
 };
 
 /* ---------------------------------------------------------------- 02 */
 export const PROCESS = {
-  id: 'process',
-  index: '02',
-  label: 'THE PROCESS',
-  ref: { w: 941, h: 1672, src: 'tools/ref/02-process.png' },
-  bg: '#EEEEF8',
-  crop: { desktop: [20, 270, 900, 1402], mobile: [50, 280, 850, 1392] },
-  badge: { x: 94, y: 295, size: 45, num: { x: 153, capTop: 309, capH: 19 } },
+  id: 'process', index: '02', label: 'THE PROCESS', bg: '#EEEEF8', ref: 'tools/ref/new-02.jpg',
+  crop: { desktop: FULL, mobile: [120, 300, 1720, 720] },
+  badge: { x: 146, y: 333, size: 41, num: { x: 199, y: 343, size: 24 } },
   copy: {
-    lines: ['מחקר, גיבוש כיוון,', 'עיצוב וביצוע מדויק —', 'תהליך אסטרטגי שמחבר', 'בין רעיון לתוצאה.'],
-    align: 'left', x: 554, firstTop: 371, pitch: 35.5, size: 29, weight: 500, color: COLORS.cobaltBright,
+    lines: ['לפני שמתחילים, לתהליך נכון יש משקל חשוב.', 'להבין מה צריך ומה נכון לנו עסקית, ואיך אנחנו עובדים חכם.', 'חושבים את זה,  בונים את זה, ומעצבים מוצר יפה. נכון.'],
+    left: 146, top: 452, size: 20, lh: 25, weight: 500, color: COLORS.bright,
   },
-  the: { text: 'THE', x0: 71, x1: 485, capTop: 449, capH: 151 },
-  word: { text: 'PROCESS', x0: 70, x1: 879, capTop: 619, capH: 141 },
-  tagline: {
-    text: 'FROM STRATEGY TO EXECUTION', x0: 72, x1: 868, capTop: 783, capH: 19, weight: 500, color: COLORS.ink,
-    underline: { x0: 71, x1: 472, y: 819, h: 3.5 },
-  },
-  // wide screens: the title block sits beside the workspace instead of above it
-  layouts: {
-    desktop: { crop: [40, 115, 1880, 880], groups: { desk: [905, -691] } },
-  },
-  // swatch fan pivots around the rivet
+  title: [
+    { text: 'TO THE', x: 143, y: 511, size: 150, ls: -16 },
+    { text: 'PROCESS', x: 146, y: 648, size: 149, ls: -7.4 },
+  ],
+  tagline: { text: 'FROM STRATEGY TO EXECUTION', x: 159, y: 790, size: 24, ls: 15.9, line: { x: 160, y: 826, w: 369, h: 3 } },
+  // desk photo layers: frame px = deskX + refX * deskScale (layers are in the old frame's px)
+  desk: { x: 931, y: 197, scale: 0.919, refY0: 826 },
   swatchPivot: { x: 186, y: 1318 },
+  // where the glasses lie on the desk (desk-layer px)
+  glassesOnDesk: { x: 470, y: 1330, w: 230 },
 };
 
 /* ---------------------------------------------------------------- 03 */
-export const PRODUCT = {
-  id: 'product',
-  index: '03',
-  label: 'THE PRODUCT',
-  ref: { w: 1149, h: 1369, src: 'tools/ref/03-product.png' },
-  bg: '#ECEDFA',
-  crop: { desktop: [30, 190, 1090, 1110], mobile: [55, 215, 1055, 1060] },
-  th: { text: 'TH', x0: 68, x1: 325, capTop: 228, capH: 128 },
-  e: { x0: 336, x1: 617, capTop: 228, capH: 128, stem: 33, bar: 0.25 },
-  word: { text: 'PRODUCT', x0: 68, x1: 1099, capTop: 372, capH: 146 },
-  echoes: [
-    { text: 'THE PRODUCT', x0: 68, x1: 1092, capTop: 535, capH: 93, color: COLORS.echo, fade: 0 },
-    { text: 'THE PRODUCT', x0: 68, x1: 1092, capTop: 646, capH: 93, color: COLORS.echo, fade: 1 },
+export const RESULT = {
+  id: 'result', index: '03', label: 'THE RESULT', bg: '#ECEDFA', ref: 'tools/ref/new-03.jpg',
+  crop: { desktop: FULL, mobile: [110, 270, 1700, 700] },
+  title: [
+    { text: 'And the', x: 138, y: 284, size: 116, ls: -5.8, role: 'small' },
+    { text: 'RESULT', x: 138, y: 388, size: 162, ls: -12, role: 'main' },
+    { text: 'THR RESULT', x: 138, y: 527, size: 109, ls: -5.4, role: 'echo', color: COLORS.echo1 },
+    { text: 'THR RESULT', x: 138, y: 618, size: 109, ls: -5.4, role: 'echo', color: COLORS.echo2 },
   ],
-  // laptop hinge (lid rotates around it), phone pivot
+  copy: {
+    lines: ['וכאן נכנס עיצוב טוב', 'כשזה קורה, התוצאה מדברת', 'לבד. אנחנו כאן כדי לתת לה', 'את השפה שלה'],
+    right: 1774, top: 553, size: 20, lh: 25, weight: 500, color: COLORS.bright,
+  },
+  // device photo layers: frame px = x + refX * scale
+  devices: { x: 640, y: -281, scale: 0.88 },
   hinge: { x0: 300, y0: 1127, x1: 840, y1: 1083 },
   phonePivot: { x: 860, y: 1160 },
 };
 
 /* ---------------------------------------------------------------- 04 */
-export const RESULT = {
-  id: 'result',
-  index: '04',
-  label: 'THE RESULT',
-  ref: { w: 1122, h: 1402, src: 'tools/ref/04-result.png' },
-  bg: '#ECEFFD',
-  crop: { desktop: [0, 100, 1122, 1090], mobile: [40, 110, 1050, 1070] },
-  th: { text: 'TH', x0: 290, x1: 517, capTop: 137, capH: 111 },
-  e: { x0: 528, x1: 786, capTop: 137, capH: 111, stem: 31, bar: 0.25 },
-  word: { text: 'RESULT', x0: 316, x1: 1089, capTop: 269, capH: 119 },
-  tagline: {
-    parts: [{ text: 'WHERE STRATEGY BECOMES ', weight: 500 }, { text: 'IMPACT', weight: 800 }],
-    x0: 355, x1: 1077, capTop: 406, capH: 22, color: COLORS.navy,
-  },
+export const WORKS = {
+  id: 'works', index: '04', label: 'THE WORKS', bg: '#EEEEF8',
+  crop: { desktop: FULL, mobile: [60, 100, 1800, 950] },
+  badge: { x: 146, y: 110, size: 41, num: { x: 199, y: 118, size: 24 } },
+  title: [
+    { text: 'the', x: 138, y: 160, size: 116, ls: -5.8 },
+    { text: 'WORKS', x: 134, y: 262, size: 162, ls: -8 },
+  ],
+  bigOutline: { text: 'THE WORKS', x: 60, y: 560, size: 330, ls: -14 },
   copy: {
-    lines: [
-      { text: 'כשהאסטרטגיה,', weight: 700, color: COLORS.cobaltBright },
-      { text: 'העיצוב והביצוע', weight: 700, color: COLORS.cobaltBright },
-      { text: 'מתחברים, מתקבלת', weight: 400, color: COLORS.navy },
-      { text: 'תוצאה מדויקת,', weight: 400, color: COLORS.navy },
-      { text: 'בולטת ואפקטיבית.', weight: 400, color: COLORS.navy },
-    ],
-    align: 'right', x: 1056, firstTop: 556, pitch: 54.5, size: 45,
+    lines: ['כמה מהעבודות שאנחנו גאים בהן.', 'גללו כדי לעבור בין העבודות.'],
+    right: 1770, top: 196, size: 22, lh: 30, weight: 500, color: COLORS.bright,
   },
-  // rotated band: bottom-left corner, angle (deg, clockwise from vertical), width
-  band: { x: 226, y: 1165, angle: 14.6, width: 258, length: 1600 },
-  // slogan along the band. along = distance from the band's bottom edge
-  bandText: {
-    capH: 104, inset: 26, along: [46, 1031],
-    parts: [
-      { text: 'MADE IT', style: 'stroke', x0: 0, x1: 482 },
-      { text: 'HAPPEN', style: 'fill', x0: 526, x1: 985 },
-    ],
-  },
+  tagline: { text: 'FROM IDEA TO IMPACT', x: 160, y: 958, size: 24, ls: 15.9, line: { x: 161, y: 996, w: 300, h: 3 } },
+  // the gallery. name / category are shown under the work in the middle
+  items: [
+    { src: 'assets/works/w1.webp', name: 'טוב לדעת', cat: 'קמפיין פרינט' },
+    { src: 'assets/works/w2.webp', name: 'FOREVER', cat: 'פוסטר מוצר' },
+    { src: 'assets/works/v1.mp4', poster: 'assets/works/v1.jpg', name: 'תנחתו', cat: 'סרטון פרסומי' },
+    { src: 'assets/works/w3.webp', name: 'FOREVER', cat: 'פוסטר מוצר' },
+    { src: 'assets/works/w4.webp', name: 'KIRMORE', cat: 'פלאייר' },
+    { src: 'assets/works/w5.webp', name: 'CHUMI SHENELZON', cat: 'מיתוג' },
+    { src: 'assets/works/v2.mp4', poster: 'assets/works/v2.jpg', name: 'שיחה', cat: 'לוגו מונפש' },
+    { src: 'assets/works/w6.webp', name: 'CHUMI SHENELZON', cat: 'אתר' },
+    { src: 'assets/works/w7.webp', name: 'KIRMORE', cat: 'פלאייר' },
+    { src: 'assets/works/w8.webp', name: 'ערוץ 14', cat: 'קורס עברית' },
+    { src: 'assets/works/w9.webp', name: 'ערוץ 14', cat: 'מוצרי קידום' },
+  ],
 };
 
-export const SCENES = [IDEA, PROCESS, PRODUCT, RESULT];
+/* ---------------------------------------------------------------- 05 */
+export const CONTACT = {
+  id: 'contact', index: '05', label: 'LET’S TALK', bg: '#ECEDFA',
+  crop: { desktop: FULL, mobile: [110, 40, 1700, 1000] },
+  badge: { x: 146, y: 180, size: 41, num: { x: 199, y: 188, size: 24 } },
+  title: [
+    { text: 'let’s', x: 138, y: 290, size: 116, ls: -5.8, role: 'small' },
+    { text: 'TALK', x: 134, y: 393, size: 162, ls: -8, role: 'main' },
+    { text: 'TALK', x: 136, y: 538, size: 109, ls: -5.4, role: 'echo', color: COLORS.echo1 },
+    { text: 'TALK', x: 136, y: 629, size: 109, ls: -5.4, role: 'echo', color: COLORS.echo2 },
+  ],
+  tagline: { text: 'LET’S MAKE IT HAPPEN', x: 160, y: 810, size: 24, ls: 15.9, line: { x: 161, y: 848, w: 300, h: 3 } },
+  // newspaper photo; the headline on the paper is live text
+  photo: { src: 'assets/scene/contact.jpg', x: 1250, y: 40, w: 340, h: 426, paper: { x: 110, y: 96, w: 122 } },
+  copy: {
+    lines: ['יש לכם רעיון? בואו נדבר.', 'נשמח לשמוע על הפרויקט הבא שלכם.'],
+    right: 1760, top: 520, size: 22, lh: 30, weight: 500, color: COLORS.bright,
+  },
+  // placeholders until the real details are provided
+  rows: [
+    { key: 'EMAIL', value: '[אימייל]', y: 610 },
+    { key: 'PHONE', value: '[טלפון]', y: 700 },
+    { key: 'INSTAGRAM', value: '[אינסטגרם]', y: 790 },
+  ],
+  rowsBox: { x: 1080, w: 680 },
+  button: { text: 'שלחו הודעה', href: '#', x: 1452, y: 930 },
+  glasses: { x: 905, y: 470, w: 300, rot: -9 },
+};
+
+export const SCENES = [WELCOME, PROCESS, RESULT, WORKS, CONTACT];
 
 /**
- * Scroll script. One master timeline, 100 units long, scrubbed by scroll.
- * Each entry: where a scene's resting composition is fully visible.
+ * Scroll script: one master timeline, 0..100, scrubbed by scroll.
+ * rest = the moment each screen is shown exactly as designed.
  */
 export const TIMING = {
   total: 100,
-  scrollLength: 8, // in viewport heights
-  idea: { rest: [0, 5] },
-  t12: [5, 21],
-  process: { build: [13, 30], rest: [30, 38] },
-  t23: [38, 50],
-  product: { build: [44, 60], rest: [60, 67] },
-  t34: [67, 79],
-  result: { build: [75, 90], rest: [90, 100] },
+  scrollLength: 10, // viewport heights
+  t12: [4, 17],
+  process: { build: [11, 22], rest: 25 },
+  t23: [28, 37],
+  result: { build: [34, 46], rest: 48 },
+  t34: [51, 58],
+  works: { build: [55, 62], scrub: [62, 86] },
+  t45: [86, 91],
+  contact: { build: [88, 97], rest: 99 },
 };
+
+// resting moments used by the soft scroll lock and by the navigation
+export const ANCHORS = [0, TIMING.process.rest, TIMING.result.rest, TIMING.works.scrub[0], TIMING.contact.rest];
