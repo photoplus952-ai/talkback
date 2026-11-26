@@ -9,7 +9,7 @@
 
 export const FONTS = {
   display: "'Archivo Black', 'Archivo', 'Arial Black', sans-serif",
-  text: "'Rubik', 'Google Sans', system-ui, sans-serif",
+  text: "'Google Sans', 'Rubik', system-ui, sans-serif",
   latin: "'Google Sans', 'Google Sans Flex', 'Rubik', sans-serif",
 };
 
@@ -27,7 +27,7 @@ const FULL = [0, 0, 1920, 1080];
 
 /* ---------------------------------------------------------------- 01 */
 export const WELCOME = {
-  id: 'welcome', index: '01', label: 'YOU’RE WELCOME', bg: '#F1F1F7', ref: 'tools/ref/new-01.jpg',
+  id: 'welcome', index: '01', label: 'YOU’RE WELCOME', bg: '#F1F1F7', ref: 'tools/ref/new-01.png',
   crop: { desktop: FULL, mobile: [120, 240, 1790, 640] },
   badge: { x: 185, y: 271, size: 60, num: { x: 263, y: 283, size: 35 } },
   copy: {
@@ -35,14 +35,15 @@ export const WELCOME = {
     left: 395, top: 286, size: 20, lh: 25, weight: 500, color: COLORS.bright,
   },
   title: [
-    { text: 'Youre', x: 142, y: 310, size: 266, ls: -15 },
-    { text: 'welcome', x: 185, y: 518, size: 266, ls: -13 },
+    { text: 'Youre', x: 150, y: 288, size: 278, ls: -21 },
+    { text: 'welcome', x: 189, y: 506, size: 278, ls: -14 },
   ],
   // the smile under the glasses (drawn as a line, so it can be "signed")
-  smile: { d: 'M1630 652 Q1575 850 1305 812', width: 32 },
-  tagline: { text: 'WE STARTING FROM HERE', x: 187, y: 798, size: 35, ls: 30.8, line: { x: 187, y: 838, w: 487, h: 4 } },
+  // the smile: a crescent like the rotated ')' in Figma (filled shape)
+  smile: { x: 1411, y: 640, w: 245, h: 174 },
+  tagline: { text: 'WE STARTING FROM HERE', x: 199, y: 795, size: 35, w: 1062, line: { x: 187, y: 838, w: 487, h: 4 } },
   // the glasses at rest (centre, width) — see objects/glasses.js
-  glasses: { x: 1482, y: 491, w: 845 },
+  glasses: { x: 1494, y: 491, w: 824 },
 };
 
 /* ---------------------------------------------------------------- 02 */
@@ -52,13 +53,13 @@ export const PROCESS = {
   badge: { x: 146, y: 333, size: 41, num: { x: 199, y: 343, size: 24 } },
   copy: {
     lines: ['לפני שמתחילים, לתהליך נכון יש משקל חשוב.', 'להבין מה צריך ומה נכון לנו עסקית, ואיך אנחנו עובדים חכם.', 'חושבים את זה,  בונים את זה, ומעצבים מוצר יפה. נכון.'],
-    left: 146, top: 452, size: 20, lh: 25, weight: 500, color: COLORS.bright,
+    left: 146, top: 432, size: 20, lh: 24, weight: 500, color: COLORS.bright,
   },
   title: [
     { text: 'TO THE', x: 143, y: 511, size: 150, ls: -16 },
     { text: 'PROCESS', x: 146, y: 648, size: 149, ls: -7.4 },
   ],
-  tagline: { text: 'FROM STRATEGY TO EXECUTION', x: 159, y: 790, size: 24, ls: 15.9, line: { x: 160, y: 826, w: 369, h: 3 } },
+  tagline: { text: 'FROM STRATEGY TO EXECUTION', x: 159, y: 790, size: 24, w: 734, line: { x: 160, y: 826, w: 369, h: 3 } },
   // desk photo layers: frame px = deskX + refX * deskScale (layers are in the old frame's px)
   desk: { x: 931, y: 197, scale: 0.919, refY0: 826 },
   swatchPivot: { x: 186, y: 1318 },
@@ -81,7 +82,7 @@ export const RESULT = {
     right: 1774, top: 553, size: 20, lh: 25, weight: 500, color: COLORS.bright,
   },
   // device photo layers: frame px = x + refX * scale
-  devices: { x: 640, y: -281, scale: 0.88 },
+  devices: { x: 648, y: -260, scale: 0.848 },
   hinge: { x0: 300, y0: 1127, x1: 840, y1: 1083 },
   phonePivot: { x: 860, y: 1160 },
 };

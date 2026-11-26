@@ -63,6 +63,16 @@ export function tagline(parent, o) {
   });
   root.setAttribute('aria-hidden', 'true');
   splitWords(root, o.text, 'tw');
+  if (o.w) {
+    // fit the tracking so the line spans exactly the designed width
+    const fit = () => {
+      root.style.letterSpacing = '0px';
+      const w0 = root.getBoundingClientRect().width / (root.closest('.art')?.getBoundingClientRect().width / 1920 || 1);
+      const n = o.text.length - 1;
+      root.style.letterSpacing = `${(o.w - w0) / n}px`;
+    };
+    fit(); document.fonts?.ready.then(fit); root._fit = fit;
+  }
   const line = o.line ? el('i', 'underline', parent, {
     left: `${o.line.x}px`, top: `${o.line.y}px`, width: `${o.line.w}px`, height: `${o.line.h}px`,
   }) : null;

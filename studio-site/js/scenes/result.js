@@ -66,6 +66,8 @@ export function createResult(stage, cfg) {
     tl.fromTo(c.lines.map((l) => l.firstChild), { yPercent: 110 }, { yPercent: 0, duration: 2, stagger: 0.4, ease: 'power3.out' }, b0 + 5)
       .fromTo(dev, { yPercent: 8, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 4, ease: 'power3.out' }, c0 + 5)
       .fromTo(lid, { transform: lidOpen(82) }, { transform: lidOpen(0), duration: 4.5, ease: 'power2.inOut' }, b0 + 0.5)
+      // once open, drop the 3D transform so the screen is drawn flat and sharp
+      .set(lid, { transform: 'none' }, b0 + 5.02)
       .fromTo(blank, { opacity: 0 }, { opacity: 1, duration: 1 }, b0 + 4.5)
       .fromTo(blocks, { opacity: 0, y: 14, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 1.3, stagger: 0.5, ease: 'power3.out' }, b0 + 5.2)
       .fromTo(full, { opacity: 0 }, { opacity: 1, duration: 1 }, b0 + 5.2 + 0.5 * blocks.length + 0.8)
