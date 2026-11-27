@@ -14,14 +14,16 @@ export function createWorks(stage, cfg) {
   const art = s.art;
   srHeading(s.section, 'THE WORKS');
 
-  const big = headline(art, { ...cfg.bigOutline, cls: 'outline-word' });
-  const b = badge(art, cfg.badge, cfg.index);
-  const words = cfg.title.map((t) => headline(art, t));
-  const c = copy(art, cfg.copy);
-  const tag = tagline(art, cfg.tagline);
+  const LG = (n) => stage.group(cfg.id, n, el('div', 'layout', art));
+  const gHead = LG('head'); const gCopy = LG('copy'); const gGal = LG('gallery'); const gFoot = LG('foot');
+  const big = headline(gGal, { ...cfg.bigOutline, cls: 'outline-word' });
+  const b = badge(gHead, cfg.badge, cfg.index);
+  const words = cfg.title.map((t) => headline(gHead, t));
+  const c = copy(gCopy, cfg.copy);
+  const tag = tagline(gFoot, cfg.tagline);
 
   // gallery
-  const ribbon = el('div', 'ribbon', art);
+  const ribbon = el('div', 'ribbon', gGal);
   const list = el('ul', 'sr-only', s.section);
   const tiles = cfg.items.map((it, i) => {
     const t = el('button', 'tile', ribbon);
@@ -36,10 +38,10 @@ export function createWorks(stage, cfg) {
     t.addEventListener('click', () => openWork(i));
     return t;
   });
-  const cap = el('div', 'caption', art);
+  const cap = el('div', 'caption', gFoot);
   const capCount = el('div', 'c-count', cap); const capName = el('div', 'c-name', cap); const capCat = el('div', 'c-cat', cap);
-  const bar = el('i', '', el('div', 'progress', art));
-  const view = el('div', 'view', art); view.textContent = 'VIEW'; view.setAttribute('aria-hidden', 'true');
+  const bar = el('i', '', el('div', 'progress', gFoot));
+  const view = el('div', 'view', gGal); view.textContent = 'VIEW'; view.setAttribute('aria-hidden', 'true');
 
   // widths follow each work's proportions
   const ws = tiles.map(() => 420);

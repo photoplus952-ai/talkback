@@ -5,7 +5,7 @@
  * Objects: the desk is set piece by piece; the glasses from screen 01 land on
  * it last, and each object answers as they fly over.
  */
-import { headline, copy, tagline, badge } from '../core/text.js';
+import { headline, copy, tagline, badge, el } from '../core/text.js';
 import { COLORS } from '../config.js';
 import { photo, srHeading, depth, mapped, follower, hoverLift } from './common.js';
 import { LAYERS } from '../layers.generated.js';
@@ -19,7 +19,8 @@ export function createProcess(stage, cfg) {
   srHeading(s.section, 'TO THE PROCESS — FROM STRATEGY TO EXECUTION');
 
   // workspace (photo layers in the original frame's pixels)
-  const desk = mapped(art, 'desk-group', cfg.desk);
+  const LG = (n) => stage.group(cfg.id, n, el('div', 'layout', art));
+  const desk = mapped(LG('desk'), 'desk-group', cfg.desk);
   photo(desk, 's2-desk', 'desk-plate');
   const screen = photo(desk, 's2-screen', 'desk-screen');
   const obj = {
@@ -45,7 +46,7 @@ export function createProcess(stage, cfg) {
   Object.assign(deskGlasses.style, { left: `${G.x - G.w / 2}px`, top: `${G.y - G.w * 0.225}px`, width: `${G.w}px`, height: `${G.w * 0.45}px` });
   deskGlasses.innerHTML = '<img src="assets/scene/glasses.png" alt="">';
 
-  const text = depth(art, 'text-group');
+  const text = depth(LG('text'), 'text-group');
   const b = badge(text, cfg.badge, cfg.index);
   const c = copy(text, cfg.copy);
   const [the, proc] = cfg.title.map((t, i) => headline(text, { ...t, cls: i === 0 ? 'masked' : '' }));

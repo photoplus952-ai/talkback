@@ -13,17 +13,19 @@ export function createWelcome(stage, cfg) {
   const art = s.art;
   srHeading(s.section, 'Youre welcome. WE STARTING FROM HERE', 'h1');
 
-  const b = badge(art, cfg.badge, cfg.index);
-  const c = copy(art, cfg.copy);
-  const titleBox = el('div', 'depth', art);
+  const LG = (n) => stage.group(cfg.id, n, el('div', 'layout', art));
+  const gHead = LG('head'); const gTitle = LG('title'); const gShades = LG('shades'); const gTag = LG('tag');
+  const b = badge(gHead, cfg.badge, cfg.index);
+  const c = copy(gHead, cfg.copy);
+  const titleBox = el('div', 'depth', gTitle);
   const words = cfg.title.map((t) => headline(titleBox, t));
   const chars = words.flatMap((w) => w.chars);
 
   // smile: drawn from right to left, like a signature
   const S = cfg.smile;
-  const svg = el('div', 'smile', art, { left: `${S.x}px`, top: `${S.y}px`, width: `${S.w}px`, height: `${S.h}px` });
+  const svg = el('div', 'smile', gShades, { left: `${S.x}px`, top: `${S.y}px`, width: `${S.w}px`, height: `${S.h}px` });
   svg.innerHTML = '<img src="assets/scene/smile.png" alt="">';
-  const tag = tagline(art, cfg.tagline);
+  const tag = tagline(gTag, cfg.tagline);
 
   function intro(tl) {
     tl.from(b.root, { scale: 0.4, opacity: 0, duration: 0.6, ease: 'back.out(2)' }, 0.9)

@@ -43,8 +43,8 @@ export class Glasses {
     let x; let y; let s;
     const [kind, a, b] = k.at;
     if (kind === 'vp') { x = a * st.vw; y = b * st.vh; s = st.scale('welcome'); }
-    else if (kind === 'desk') { [x, y] = st.toScreen('process', D.x + a * D.scale, D.y + (b - D.refY0) * D.scale); s = st.scale('process'); }
-    else { [x, y] = st.toScreen(kind, a, b); s = st.scale(kind); }
+    else if (kind === 'desk') { [x, y] = st.toScreen('process', D.x + a * D.scale, D.y + (b - D.refY0) * D.scale, 'desk'); s = st.scale('process') * st.groupScale('process', 'desk'); }
+    else { [x, y] = st.toScreen(kind, a, b, 'shades'); s = st.scale(kind) * st.groupScale(kind, 'shades'); }
     return [x, y, k.w * s, k.rz];
   }
 

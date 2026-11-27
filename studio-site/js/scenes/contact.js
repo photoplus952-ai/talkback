@@ -13,31 +13,33 @@ export function createContact(stage, cfg) {
   const art = s.art;
   srHeading(s.section, 'let’s TALK');
 
-  const b = badge(art, cfg.badge, cfg.index);
-  const type = depth(art, 'type');
+  const LG = (n) => stage.group(cfg.id, n, el('div', 'layout', art));
+  const gHead = LG('head'); const gPhoto = LG('photo'); const gGl = LG('glasses'); const gInfo = LG('info');
+  const b = badge(gHead, cfg.badge, cfg.index);
+  const type = depth(gHead, 'type');
   const parts = cfg.title.map((t) => ({ t, w: headline(type, t) }));
   const small = parts.find((p) => p.t.role === 'small').w;
   const main = parts.find((p) => p.t.role === 'main').w;
   const echoes = parts.filter((p) => p.t.role === 'echo');
-  const tag = tagline(art, cfg.tagline);
+  const tag = tagline(gHead, cfg.tagline);
 
   // the glasses, back from the desk
   const G = cfg.glasses;
-  const glasses = el('div', 'contact-glasses', art, { left: `${G.x - G.w / 2}px`, top: `${G.y - G.w * 0.225}px`, width: `${G.w}px`, height: `${G.w * 0.45}px`, rotate: `${G.rot}deg` });
+  const glasses = el('div', 'contact-glasses', gGl, { left: `${G.x - G.w / 2}px`, top: `${G.y - G.w * 0.225}px`, width: `${G.w}px`, height: `${G.w * 0.45}px`, rotate: `${G.rot}deg` });
   glasses.innerHTML = '<img src="assets/scene/glasses.png" alt="">';
 
   // newspaper photo
   const P = cfg.photo;
-  const news = el('div', 'news', art, { left: `${P.x}px`, top: `${P.y}px`, width: `${P.w}px`, height: `${P.h}px` });
+  const news = el('div', 'news', gPhoto, { left: `${P.x}px`, top: `${P.y}px`, width: `${P.w}px`, height: `${P.h}px` });
   const img = el('img', '', news); img.src = P.src; img.alt = 'איש בחליפה כחולה יושב על כיסא ומחזיק עיתון שמסתיר את פניו';
   const paper = el('div', 'paper', news, { left: `${P.paper.x}px`, top: `${P.paper.y}px`, width: `${P.paper.w}px` });
   const p1 = el('span', 'p1', paper); p1.textContent = cfg.title[0].text;
   const p2 = el('span', 'p2', paper); p2.textContent = cfg.title[1].text;
 
-  const c = copy(art, cfg.copy);
+  const c = copy(gInfo, cfg.copy);
   const R = cfg.rowsBox;
   const rows = cfg.rows.map((r) => {
-    const row = el('button', 'contact-row', art, { left: `${R.x}px`, top: `${r.y}px`, width: `${R.w}px` });
+    const row = el('button', 'contact-row', gInfo, { left: `${R.x}px`, top: `${r.y}px`, width: `${R.w}px` });
     row.type = 'button';
     const k = el('span', 'k', row); k.textContent = r.key;
     const v = el('span', 'v', row); v.textContent = r.value; v.dir = 'auto';
@@ -48,7 +50,7 @@ export function createContact(stage, cfg) {
     });
     return row;
   });
-  const btn = el('a', 'cta', art, { left: `${cfg.button.x}px`, top: `${cfg.button.y}px` });
+  const btn = el('a', 'cta', gInfo, { left: `${cfg.button.x}px`, top: `${cfg.button.y}px` });
   btn.href = cfg.button.href;
   btn.innerHTML = `<span class="cta-arrow">${arrowSvg()}</span><span>${cfg.button.text}</span>`;
 

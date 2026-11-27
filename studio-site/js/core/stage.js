@@ -62,11 +62,12 @@ export class Stage {
       const lay = (s.cfg.layouts && s.cfg.layouts[this.mode]) || null;
       s.offsets = (lay && lay.groups) || {};
       for (const [name, el] of Object.entries(s.groups || {})) {
-        const [dx, dy] = s.offsets[name] || [0, 0];
+        const [dx, dy, k = 1] = s.offsets[name] || [0, 0, 1];
         // layout wrappers are never animated by GSAP, so a plain transform is safe
-        el.style.transform = dx || dy ? `translate3d(${dx}px, ${dy}px, 0)` : '';
+        el.style.transformOrigin = '0 0';
+        el.style.transform = dx || dy || k !== 1 ? `translate3d(${dx}px, ${dy}px, 0) scale(${k})` : '';
       }
-      const [cx, cy, cw, ch] = (lay && lay.crop) || s.cfg.crop[this.mode];
+      const [cx, cy, cw, ch] = (lay && lay.crop) || s.cfg.crop[this.mode] || s.cfg.crop.desktop;
       const h = staticMode ? s.section.clientHeight || vh : vh;
       const availW = vw * (1 - pad.x * 2);
       const availH = h * (1 - pad.top - pad.bottom);
@@ -83,9 +84,12 @@ export class Stage {
   toScreen(id, x, y, group) {
     const sc = this.scenes.get(id);
     const { s, tx, ty } = sc.fit;
-    const [dx, dy] = (group && sc.offsets && sc.offsets[group]) || [0, 0];
-    return [tx + (x + dx) * s, ty + (y + dy) * s];
+    const [dx, dy, k = 1] = (group && sc.offsets && sc.offsets[group]) || [0, 0, 1];
+    return [tx + (x * k + dx) * s, ty + (y * k + dy) * s];
   }
+
+  /** extra scale a named group has in the current layout */
+  groupScale(id, group) { const o = this.scenes.get(id).offsets?.[group]; return (o && o[2]) || 1; }
 
   scale(id) { return this.scenes.get(id).fit.s; }
 }

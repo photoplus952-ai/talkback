@@ -21,14 +21,15 @@ export function createResult(stage, cfg) {
   const art = s.art;
   srHeading(s.section, 'And the RESULT');
 
-  const type = depth(art, 'type');
+  const LG = (n) => stage.group(cfg.id, n, el('div', 'layout', art));
+  const type = depth(LG('type'), 'type');
   const parts = cfg.title.map((t) => ({ t, w: headline(type, t) }));
   const small = parts.find((p) => p.t.role === 'small').w;
   const main = parts.find((p) => p.t.role === 'main').w;
   const echoes = parts.filter((p) => p.t.role === 'echo');
-  const c = copy(art, cfg.copy);
+  const c = copy(LG('copy'), cfg.copy);
 
-  const dev = mapped(art, 'devices', cfg.devices);
+  const dev = mapped(LG('devices'), 'devices', cfg.devices);
   photo(dev, 's3-base', 'dev-base');
   const lid = depth(dev, 'lid');
   photo(lid, 's3-lid', 'dev-lid');

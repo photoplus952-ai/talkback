@@ -25,7 +25,8 @@ body { background: var(--bg); color: var(--ink); font-family: 'Rubik', system-ui
 #scene-contact { background: #ECEDFA; z-index: 11; }
 .cam { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 50% 50%; }
 .art { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform-style: preserve-3d; }
-.art > *, .depth > *, .mapped > *, .art .word, .art .copy { position: absolute; }
+.art > *, .layout > *, .depth > *, .mapped > *, .art .word, .art .copy { position: absolute; }
+.layout { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-style: preserve-3d; }
 .depth, .mapped { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-style: preserve-3d; }
 .mapped { transform-origin: 0 0; }
 .scroller { position: relative; z-index: 0; }

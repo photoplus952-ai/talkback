@@ -24,10 +24,17 @@ export const COLORS = {
 };
 
 const FULL = [0, 0, 1920, 1080];
+const PORTRAIT = [0, 0, 1080, 1920];
+/** place a group whose box starts at (bx, by) at (X, Y) in the portrait frame, scaled by k */
+const P = (bx, by, X, Y, k) => [X - bx * k, Y - by * k, k];
 
 /* ---------------------------------------------------------------- 01 */
 export const WELCOME = {
   id: 'welcome', index: '01', label: 'YOU’RE WELCOME', bg: '#F1F1F7', ref: 'tools/ref/new-01.png',
+  layouts: { mobile: { crop: PORTRAIT, groups: {
+    head: P(185, 271, 70, 330, 1.6), title: P(150, 341, 70, 540, 0.71),
+    shades: P(1082, 313, 200, 930, 0.95), tag: P(199, 795, 90, 1480, 0.85),
+  } } },
   crop: { desktop: FULL, mobile: [120, 240, 1790, 640] },
   badge: { x: 185, y: 271, size: 60, num: { x: 263, y: 283, size: 35 } },
   copy: {
@@ -49,6 +56,9 @@ export const WELCOME = {
 /* ---------------------------------------------------------------- 02 */
 export const PROCESS = {
   id: 'process', index: '02', label: 'THE PROCESS', bg: '#EEEEF8', ref: 'tools/ref/new-02.jpg',
+  layouts: { mobile: { crop: PORTRAIT, groups: {
+    text: P(143, 333, 70, 180, 1.25), desk: P(931, 197, 42, 880, 1.15),
+  } } },
   crop: { desktop: FULL, mobile: [120, 300, 1720, 720] },
   badge: { x: 146, y: 333, size: 41, num: { x: 199, y: 343, size: 24 } },
   copy: {
@@ -70,6 +80,9 @@ export const PROCESS = {
 /* ---------------------------------------------------------------- 03 */
 export const RESULT = {
   id: 'result', index: '03', label: 'THE RESULT', bg: '#ECEDFA', ref: 'tools/ref/new-03.jpg',
+  layouts: { mobile: { crop: PORTRAIT, groups: {
+    type: P(138, 284, 70, 200, 1.3), devices: P(835, 290, 78, 850, 1.3), copy: P(1533, 553, 624, 1690, 1.6),
+  } } },
   crop: { desktop: FULL, mobile: [110, 270, 1700, 700] },
   title: [
     { text: 'And the', x: 138, y: 284, size: 116, ls: -5.8, role: 'small' },
@@ -90,6 +103,10 @@ export const RESULT = {
 /* ---------------------------------------------------------------- 04 */
 export const WORKS = {
   id: 'works', index: '04', label: 'THE WORKS', bg: '#EEEEF8',
+  layouts: { mobile: { crop: PORTRAIT, groups: {
+    head: P(134, 110, 70, 140, 1.4), copy: P(1350, 196, 470, 640, 1.3),
+    gallery: [540 - 960 * 1.25, 720 - 390 * 1.25, 1.25], foot: P(160, 940, 40, 1460, 0.62),
+  } } },
   crop: { desktop: FULL, mobile: [60, 100, 1800, 950] },
   badge: { x: 146, y: 110, size: 41, num: { x: 199, y: 118, size: 24 } },
   title: [
@@ -121,6 +138,10 @@ export const WORKS = {
 /* ---------------------------------------------------------------- 05 */
 export const CONTACT = {
   id: 'contact', index: '05', label: 'LET’S TALK', bg: '#ECEDFA',
+  layouts: { mobile: { crop: PORTRAIT, groups: {
+    head: P(134, 180, 70, 120, 1.15), photo: P(1250, 40, 680, 140, 1), glasses: P(755, 400, 690, 640, 0.9),
+    info: P(1080, 520, 81, 1000, 1.35),
+  } } },
   crop: { desktop: FULL, mobile: [110, 40, 1700, 1000] },
   badge: { x: 146, y: 180, size: 41, num: { x: 199, y: 188, size: 24 } },
   title: [
